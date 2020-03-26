@@ -1,0 +1,3 @@
+SHOWROOM_DB_NAME=django_showroom
+SHOWROOM_DB_USER=django_showroom
+SHOWROOM_DB_PASSWORD=password
