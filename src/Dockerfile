@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 
 ENV PYTHONUNBUFFERED 1
 
@@ -11,11 +11,12 @@ VOLUME /logs
 
 WORKDIR /django
 
-RUN pip install --upgrade pip==19.1.1
-ADD requirements.txt .
+RUN pip install --upgrade pip==20.2.3
+COPY requirements.txt .
 RUN pip install -r requirements.txt
-ADD . .
+COPY . .
 
-CMD rainbow-saddle --pid /var/run/django.pid --gunicorn-pidfile /var/run/gunicorn.pid gunicorn showroom.wsgi -w 3 -b :8000 -t 300 --max-requests 1000 --log-level=info --access-logfile=/logs/gunicorn.access.log --error-logfile=/logs/gunicorn.error.log
+CMD ["rainbow-saddle", "--pid", "/var/run/django.pid", "--gunicorn-pidfile", "/var/run/gunicorn.pid", "gunicorn", "showroom.wsgi", "-c", "/django/gunicorn-conf.py"]
+
 
 EXPOSE 8000
