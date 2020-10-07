@@ -1,4 +1,4 @@
-"""showroom URL Configuration
+"""showroom URL Configuration.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
@@ -23,13 +23,24 @@ urlpatterns = [
     # admin
     path('da/', admin.site.urls),
     # django cas ng
-    path('accounts/login/', django_cas_ng.views.LoginView.as_view(), name='cas_ng_login'),
-    path('accounts/logout/', django_cas_ng.views.LogoutView.as_view(), name='cas_ng_logout'),
-    path('accounts/callback/', django_cas_ng.views.CallbackView.as_view(), name='cas_ng_proxy_callback'),
+    path(
+        'accounts/login/', django_cas_ng.views.LoginView.as_view(), name='cas_ng_login'
+    ),
+    path(
+        'accounts/logout/',
+        django_cas_ng.views.LogoutView.as_view(),
+        name='cas_ng_logout',
+    ),
+    path(
+        'accounts/callback/',
+        django_cas_ng.views.CallbackView.as_view(),
+        name='cas_ng_proxy_callback',
+    ),
 ]
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
