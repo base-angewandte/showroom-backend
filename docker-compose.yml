@@ -2,7 +2,7 @@ version: '2'
 services:
 
   showroom-redis:
-    image: redis:5.0-alpine
+    image: redis:6.0-alpine
     container_name: showroom-redis
     volumes:
       - ./dockerdata/redis/data:/data
@@ -12,7 +12,7 @@ services:
     command: redis-server --appendonly yes
 
   showroom-postgres:
-    image: postgres:11-alpine
+    image: postgres:13-alpine
     container_name: showroom-postgres
     environment:
       - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
@@ -20,7 +20,7 @@ services:
       - POSTGRES_DB=$SHOWROOM_DB_NAME
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - ./dockerdata/postgres/11/data:/var/lib/postgresql/data/pgdata
+      - ./dockerdata/postgres/13/data:/var/lib/postgresql/data/pgdata
     networks:
       - showroomnet
     restart: always
