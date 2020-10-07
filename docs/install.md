@@ -7,7 +7,7 @@
 * Clone git repository and checkout branch `develop`:
 
     ```bash
-    git clone https://P0009600@basedev.uni-ak.ac.at/redmine/showroom-backend.git
+    git clone https://basedev.uni-ak.ac.at/redmine/showroom-backend.git
     cd showroom-backend
     ```
 
@@ -29,7 +29,7 @@
     cp docker-compose.override.dev.yml docker-compose.override.yml
     ```
 
-* Install latest python 3 and create virtualenv e.g. via `pyenv` and `pyenv-virtualenv`
+* Install latest python 3.8 and create virtualenv e.g. via `pyenv` and `pyenv-virtualenv`
 
 * Install pip-tools and requirements in your virtualenv:
 
@@ -62,7 +62,7 @@
 * Start development server:
 
     ```bash
-    python manage.py runserver 8000
+    python manage.py runserver 8500
     ```
 
 
@@ -87,7 +87,7 @@
 * Clone git repository:
 
     ```bash
-    git clone https://P0009600@basedev.uni-ak.ac.at/redmine/showroom-backend.git
+    git clone https://base@basedev.uni-ak.ac.at/redmine/showroom-backend.git
     cd showroom-backend
     ```
 
