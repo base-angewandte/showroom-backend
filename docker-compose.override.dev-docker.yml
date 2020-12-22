@@ -1,12 +1,11 @@
-version: '2'
+version: '2.3'
 services:
 
   showroom-django:
     build:
       context: ./src
-      dockerfile: Dockerfile.dev
+      target: dev
     image: showroom-django-dev
     container_name: showroom-django-dev
     ports:
-      - "127.0.0.1:8000:8000"
-    command: python manage.py runserver 0.0.0.0:8000
+      - "127.0.0.1:8500:8500"

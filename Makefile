@@ -37,10 +37,11 @@ start-dev:
 		showroom-postgres
 
 start-dev-docker:
-	docker-compose up --build \
+	docker-compose up -d --build \
 		showroom-redis \
 		showroom-postgres \
 		showroom-django
+	docker logs -f showroom-django-dev
 
 pip-compile:
 	pip-compile src/requirements.in

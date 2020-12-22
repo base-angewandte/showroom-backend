@@ -60,8 +60,17 @@ subsections.
   also just use `docker-compose` directly:
 
     ```bash
-    docker-compose up --build showroom-redis showroom-postgres showroom-django
+    docker-compose up -d --build showroom-redis showroom-postgres showroom-django
     ```
+
+  If you did start the service with the `docker-compose` instead of `make`, you
+  might want to do the following to also get Django's debug output:
+
+    ```bash
+    docker logs -f showroom-django-dev
+    ```
+
+  To stop all services again, use `make stop` or `docker-compose down`.
 
 ### The full developer setup
 

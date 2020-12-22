@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.8 AS base
 
 ENV PYTHONUNBUFFERED 1
 
@@ -11,12 +11,25 @@ VOLUME /logs
 
 WORKDIR /django
 
-RUN pip install --upgrade pip==20.2.3
+RUN pip install --upgrade --no-cache-dir pip==20.2.3
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install  --no-cache-dir -r requirements.txt
+
+
+FROM base as dev
+
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8500"]
+
+EXPOSE 8500
+
+
+FROM base as prod
+
 COPY . .
 
 CMD ["rainbow-saddle", "--pid", "/var/run/django.pid", "--gunicorn-pidfile", "/var/run/gunicorn.pid", "gunicorn", "showroom.wsgi", "-c", "/django/gunicorn-conf.py"]
 
-
-EXPOSE 8000
+EXPOSE 8500

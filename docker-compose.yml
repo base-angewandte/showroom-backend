@@ -1,4 +1,4 @@
-version: '2'
+version: '2.3'
 services:
 
   showroom-redis:
@@ -33,7 +33,7 @@ services:
       - POSTGRES_USER=$SHOWROOM_DB_USER
       - POSTGRES_DB=$SHOWROOM_DB_NAME
     expose:
-      - 8000
+      - 8500
     volumes:
       - ./src:/django
       - ./logs:/logs
