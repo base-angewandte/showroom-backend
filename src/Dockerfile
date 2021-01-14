@@ -12,9 +12,9 @@ VOLUME /logs
 
 WORKDIR /django
 
-RUN pip install --upgrade --no-cache-dir pip==20.2.3
+RUN pip install --disable-pip-version-check --upgrade --no-cache-dir pip==20.2.3
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
 
 EXPOSE 8500
 
@@ -22,7 +22,7 @@ EXPOSE 8500
 FROM base as dev
 
 COPY requirements-dev.txt .
-RUN pip install --no-cache-dir -r requirements-dev.txt
+RUN pip install --disable-pip-version-check --no-cache-dir -r requirements-dev.txt
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8500"]
 
