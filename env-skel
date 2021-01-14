@@ -1,7 +1,8 @@
 ## These settings are used to set up the DB in the showroom-postgres container.
 SHOWROOM_DB_NAME=django_showroom
 SHOWROOM_DB_USER=django_showroom
-## The password can be used as is for a dev server.
+## The password can be used as is for a local dev server.
+## Make sure to change this to a strong password on any production/public server.
 ## If you change it here, make sure to also set the POSTGRES_PASSWORD in
-## showroom/.env accordingly
+## src/showroom/.env accordingly
 SHOWROOM_DB_PASSWORD=password

@@ -49,9 +49,11 @@ SITE_URL=https://url/
 # CORS_ORIGIN_ALLOW_ALL=False
 # CORS_ORIGIN_WHITELIST=
 
-# The database port only needs to be changed, if you are running showroom
-# locally in combination with e.g. portfolio also running locally. Then at
-# least one of the database container ports needs to be mapped to a different
-# value. So use whatever you set in your docker-compose.override.yml for
-# showroom-postgres or leave the comment to use the default:
+## The database port only needs to be changed, if you are running showroom
+## locally in combination with e.g. portfolio also running locally. Then at
+## least one of the database container ports needs to be mapped to a different
+## value. So use whatever you set in your docker-compose.override.yml for
+## showroom-postgres or leave the comment to use the default:
 # POSTGRES_PORT=5432
+## The database password has to be the same as the one set in ../../.env
+POSTGRES_PASSWORD=password
