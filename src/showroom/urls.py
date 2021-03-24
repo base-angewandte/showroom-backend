@@ -36,6 +36,7 @@ urlpatterns = [
         django_cas_ng.views.CallbackView.as_view(),
         name='cas_ng_proxy_callback',
     ),
+    path('api/', include('api.urls')),
 ]
 
 if settings.DEBUG:

@@ -90,10 +90,13 @@ INSTALLED_APPS = [
     # Third-party apps
     'django_cas_ng',
     'django_extensions',
+    'rest_framework',
+    'drf_spectacular',
     'corsheaders',
     # Project apps
     'core',
     'general',
+    'api',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -362,6 +365,37 @@ CORS_ALLOW_CREDENTIALS = env.bool('CORS_ALLOW_CREDENTIALS', default=False)
 CORS_ORIGIN_ALLOW_ALL = env.bool('CORS_ORIGIN_ALLOW_ALL', default=False)
 CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=[])
 # CORS_URLS_REGEX = r'^/()/.*$'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ORDERING_PARAM': 'sort',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# spectacular settings
+# https://drf-spectacular.readthedocs.io/en/latest/settings.html
+SPECTACULAR_SETTINGS = {
+    # available SwaggerUI configuration parameters
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',  # default
+    # "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png",  # default is swagger favicon
+}
+
 
 if DEBUG:
     INSTALLED_APPS += ['debug_toolbar']
