@@ -19,7 +19,7 @@ class AbstractShowroomObject(AbstractBaseModel):
     title = models.CharField(max_length=255)
     list = JSONField(blank=True, null=True)
     primary_details = JSONField(blank=True, null=True)
-    secondary_detials = JSONField(blank=True, null=True)
+    secondary_details = JSONField(blank=True, null=True)
     locations = JSONField(blank=True, null=True)
     dates = JSONField(blank=True, null=True)
     # TODO@review: is models.PROTECT the right constraint here?
