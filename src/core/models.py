@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.models import Q
 
 from general.models import AbstractBaseModel, ShortUUIDField
 
@@ -10,8 +11,11 @@ class SourceRepository(models.Model):
     label_repository = models.CharField(max_length=255)
     url_institution = models.CharField(max_length=255)
     url_repository = models.CharField(max_length=255)
-    icon = models.CharField(max_length=255)
-    api_key = models.CharField(max_length=255)
+    icon = models.CharField(max_length=255, blank=True)
+    api_key = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return f'[{self.id}] {self.label_institution} : {self.label_repository}'
 
 
 class AbstractShowroomObject(AbstractBaseModel):
@@ -46,19 +50,38 @@ class Entity(AbstractShowroomObject):
     expertise = JSONField(blank=True, null=True)
     showcase = JSONField(blank=True, null=True)
     photo = models.CharField(max_length=255, blank=True)
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
+    parent_choice_limit = Q(type='I') | Q(type='D')
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to=parent_choice_limit,
+    )
+
+    def __str__(self):
+        return f'{self.title} (ID: {self.id})'
 
 
 class Activity(AbstractShowroomObject):
     type = JSONField(blank=True, null=True)
     featured_media = models.ForeignKey(
-        'Media', on_delete=models.SET_NULL, null=True, related_name='featured_by'
+        'Media',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='featured_by',
     )
     # TODO@review: is cascading the right constraint here?
     #   reasoning: if an entity that has activities (which should be a person) is deleted from the DB, all their
     #              activities should be deleted as well
     belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE)
-    parents = models.ManyToManyField('self', symmetrical=False, related_name='children')
+    parents = models.ManyToManyField(
+        'self', symmetrical=False, related_name='children', blank=True
+    )
+
+    def __str__(self):
+        return f'{self.title} (ID: {self.id})'
 
 
 class Album(models.Model):
@@ -69,6 +92,9 @@ class Album(models.Model):
     # TODO@review: is cascading the right constraint here? see remark in Activity
     belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE)
     activities = models.ManyToManyField(Activity)
+
+    def __str__(self):
+        return f'{self.title}. {self.subtitle} (ID: {self.id})'
 
 
 class Media(models.Model):
@@ -99,3 +125,6 @@ class Media(models.Model):
     license = JSONField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+
+    def __str__(self):
+        return f'[{self.id}] {self.type}: {self.file}'
