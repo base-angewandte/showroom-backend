@@ -4,8 +4,9 @@
 #
 #    pip-compile src/requirements.in
 #
-certifi==2020.6.20        # via requests
-chardet==3.0.4            # via requests
+attrs==20.3.0             # via jsonschema
+certifi==2020.12.5        # via requests
+chardet==4.0.0            # via requests
 click==7.1.2              # via pip-tools
 concurrent-log-handler==0.9.17  # via -r src/requirements.in
 django-cas-ng==4.1.1      # via -r src/requirements.in
@@ -13,24 +14,32 @@ django-cors-headers==3.5.0  # via -r src/requirements.in
 django-debug-toolbar==3.1.1  # via -r src/requirements.in
 django-environ==0.4.5     # via -r src/requirements.in
 django-extensions==3.0.9  # via -r src/requirements.in
+django-filter==2.4.0      # via -r src/requirements.in
 django-redis==4.12.1      # via -r src/requirements.in
-django==2.2.16            # via -r src/requirements.in, django-cas-ng, django-cors-headers, django-debug-toolbar, django-redis
+django==2.2.20            # via -r src/requirements.in, django-cas-ng, django-cors-headers, django-debug-toolbar, django-filter, django-redis, djangorestframework, drf-spectacular
+djangorestframework==3.12.2  # via -r src/requirements.in, drf-spectacular
+drf-spectacular==0.15.1   # via -r src/requirements.in
 gunicorn==20.0.4          # via -r src/requirements.in
 idna==2.10                # via requests
-lxml==4.5.2               # via python-cas
+inflection==0.5.1         # via drf-spectacular
+jsonschema==3.2.0         # via drf-spectacular
+lxml==4.6.3               # via python-cas
 pip-tools==5.3.1          # via -r src/requirements.in
-portalocker==2.0.0        # via concurrent-log-handler
-psutil==5.7.2             # via rainbow-saddle
+portalocker==2.3.0        # via concurrent-log-handler
+psutil==5.8.0             # via rainbow-saddle
 psycopg2-binary==2.8.6    # via -r src/requirements.in
+pyrsistent==0.17.3        # via jsonschema
 python-cas==1.5.0         # via django-cas-ng
-pytz==2020.1              # via django
+pytz==2021.1              # via django
+pyyaml==5.4.1             # via drf-spectacular
 rainbow-saddle==0.4.0     # via -r src/requirements.in
 redis==3.5.3              # via django-redis
-requests==2.24.0          # via python-cas
+requests==2.25.1          # via python-cas
 shortuuid==1.0.1          # via -r src/requirements.in
-six==1.15.0               # via pip-tools, python-cas
-sqlparse==0.4.0           # via django, django-debug-toolbar
-urllib3==1.25.10          # via requests
+six==1.15.0               # via jsonschema, pip-tools, python-cas
+sqlparse==0.4.1           # via django, django-debug-toolbar
+uritemplate==3.0.1        # via drf-spectacular
+urllib3==1.26.4           # via requests
 werkzeug==1.0.1           # via -r src/requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
