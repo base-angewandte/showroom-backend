@@ -370,7 +370,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_PERMISSION_CLASSES': [],
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         # 'rest_framework.renderers.BrowsableAPIRenderer',
@@ -384,6 +384,14 @@ REST_FRAMEWORK = {
 # spectacular settings
 # https://drf-spectacular.readthedocs.io/en/latest/settings.html
 SPECTACULAR_SETTINGS = {
+    'TITLE': 'Showroom API v1',
+    'VERSION': '1.0.0',
+    'DESCRIPTION': """Provides public access to all activities published to *Showroom*, as well as authenticated access
+    for users and repositories to publish and update activites, create and maintain albums. For a general project
+    description visit the [Portfolio/Showroom website](https://portfolio-showroom.ac.at), for the sources and
+    documentation of this component go to **TODO:insertlinktogithubrepo**.
+    """,
+    'TAGS': ['public', 'private', 'protected', 'api'],
     # available SwaggerUI configuration parameters
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {

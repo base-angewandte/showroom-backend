@@ -1,8 +1,15 @@
 # from django.shortcuts import render
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from core.models import Activity, Album, Entity, Media
 
+from . import view_spec
+from .permissions import ActivityPermission
 from .serializers import (
     ActivitySerializer,
     AlbumSerializer,
@@ -13,38 +20,201 @@ from .serializers import (
 # Create your views here.
 
 
+@extend_schema_view(
+    retrieve=extend_schema(
+        tags=['public'],
+        responses={
+            200: EntitySerializer,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    partial_update=extend_schema(
+        tags=['private'],
+        responses={
+            204: None,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    list=extend_schema(exclude=True),
+    activities=extend_schema(
+        tags=['public'],
+        responses={
+            200: ActivitySerializer(
+                many=True
+            ),  # TODO: replace through a SearchCollection serializer
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    search=extend_schema(
+        tags=['public'],
+        responses={
+            200: ActivitySerializer(
+                many=True
+            ),  # TODO: replace through a CommonList serializer
+            404: view_spec.Responses.Error404,
+        },
+    ),
+)
 class EntityViewSet(
-    mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     queryset = Entity.objects.all()
     serializer_class = EntitySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    # we only want partial updates enabled, therefore removing put from the allowed methods
+    http_method_names = ['get', 'head', 'options', 'patch', 'post']
+
+    def list(self, request, *args, **kwargs):
+        # If we do not include the ListModelMixin and define this here, Django would provide a standard 404
+        # HTML page. So to be consistent with the APIs error scheme we raise a rest_framework 405, and exclude
+        # the list method in the schema (through the list parameter in the extend_schema_view decorator above)
+        raise MethodNotAllowed(method='GET')
+
+    @action(detail=True, methods=['get'])
+    def activities(self, request, *args, **kwargs):
+        return Response({'detail': 'Not yet implemented'}, status=500)
+
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+    def search(self, request, *args, **kwargs):
+        return Response({'detail': 'Not yet implemented'}, status=500)
 
 
+@extend_schema_view(
+    create=extend_schema(
+        tags=['protected'],
+        responses={
+            201: ActivitySerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+        },
+    ),
+    destroy=extend_schema(
+        tags=['protected'],
+        responses={
+            204: None,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    retrieve=extend_schema(
+        tags=['public'],
+        responses={
+            200: ActivitySerializer,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    media=extend_schema(
+        tags=['public'],
+        responses={
+            200: MediaSerializer(many=True),
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    list=extend_schema(exclude=True),
+)
 class ActivityViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
+    permission_classes = [ActivityPermission]
+
+    def list(self, request, *args, **kwargs):
+        # Similar to list in EntitiyViewSet
+        raise MethodNotAllowed(method='GET')
+
+    @action(detail=True, methods=['get'])
+    def media(self, request, *args, **kwargs):
+        return Response({'detail': 'Not yet implemented'}, status=500)
 
 
-class AlbumViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+@extend_schema_view(
+    create=extend_schema(
+        tags=['private'],
+        responses={
+            201: AlbumSerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+        },
+    ),
+    partial_update=extend_schema(
+        tags=['private'],
+        responses={
+            200: AlbumSerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    destroy=extend_schema(
+        tags=['private'],
+        responses={
+            204: None,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    retrieve=extend_schema(
+        tags=['public'],
+        responses={
+            200: AlbumSerializer,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    update=extend_schema(exclude=True),
+    list=extend_schema(exclude=True),
+)
+class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def list(self, request, *args, **kwargs):
+        # Similar to list in EntitiyViewSet
+        raise MethodNotAllowed(method='GET')
 
 
+@extend_schema_view(
+    create=extend_schema(
+        tags=['protected'],
+        responses={
+            201: MediaSerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    update=extend_schema(
+        tags=['protected'],
+        responses={
+            200: MediaSerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    destroy=extend_schema(
+        tags=['protected'],
+        responses={
+            204: None,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    ),
+    partial_update=extend_schema(exclude=True),
+)
 class MediaViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
