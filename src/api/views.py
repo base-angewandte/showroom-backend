@@ -38,7 +38,7 @@ from .serializers import (
         },
     ),
     list=extend_schema(exclude=True),
-    activities=extend_schema(
+    activities_list=extend_schema(
         tags=['public'],
         responses={
             200: view_spec.Responses.CommonList,
@@ -72,8 +72,8 @@ class EntityViewSet(
         # the list method in the schema (through the list parameter in the extend_schema_view decorator above)
         raise MethodNotAllowed(method='GET')
 
-    @action(detail=True, methods=['get'])
-    def activities(self, request, *args, **kwargs):
+    @action(detail=True, methods=['get'], url_path='list')
+    def activities_list(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=500)
 
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
