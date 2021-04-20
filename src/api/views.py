@@ -41,20 +41,17 @@ from .serializers import (
     activities=extend_schema(
         tags=['public'],
         responses={
-            200: ActivitySerializer(
-                many=True
-            ),  # TODO: replace through a SearchCollection serializer
+            200: view_spec.Responses.CommonList,
             404: view_spec.Responses.Error404,
         },
     ),
     search=extend_schema(
         tags=['public'],
         responses={
-            200: ActivitySerializer(
-                many=True
-            ),  # TODO: replace through a CommonList serializer
+            200: view_spec.Responses.SearchCollection,
             404: view_spec.Responses.Error404,
         },
+        # TODO: change parameters
     ),
 )
 class EntityViewSet(
