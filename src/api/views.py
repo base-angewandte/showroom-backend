@@ -1,4 +1,3 @@
-# from django.shortcuts import render
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
@@ -74,11 +73,16 @@ class EntityViewSet(
 
     @action(detail=True, methods=['get'], url_path='list')
     def activities_list(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=500)
+        return Response({'detail': 'Not yet implemented'}, status=400)
 
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def search(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=500)
+        s = view_spec.SearchSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        return Response(
+            {'detail': 'Not yet implemented', 'filters_used': s.validated_data},
+            status=400,
+        )
 
 
 @extend_schema_view(
@@ -132,7 +136,7 @@ class ActivityViewSet(
 
     @action(detail=True, methods=['get'])
     def media(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=500)
+        return Response({'detail': 'Not yet implemented'}, status=400)
 
 
 @extend_schema_view(
@@ -220,3 +224,56 @@ class MediaViewSet(
 ):
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
+
+
+@extend_schema_view(
+    create=extend_schema(
+        tags=['public'],
+        responses={
+            200: view_spec.Responses.SearchCollection,
+            400: view_spec.Responses.Error400,
+        },
+    )
+)
+class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """Submit a search to Showroom."""
+
+    def create(self, request, *args, **kwargs):
+        s = view_spec.SearchSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        return Response(
+            {'detail': 'Not yet implemented', 'filters_used': s.validated_data},
+            status=400,
+        )
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['public'],
+        responses={
+            200: view_spec.Responses.SearchCollection,
+        },
+    )
+)
+class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Get all the available filters that can be used in search and
+    autocomplete."""
+
+    def list(self, request, *args, **kwargs):
+        return Response({'detail': 'Not yet implemented'}, status=400)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['public'],
+        responses={
+            200: view_spec.Responses.SearchCollection,
+        },
+    )
+)
+class AutocompleteViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Retrieves available autocomplete results for a specific string and
+    filter."""
+
+    def list(self, request, *args, **kwargs):
+        return Response({'detail': 'Not yet implemented'}, status=400)

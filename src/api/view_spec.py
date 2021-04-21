@@ -99,6 +99,18 @@ class SearchCollectionSerializer(serializers.Serializer):
     data = SearchItemSerializer(many=True)
 
 
+class CommonSearchFilterSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    type = serializers.ChoiceField(choices=['text', 'date', 'daterange', 'chips'])
+    filter_values = serializers.ListField(child=serializers.JSONField())
+
+
+class SearchSerializer(serializers.Serializer):
+    filter = serializers.ListField(child=CommonSearchFilterSerializer())
+    limit = serializers.IntegerField(required=False)
+    offset = serializers.IntegerField(required=False)
+
+
 class Responses:
     Error400 = error(
         status_code=400,

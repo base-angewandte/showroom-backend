@@ -10,6 +10,9 @@ router.register(r'entities', views.EntityViewSet)
 router.register(r'activities', views.ActivityViewSet)
 router.register(r'albums', views.AlbumViewSet)
 router.register(r'media', views.MediaViewSet)
+router.register(r'search', views.SearchViewSet, basename='search')
+router.register(r'filters', views.FilterViewSet, basename='filters')
+router.register(r'autocomplete', views.AutocompleteViewSet, basename='autocomplete')
 
 urlpatterns = [
     path('', include(router.urls)),
