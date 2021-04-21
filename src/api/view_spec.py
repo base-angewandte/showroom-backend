@@ -99,9 +99,22 @@ class SearchCollectionSerializer(serializers.Serializer):
     data = SearchItemSerializer(many=True)
 
 
+@extend_schema_field(
+    field={'type': 'string', 'enum': ['text', 'date', 'daterange', 'chips']},
+    component_name='FilterTypes',
+)
+class FilterTypesField(serializers.ChoiceField):
+    def __init__(self, **kwargs):
+        if 'choices' in kwargs:
+            print('choices found. popping.')
+            kwargs.pop('choices')
+
+        super().__init__(choices=['text', 'date', 'daterange', 'chips'], **kwargs)
+
+
 class CommonSearchFilterSerializer(serializers.Serializer):
     name = serializers.CharField()
-    type = serializers.ChoiceField(choices=['text', 'date', 'daterange', 'chips'])
+    type = FilterTypesField()
     filter_values = serializers.ListField(child=serializers.JSONField())
 
 
@@ -109,6 +122,28 @@ class SearchSerializer(serializers.Serializer):
     filter = serializers.ListField(child=CommonSearchFilterSerializer())
     limit = serializers.IntegerField(required=False)
     offset = serializers.IntegerField(required=False)
+
+
+class FilterSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    type = FilterTypesField()
+    # The following fields are only used for 'chips' filters
+    options = serializers.ListField(child=serializers.JSONField(), required=False)
+    freetext_allowed = serializers.BooleanField(required=False)
+    autocomplete_url = serializers.URLField(required=False)
+
+
+class AutocompleteItemDataSerializer(serializers.Serializer):
+    id = serializers.CharField()  # ShortUUID
+    title = serializers.CharField()
+    subtext = serializers.ListField(child=serializers.CharField())
+    source = serializers.CharField()
+
+
+class AutocompleteItemSerializer(serializers.Serializer):
+    source = serializers.CharField()
+    label = serializers.CharField()
+    data = AutocompleteItemDataSerializer(many=True)
 
 
 class Responses:
@@ -136,4 +171,16 @@ class Responses:
         description='',
         response=SearchCollectionSerializer,
         # TODO: add examples
+    )
+
+    Filters = OpenApiResponse(
+        description='',
+        response=serializers.ListSerializer(child=FilterSerializer()),
+        # TODO: add description and examples
+    )
+
+    AutoComplete = OpenApiResponse(
+        description='',
+        response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
+        # TODO: add description and examples
     )

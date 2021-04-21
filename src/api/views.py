@@ -238,6 +238,8 @@ class MediaViewSet(
 class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Submit a search to Showroom."""
 
+    serializer_class = view_spec.SearchSerializer
+
     def create(self, request, *args, **kwargs):
         s = view_spec.SearchSerializer(data=request.data)
         s.is_valid(raise_exception=True)
@@ -251,7 +253,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     list=extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.SearchCollection,
+            200: view_spec.Responses.Filters,
         },
     )
 )
@@ -267,7 +269,7 @@ class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     list=extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.SearchCollection,
+            200: view_spec.Responses.AutoComplete,
         },
     )
 )
