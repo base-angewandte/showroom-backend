@@ -20,6 +20,14 @@ from .serializers import (
 
 
 @extend_schema_view(
+    create=extend_schema(
+        tags=['protected'],
+        responses={
+            201: EntitySerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+        },
+    ),
     retrieve=extend_schema(
         tags=['public'],
         responses={
@@ -54,6 +62,7 @@ from .serializers import (
     ),
 )
 class EntityViewSet(
+    mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
