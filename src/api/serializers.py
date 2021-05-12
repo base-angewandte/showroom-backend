@@ -2,6 +2,9 @@ from rest_framework import serializers
 
 from core.models import Activity, Album, Entity, Media
 
+from .repositories import portfolio
+from .repositories.portfolio import transform
+
 abstract_showroom_object_fields = [
     'id',
     'title',
@@ -31,11 +34,48 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = abstract_showroom_object_fields + [
-            'type',
+            'source_repo_data',
             'featured_media',
             'belongs_to',
             'parents',
         ]
+
+    def to_internal_value(self, data):
+        print(data)
+        new_data = {
+            'source_repo_entry_id': data.get('source_repo_entry_id'),
+            'source_repo': data.get('source_repo'),
+            'belongs_to': data.get('belongs_to'),
+        }
+        repo_data = data.get('data')
+        if not type(repo_data) is dict:
+            raise serializers.ValidationError(
+                {'data': ['Invalid type - has to be an object']}
+            )
+        entry_type = repo_data.get('type')
+        if not entry_type:
+            raise serializers.ValidationError(
+                {'data.type': ['This field may not be null.']}
+            )
+        if not type(entry_type) is dict:
+            raise serializers.ValidationError(
+                {'data.type': ['Invalid type - has to be an object']}
+            )
+        new_data['title'] = repo_data.get('title')
+        new_data['source_repo_data'] = repo_data
+
+        # now fetch the schema and apply transformations for the optimised display data
+        schema = portfolio.get_schema(entry_type.get('source'))
+        print(schema)
+        try:
+            transformed = transform.transform_data(repo_data['data'], schema)
+        except KeyError as e:
+            # TODO: check why we the 500 response code is ignored and turned into a 400
+            raise serializers.ValidationError(
+                {'server error': f'Missing transform function for field: {e}'}, code=500
+            )
+        new_data.update(transformed)
+        return super().to_internal_value(new_data)
 
 
 class AlbumSerializer(serializers.ModelSerializer):

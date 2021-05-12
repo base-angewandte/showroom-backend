@@ -117,6 +117,33 @@ CAS_VERSION = '3'
 CAS_APPLY_ATTRIBUTES_TO_USER = True
 CAS_REDIRECT_URL = env.str('CAS_REDIRECT_URL', default=FORCE_SCRIPT_NAME or '/')
 
+SKOSMOS_API = env.str(
+    'SKOSMOS_API', default='https://voc.uni-ak.ac.at/skosmos/rest/v1/'
+)
+ACTIVE_SCHEMAS = env.list(
+    'ACTIVE_SCHEMAS',
+    default=[
+        'architecture',
+        'audio',
+        'awards_and_grants',
+        'concert',
+        'conference',
+        'conference_contribution',
+        'design',
+        'document_publication',
+        'event',
+        'exhibition',
+        'fellowship_visiting_affiliation',
+        'festival',
+        'image',
+        'performance',
+        'research_project',
+        'sculpture',
+        'software',
+        'film_video',
+    ],
+)
+
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
 
