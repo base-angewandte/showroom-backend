@@ -64,7 +64,7 @@ class Entity(AbstractShowroomObject):
 
 
 class Activity(AbstractShowroomObject):
-    type = JSONField(blank=True, null=True)
+    source_repo_data = JSONField(blank=True, null=True)
     featured_media = models.ForeignKey(
         'Media',
         on_delete=models.SET_NULL,
