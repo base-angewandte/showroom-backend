@@ -9,7 +9,7 @@ def transform_data(data, schema):
     transformed = {}
     for category, fields in mapping.items():
         transformed[category] = [
-            transform_field(field, data) for field in fields if field
+            transform_field(field, data) for field in fields if data.get(field)
         ]
     return transformed
 
