@@ -1,3 +1,5 @@
+from rdflib import SKOS
+from requests import RequestException
 from skosmos_client import SkosmosClient
 
 from django.conf import settings
@@ -8,6 +10,9 @@ CACHE_TIME = 86400  # 1 day
 skosmos = SkosmosClient(api_base=settings.SKOSMOS_API)
 
 ACTIVE_TUPLES = []
+
+# TODO: use i18n similar to portfolio
+LANGUAGES = ['de', 'en']
 
 
 def init():
@@ -36,6 +41,56 @@ def get_schema(entry_type):
     for types, schema in ACTIVE_TUPLES:
         if entry_type in types:
             return schema
+
+
+def get_altlabel(concept, project=settings.VOC_ID, graph=settings.VOC_GRAPH, lang=None):
+    # TODO: use i18n similar to portfolio
+    language = lang or 'en'
+    cache_key = f'get_altlabel_{language}_{concept}'
+
+    label = cache.get(cache_key)
+    if not label:
+        try:
+            g = skosmos.data(f'{graph}{concept}')
+            for _uri, l in g.subject_objects(SKOS.altLabel):
+                if l.language == language:
+                    label = l
+                    break
+        except RequestException:
+            pass
+
+    label = label or get_preflabel(concept, project, graph)
+
+    if label:
+        cache.set(cache_key, label, CACHE_TIME)
+
+    return label
+
+
+def get_preflabel(
+    concept, project=settings.VOC_ID, graph=settings.VOC_GRAPH, lang=None
+):
+    # TODO: use i18n similar to portfolio
+    language = lang or 'en'
+    cache_key = f'get_preflabel_{language}_{concept}'
+
+    label = cache.get(cache_key)
+    if not label:
+        c = skosmos.get_concept(project, f'{graph}{concept}')
+        try:
+            label = c.label(language)
+        except KeyError:
+            try:
+                label = c.label('de' if language == 'en' else 'en')
+            except KeyError:
+                pass
+        except RequestException:
+            pass
+
+        if label:
+            cache.set(cache_key, label, CACHE_TIME)
+
+    return label or ''
 
 
 init()
