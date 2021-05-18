@@ -1,11 +1,25 @@
+import logging
+
 from django.conf import settings
 
-from . import LANGUAGES, get_altlabel, get_preflabel
+from . import (
+    LANGUAGES,
+    FieldTransformerMissingError,
+    MappingNotFoundError,
+    get_altlabel,
+    get_preflabel,
+)
 from .mapping import map
+
+logger = logging.getLogger(__name__)
 
 
 def transform_data(data, schema):
     mapping = map(schema)
+    if not mapping:
+        logger.error(f'No mapping is available to transform entry of type: {schema}')
+        raise MappingNotFoundError(schema)
+
     transformed = {}
     for category, fields in mapping.items():
         transformed[category] = [
@@ -23,15 +37,17 @@ def transform_field(field, data):
         'organisers': get_organisers,
         'url': get_url,
     }
-    try:
-        transformed = functions[field](data)
-        # TODO: remove this after all (current) field transformations have been implemented
-        #       and replace with an Exception / log line / admin mail notification(?)
-        if settings.DEBUG and not transformed:
-            print('not transformed:', field, data.get(field))
-    except KeyError as e:
-        raise e
 
+    field_transformer = functions.get(field)
+    # TODO: remove this after all (current) field transformations have been implemented
+    #       and replace with an Exception / log line / admin mail notification(?)
+    if settings.DEBUG and not field_transformer:
+        logger.error(
+            f'No transformation function is available for field: {{"{field}": "{data.get(field)}"}}'
+        )
+        raise FieldTransformerMissingError(field)
+
+    transformed = functions[field](data)
     return transformed
 
 

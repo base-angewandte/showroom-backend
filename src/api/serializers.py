@@ -3,7 +3,11 @@ from rest_framework import serializers
 from core.models import Activity, Album, Entity, Media
 
 from .repositories import portfolio
-from .repositories.portfolio import transform
+from .repositories.portfolio import (
+    FieldTransformerMissingError,
+    MappingNotFoundError,
+    transform,
+)
 
 abstract_showroom_object_fields = [
     'id',
@@ -69,10 +73,21 @@ class ActivitySerializer(serializers.ModelSerializer):
         print(schema)
         try:
             transformed = transform.transform_data(repo_data['data'], schema)
-        except KeyError as e:
+        except MappingNotFoundError as e:
             # TODO: check why we the 500 response code is ignored and turned into a 400
             raise serializers.ValidationError(
-                {'server error': f'Missing transform function for field: {e}'}, code=500
+                {
+                    'server error': f'No mapping is available to transform entry of type: {e}'
+                },
+                code=500,
+            )
+        except FieldTransformerMissingError as e:
+            # TODO: check why we the 500 response code is ignored and turned into a 400
+            raise serializers.ValidationError(
+                {
+                    'server error': f'No transformation function is available for field: {e}'
+                },
+                code=500,
             )
         new_data.update(transformed)
         return super().to_internal_value(new_data)

@@ -15,6 +15,14 @@ ACTIVE_TUPLES = []
 LANGUAGES = ['de', 'en']
 
 
+class MappingNotFoundError(Exception):
+    pass
+
+
+class FieldTransformerMissingError(Exception):
+    pass
+
+
 def init():
     for schema in settings.ACTIVE_SCHEMAS:
         members = get_collection_members(
