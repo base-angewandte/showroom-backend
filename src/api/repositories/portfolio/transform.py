@@ -181,11 +181,36 @@ def get_date_range_time_range_location(data):
 
 
 def get_organisers(data):
-    return data.get('organisers')
+    organisers = data.get('organisers')
+    lines = [c['label'] for c in organisers]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(organisers) > 1:
+            label = get_altlabel('organiser_management', lang=lang)
+        else:
+            label = get_preflabel('organiser_management', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
 
 
 def get_url(data):
-    return data.get('url')
+    url = data.get('url')
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': 'URL',
+            'data': {
+                'label': 'www',
+                'value': url,
+                'url': url,
+            },
+        }
+    return transformed
 
 
 # def get_(data):
