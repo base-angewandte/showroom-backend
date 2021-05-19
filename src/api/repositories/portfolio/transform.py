@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 def transform_data(data, schema):
     mapping = map(schema)
+    print(data)
     if not mapping:
         logger.error(f'No mapping is available to transform entry of type: {schema}')
         raise MappingNotFoundError(schema)
 
     transformed = {}
     for category, fields in mapping.items():
-        transformed[category] = [
-            transform_field(field, data) for field in fields if data.get(field)
-        ]
+        transformed[category] = [transform_field(field, data) for field in fields]
+    print(transformed)
     return transformed
 
 
@@ -34,7 +34,11 @@ def transform_field(field, data):
         'contributors': get_contributors,
         'curators': get_curators,
         'date_range_time_range_location': get_date_range_time_range_location,
+        'headline': get_headline,
+        'keywords': get_keywords,
         'organisers': get_organisers,
+        'texts_with_types': get_texts_with_types,
+        'type': get_type,
         'url': get_url,
     }
 
@@ -69,7 +73,12 @@ def transform_field(field, data):
 
 
 def get_artists(data):
-    artists = data.get('artists')
+    try:
+        artists = data.get('data').get('artists')
+    except AttributeError:
+        return None
+    if not artists:
+        return None
 
     lines = [a['label'] for a in artists]
 
@@ -88,7 +97,13 @@ def get_artists(data):
 
 
 def get_contributors(data):
-    contributors = data.get('contributors')
+    try:
+        contributors = data.get('data').get('contributors')
+    except AttributeError:
+        return None
+    if not contributors:
+        return None
+
     lines = [c['label'] for c in contributors]
 
     transformed = {}
@@ -106,7 +121,13 @@ def get_contributors(data):
 
 
 def get_curators(data):
-    curators = data.get('curators')
+    try:
+        curators = data.get('data').get('curators')
+    except AttributeError:
+        return None
+    if not curators:
+        return None
+
     lines = [c['label'] for c in curators]
 
     transformed = {}
@@ -124,7 +145,13 @@ def get_curators(data):
 
 
 def get_date_range_time_range_location(data):
-    daterange = data.get('date_range_time_range_location')
+    try:
+        daterange = data.get('data').get('date_range_time_range_location')
+    except AttributeError:
+        return None
+    if not daterange:
+        return None
+
     line = ''
 
     """
@@ -196,8 +223,53 @@ def get_date_range_time_range_location(data):
     return transformed
 
 
+def get_headline(data):
+    title = data.get('title')
+    subtitle = data.get('subtitle')
+    if not title and not subtitle:
+        return None
+
+    headline = title + '. ' if title else ''
+    if subtitle:
+        headline += subtitle
+
+    # the headline is the same in all languages, therefore only using a default key
+    return {
+        'default': {
+            'label': headline,
+        }
+    }
+
+
+def get_keywords(data):
+    keywords = data.get('keywords')
+    if not keywords:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        keyword_labels = [
+            label for kw in keywords if (label := kw.get('label').get(lang))
+        ]
+        transformed[lang] = {
+            'label': '',
+            'data': {
+                'label': get_preflabel('keywords', lang=lang),
+                'value': ', '.join(keyword_labels),
+            },
+        }
+
+    return transformed
+
+
 def get_organisers(data):
-    organisers = data.get('organisers')
+    try:
+        organisers = data.get('data').get('organisers')
+    except AttributeError:
+        return None
+    if not organisers:
+        return None
+
     lines = [c['label'] for c in organisers]
 
     transformed = {}
@@ -214,8 +286,36 @@ def get_organisers(data):
     return transformed
 
 
+def get_texts_with_types(data):
+    print('TODO: text_with_types')  # TODO
+    return None
+
+
+def get_type(data):
+    typ = data.get('type')
+    if not typ:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        label = typ.get('label').get(lang)
+        if label:
+            transformed[lang] = {
+                'label': '',
+                'data': label,
+            }
+
+    return transformed
+
+
 def get_url(data):
-    url = data.get('url')
+    try:
+        url = data.get('data').get('url')
+    except AttributeError:
+        return None
+    if not url:
+        return None
+
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {

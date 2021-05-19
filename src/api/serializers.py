@@ -45,7 +45,6 @@ class ActivitySerializer(serializers.ModelSerializer):
         ]
 
     def to_internal_value(self, data):
-        print(data)
         new_data = {
             'source_repo_entry_id': data.get('source_repo_entry_id'),
             'source_repo': data.get('source_repo'),
@@ -70,9 +69,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 
         # now fetch the schema and apply transformations for the optimised display data
         schema = portfolio.get_schema(entry_type.get('source'))
-        print(schema)
         try:
-            transformed = transform.transform_data(repo_data['data'], schema)
+            transformed = transform.transform_data(repo_data, schema)
         except MappingNotFoundError as e:
             # TODO: check why we the 500 response code is ignored and turned into a 400
             raise serializers.ValidationError(
