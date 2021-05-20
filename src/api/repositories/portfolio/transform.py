@@ -16,15 +16,18 @@ logger = logging.getLogger(__name__)
 
 def transform_data(data, schema):
     mapping = map(schema)
-    print(data)
     if not mapping:
         logger.error(f'No mapping is available to transform entry of type: {schema}')
         raise MappingNotFoundError(schema)
 
     transformed = {}
     for category, fields in mapping.items():
-        transformed[category] = [transform_field(field, data) for field in fields]
-    print(transformed)
+        transformed[category] = []
+        for field in fields:
+            if type(tf := transform_field(field, data)) == list:
+                transformed[category].extend(tf)
+            elif tf:
+                transformed[category].append(tf)
     return transformed
 
 
@@ -68,8 +71,9 @@ def transform_field(field, data):
 # consume the provided data: https://base-angewandte.github.io/base-ui-components/#basetextlist
 #
 # The following field transformation functions should therefore always
-# return all localised versions of the above, in the format:
-# { 'en': CommonText, 'de': CommonText, ... }
+# return all localised versions of the above, either as a dict in the format of
+#   { 'en': CommonText, 'de': CommonText, ... }
+# or as a list of such dicts, if the data has to be transformed into separate CommonText fields
 
 
 def get_artists(data):
@@ -287,8 +291,17 @@ def get_organisers(data):
 
 
 def get_texts_with_types(data):
-    print('TODO: text_with_types')  # TODO
-    return None
+    texts = data.get('texts')
+    transformed = []
+    for text in texts:
+        t = {}
+        for localised_text in text.get('data'):
+            lang = localised_text.get('language').get('source')
+            # we want e.g. the 'en' out of 'http://base.uni-ak.ac.at/portfolio/languages/en'
+            lang = lang.split('/')[-1]
+            t[lang] = localised_text.get('text')
+        transformed.append(t)
+    return transformed
 
 
 def get_type(data):
