@@ -15,6 +15,25 @@ mapping = {
         ],
         'list': ['contributors'],
     },
+    'software': {
+        'primary_details': [
+            'headline',
+            'type',
+            'software_developers',
+            'date',
+            'open_source_license',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'programming_language',
+            'git_url',
+            'documentation_url',
+            'software_version',
+        ],
+        'list': ['contributors'],
+    },
     'empty_placeholder': {
         'primary_details': [],
         'secondary_details': [],

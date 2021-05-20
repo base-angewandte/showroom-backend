@@ -36,10 +36,17 @@ def transform_field(field, data):
         'artists': get_artists,
         'contributors': get_contributors,
         'curators': get_curators,
+        'date': get_date,
         'date_range_time_range_location': get_date_range_time_range_location,
+        'documentation_url': get_documentation_url,
+        'git_url': get_git_url,
         'headline': get_headline,
         'keywords': get_keywords,
+        'open_source_license': get_open_source_license,
         'organisers': get_organisers,
+        'programming_language': get_programming_language,
+        'software_developers': get_software_developers,
+        'software_version': get_software_version,
         'texts_with_types': get_texts_with_types,
         'type': get_type,
         'url': get_url,
@@ -74,6 +81,9 @@ def transform_field(field, data):
 # return all localised versions of the above, either as a dict in the format of
 #   { 'en': CommonText, 'de': CommonText, ... }
 # or as a list of such dicts, if the data has to be transformed into separate CommonText fields
+#
+# If the transformed data is translation independent the a 'default' language key can be used:
+#   { 'default': CommonText }
 
 
 def get_artists(data):
@@ -145,6 +155,23 @@ def get_curators(data):
             'data': lines,
         }
 
+    return transformed
+
+
+def get_date(data):
+    try:
+        date = data.get('data').get('date')
+    except AttributeError:
+        return None
+    if not date:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('date', lang=lang).capitalize(),
+            'data': date,
+        }
     return transformed
 
 
@@ -227,6 +254,48 @@ def get_date_range_time_range_location(data):
     return transformed
 
 
+def get_documentation_url(data):
+    try:
+        url = data.get('data').get('documentation_url')
+    except AttributeError:
+        return None
+    if not url:
+        return None
+
+    transformed = {
+        'default': {
+            'label': 'URL',
+            'data': {
+                'label': 'www',
+                'value': url,
+                'url': url,
+            },
+        },
+    }
+    return transformed
+
+
+def get_git_url(data):
+    try:
+        url = data.get('data').get('git_url')
+    except AttributeError:
+        return None
+    if not url:
+        return None
+
+    transformed = {
+        'default': {
+            'label': 'URL',
+            'data': {
+                'label': 'www',
+                'value': url,
+                'url': url,
+            },
+        },
+    }
+    return transformed
+
+
 def get_headline(data):
     title = data.get('title')
     subtitle = data.get('subtitle')
@@ -266,6 +335,23 @@ def get_keywords(data):
     return transformed
 
 
+def get_open_source_license(data):
+    try:
+        sw_license = data.get('data').get('open_source_license')
+    except AttributeError:
+        return None
+    if not sw_license:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('open_source_license', lang=lang).capitalize(),
+            'data': sw_license,
+        }
+    return transformed
+
+
 def get_organisers(data):
     try:
         organisers = data.get('data').get('organisers')
@@ -285,6 +371,65 @@ def get_organisers(data):
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
+        }
+
+    return transformed
+
+
+def get_programming_language(data):
+    try:
+        p_lang = data.get('data').get('programming_language')
+    except AttributeError:
+        return None
+    if not p_lang:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('programming_language', lang=lang).capitalize(),
+            'data': p_lang,
+        }
+    return transformed
+
+
+def get_software_developers(data):
+    try:
+        developers = data.get('data').get('software_developers')
+    except AttributeError:
+        return None
+    if not developers:
+        return None
+
+    lines = [dev['label'] for dev in developers]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(developers) > 1:
+            label = get_altlabel('software_developer', lang=lang)
+        else:
+            label = get_preflabel('software_developer', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_software_version(data):
+    try:
+        version = data.get('data').get('software_version')
+    except AttributeError:
+        return None
+    if not version:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('software_version', lang=lang).capitalize(),
+            'data': version,
         }
 
     return transformed
