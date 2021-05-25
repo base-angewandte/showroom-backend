@@ -275,16 +275,16 @@ class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(
+    create=extend_schema(
         tags=['public'],
         responses={
             200: view_spec.Responses.AutoComplete,
         },
     )
 )
-class AutocompleteViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Retrieves available autocomplete results for a specific string and
     filter."""
 
-    def list(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
