@@ -34,12 +34,13 @@ mapping = {
             'software_version',
         ],
         'list': ['contributors'],
-        'locations': ['combined_locations'],
+        # for entries of category software no location map should be shown
     },
     'empty_placeholder': {
         'primary_details': [],
         'secondary_details': [],
         'list': [],
+        'locations': ['combined_locations'],
     },
 }
 
