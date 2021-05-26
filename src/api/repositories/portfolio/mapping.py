@@ -14,6 +14,7 @@ mapping = {
             'organisers',
         ],
         'list': ['contributors'],
+        'locations': ['combined_locations'],
     },
     'software': {
         'primary_details': [
@@ -33,6 +34,7 @@ mapping = {
             'software_version',
         ],
         'list': ['contributors'],
+        'locations': ['combined_locations'],
     },
     'empty_placeholder': {
         'primary_details': [],

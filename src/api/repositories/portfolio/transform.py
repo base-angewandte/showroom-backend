@@ -34,6 +34,7 @@ def transform_data(data, schema):
 def transform_field(field, data):
     functions = {
         'artists': get_artists,
+        'combined_locations': get_combined_locations,
         'contributors': get_contributors,
         'curators': get_curators,
         'date': get_date,
@@ -107,6 +108,44 @@ def get_artists(data):
             'data': lines,
         }
 
+    return transformed
+
+
+def get_combined_locations(data):
+    transformed = []
+    if not (inner_data := data.get('data')):
+        return []
+
+    def extract_locations(items):
+        l_transformed = []
+        for item in items:
+            if locations := item.get('location'):
+                for location in locations:
+                    loc = {
+                        'coordinates': location.get('geometry').get('coordinates'),
+                        'data': [location.get('label')],
+                    }
+                    if street := location.get('street'):
+                        if hn := location.get('house_number'):
+                            street = f'{street} {hn}'
+                        loc['data'].append(street)
+                    if locality := location.get('locality'):
+                        if zip := location.get('postcode'):
+                            locality = f'{zip} {locality}'
+                        loc['data'].append(locality)
+                    if country := location.get('country'):
+                        loc['data'].append(country)
+                    l_transformed.append(loc)
+        return l_transformed
+
+    if dtl_ranges := inner_data.get('date_range_time_range_location'):
+        transformed.extend(extract_locations(dtl_ranges))
+    if date_locations := inner_data.get('date_location'):
+        transformed.extend(extract_locations(date_locations))
+    if do_locations := inner_data.get('date_opening_location'):
+        transformed.extend(extract_locations(do_locations))
+    if locations := inner_data.get('location'):
+        transformed.extend(extract_locations([{'location': locations}]))
     return transformed
 
 
