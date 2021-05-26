@@ -25,7 +25,6 @@ class AbstractShowroomObject(AbstractBaseModel):
     primary_details = JSONField(blank=True, null=True)
     secondary_details = JSONField(blank=True, null=True)
     locations = JSONField(blank=True, null=True)
-    dates = JSONField(blank=True, null=True)
     # TODO@review: is models.PROTECT the right constraint here?
     #   reasoning: we would not want to accidentally delete all objects of a repo only because a repo itself is deleted.
     #              as repo deletion will be a rare activity we could make sure that the admins explicitly delete or
