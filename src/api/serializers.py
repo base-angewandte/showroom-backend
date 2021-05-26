@@ -1,4 +1,10 @@
+import logging
+import sys
+from traceback import print_tb
+
 from rest_framework import serializers
+
+from django.conf import settings
 
 from core.models import Activity, Album, Entity, Media
 
@@ -8,6 +14,8 @@ from .repositories.portfolio import (
     MappingNotFoundError,
     transform,
 )
+
+logger = logging.getLogger(__name__)
 
 abstract_showroom_object_fields = [
     'id',
@@ -85,6 +93,22 @@ class ActivitySerializer(serializers.ModelSerializer):
                 {
                     'server error': f'No transformation function is available for field: {e}'
                 },
+                code=500,
+            )
+        except Exception as e:
+            if settings.DEBUG:
+                exc = sys.exc_info()
+                logger.error(
+                    f'Caught unexpected exception when trying to transform repo data: {e} ({exc[0]})'
+                )
+                print_tb(exc[2])
+            else:
+                logger.error(
+                    f'Caught unexpected exception when trying to transform repo data: {e}'
+                )
+            # TODO: check why we the 500 response code is ignored and turned into a 400
+            raise serializers.ValidationError(
+                {'server error': f'An unexpected error happened: {e}'},
                 code=500,
             )
         new_data.update(transformed)
