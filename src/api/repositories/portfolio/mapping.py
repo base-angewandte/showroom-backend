@@ -1,7 +1,29 @@
 mapping = {
-    'festival': {
+    'document_publication': {
         'primary_details': [
             'headline',  # consists of title and subtitle
+            'type',
+            'authors',
+            'editors',
+            'publisher_place_date',
+            'keywords',
+            'isbn_doi',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'volume_issue_pages',
+            'language_format_material_edition',
+        ],
+        'list': [
+            'published_in',
+            'contributors',
+        ],
+        # for entries of this type category no location map should be shown
+    },
+    'festival': {
+        'primary_details': [
+            'headline',
             'type',
             'artists',
             'curators',

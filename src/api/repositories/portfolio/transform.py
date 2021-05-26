@@ -34,18 +34,21 @@ def transform_data(data, schema):
 def transform_field(field, data):
     functions = {
         'artists': get_artists,
+        'authors': get_authors,
         'combined_locations': get_combined_locations,
         'contributors': get_contributors,
         'curators': get_curators,
         'date': get_date,
         'date_range_time_range_location': get_date_range_time_range_location,
         'documentation_url': get_documentation_url,
+        'editors': get_editors,
         'git_url': get_git_url,
         'headline': get_headline,
         'keywords': get_keywords,
         'open_source_license': get_open_source_license,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
+        'publisher_place_date': get_publisher_place_date,
         'software_developers': get_software_developers,
         'software_version': get_software_version,
         'texts_with_types': get_texts_with_types,
@@ -103,6 +106,30 @@ def get_artists(data):
             label = get_altlabel('artist', lang=lang)
         else:
             label = get_preflabel('artist', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_authors(data):
+    try:
+        authors = data.get('data').get('authors')
+    except AttributeError:
+        return None
+    if not authors:
+        return None
+
+    lines = [a['label'] for a in authors]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(authors) > 1:
+            label = get_altlabel('author', lang=lang)
+        else:
+            label = get_preflabel('author', lang=lang)
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
@@ -314,6 +341,30 @@ def get_documentation_url(data):
     return transformed
 
 
+def get_editors(data):
+    try:
+        editors = data.get('data').get('editors')
+    except AttributeError:
+        return None
+    if not editors:
+        return None
+
+    lines = [e['label'] for e in editors]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(editors) > 1:
+            label = get_altlabel('editor', lang=lang)
+        else:
+            label = get_preflabel('editor', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
 def get_git_url(data):
     try:
         url = data.get('data').get('git_url')
@@ -429,6 +480,36 @@ def get_programming_language(data):
             'label': get_preflabel('programming_language', lang=lang).capitalize(),
             'data': p_lang,
         }
+    return transformed
+
+
+def get_publisher_place_date(data):
+    if not (inner_data := data.get('data')):
+        return None
+
+    line = ''
+    if publishers := inner_data.get('publishers'):
+        p_list = [p.get('label') for p in publishers]
+        line = ', '.join(p_list)
+
+    if locations := inner_data.get('location'):
+        l_list = [loc.get('label') for loc in locations]
+        line = f'{line}, {", ".join(l_list)}'
+
+    if date := inner_data.get('date'):
+        line = f'{line}, {date}'
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(publishers) > 1:
+            label = get_altlabel('publisher', lang=lang)
+        else:
+            label = get_preflabel('publisher', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': line,
+        }
+
     return transformed
 
 
