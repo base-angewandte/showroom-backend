@@ -46,15 +46,18 @@ def transform_field(field, data):
         'headline': get_headline,
         'isbn_doi': get_isbn_doi,
         'keywords': get_keywords,
+        'language_format_material_edition': get_language_format_material_edition,
         'open_source_license': get_open_source_license,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
+        'published_in': get_published_in,
         'publisher_place_date': get_publisher_place_date,
         'software_developers': get_software_developers,
         'software_version': get_software_version,
         'texts_with_types': get_texts_with_types,
         'type': get_type,
         'url': get_url,
+        'volume_issue_pages': get_volume_issue_pages,
     }
 
     field_transformer = functions.get(field)
@@ -464,6 +467,41 @@ def get_keywords(data):
     return transformed
 
 
+def get_language_format_material_edition(data):
+    try:
+        languages = data.get('data').get('language')
+        formats = data.get('data').get('format')
+        materials = data.get('data').get('material')
+        edition = data.get('data').get('edition')
+    except AttributeError:
+        return None
+    if not languages and not formats and not materials and not edition:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': '',
+            'data': '',
+        }
+        if languages:
+            for language in languages:
+                transformed[lang]['data'] += f'{language["label"].get(lang)}, '
+        if formats:
+            for format_ in formats:
+                transformed[lang]['data'] += f'{format_["label"].get(lang)}, '
+        if materials:
+            for material in materials:
+                transformed[lang]['data'] += f'{material["label"].get(lang)}, '
+        if edition:
+            transformed[lang]['data'] += f'{edition}'
+        else:
+            # remove the trailing ", "
+            transformed[lang]['data'] = transformed[lang]['data'][:-2]
+
+    return transformed
+
+
 def get_open_source_license(data):
     try:
         sw_license = data.get('data').get('open_source_license')
@@ -519,6 +557,44 @@ def get_programming_language(data):
             'label': get_preflabel('programming_language', lang=lang).capitalize(),
             'data': p_lang,
         }
+    return transformed
+
+
+def get_published_in(data):
+    try:
+        published_in = data.get('data').get('published_in')
+        date = data.get('data').get('date')
+    except AttributeError:
+        return None
+    if not published_in:
+        return None
+
+    transformed = []
+    for pub in published_in:
+        t = {}
+        for lang in LANGUAGES:
+            label = get_preflabel('published_in', lang=lang)
+            line = ''
+            if editors := pub.get('editor'):
+                eds = [ed.get('label') for ed in editors]
+                line += ', '.join(eds) + ': '
+            if title := pub.get('title'):
+                line += title + '. '
+            if subtitle := pub.get('subtitle'):
+                line += subtitle + '. '
+            if publishers := pub.get('publisher'):
+                pubs = [p.get('label') for p in publishers]
+                line += ', '.join(pubs)
+            if date:
+                line += '. ' + date
+
+            t[lang] = {
+                'label': label.capitalize(),
+                'data': line,
+            }
+
+        transformed.append(t)
+
     return transformed
 
 
@@ -645,6 +721,31 @@ def get_url(data):
                 },
             ],
         }
+
+    return transformed
+
+
+def get_volume_issue_pages(data):
+    try:
+        volume_issue = data.get('data').get('volume')
+        pages = data.get('data').get('pages')
+    except AttributeError:
+        return None
+    if not volume_issue and not pages:
+        return None
+
+    transformed = {
+        'default': {
+            'label': '',
+            'data': '',
+        }
+    }
+    if volume_issue:
+        transformed['default']['data'] += f'{volume_issue}'
+    if volume_issue and pages:
+        transformed['default']['data'] += ', '
+    if pages:
+        transformed['default']['data'] += f'{pages}'
 
     return transformed
 
