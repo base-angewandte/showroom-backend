@@ -332,11 +332,13 @@ def get_documentation_url(data):
     transformed = {
         'default': {
             'label': 'URL',
-            'data': {
-                'label': 'www',
-                'value': url,
-                'url': url,
-            },
+            'data': [
+                {
+                    'label': 'www',
+                    'value': url,
+                    'url': url,
+                },
+            ],
         },
     }
     return transformed
@@ -377,11 +379,13 @@ def get_git_url(data):
     transformed = {
         'default': {
             'label': 'URL',
-            'data': {
-                'label': 'www',
-                'value': url,
-                'url': url,
-            },
+            'data': [
+                {
+                    'label': 'www',
+                    'value': url,
+                    'url': url,
+                },
+            ],
         },
     }
     return transformed
@@ -436,7 +440,6 @@ def get_isbn_doi(data):
             }
         )
 
-    print(transformed)
     return transformed
 
 
@@ -634,12 +637,15 @@ def get_url(data):
     for lang in LANGUAGES:
         transformed[lang] = {
             'label': 'URL',
-            'data': {
-                'label': 'www',
-                'value': url,
-                'url': url,
-            },
+            'data': [
+                {
+                    'label': 'www',
+                    'value': url,
+                    'url': url,
+                },
+            ],
         }
+
     return transformed
 
 
