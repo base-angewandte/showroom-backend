@@ -44,6 +44,7 @@ def transform_field(field, data):
         'editors': get_editors,
         'git_url': get_git_url,
         'headline': get_headline,
+        'isbn_doi': get_isbn_doi,
         'keywords': get_keywords,
         'open_source_license': get_open_source_license,
         'organisers': get_organisers,
@@ -402,6 +403,41 @@ def get_headline(data):
             'label': headline,
         }
     }
+
+
+def get_isbn_doi(data):
+    try:
+        isbn = data.get('data').get('isbn')
+        doi = data.get('data').get('doi')
+    except AttributeError:
+        return None
+    if not isbn and not doi:
+        return None
+
+    transformed = {
+        'default': {
+            'label': '',
+            'data': [],
+        },
+    }
+    if isbn:
+        transformed['default']['data'].append(
+            {
+                'label': 'ISBN',
+                'value': isbn,
+            }
+        )
+    if doi:
+        transformed['default']['data'].append(
+            {
+                'label': 'DOI',
+                'value': doi,
+                'url': f'https://dx.doi.org/{doi}',
+            }
+        )
+
+    print(transformed)
+    return transformed
 
 
 def get_keywords(data):
