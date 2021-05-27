@@ -24,7 +24,6 @@ abstract_showroom_object_fields = [
     'primary_details',
     'secondary_details',
     'locations',
-    'dates',
     'source_repo',
     'source_repo_entry_id',
 ]
