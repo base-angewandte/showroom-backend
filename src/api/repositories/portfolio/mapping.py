@@ -38,6 +38,25 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'film_video': {
+        'primary_details': [
+            'headline',
+            'type',
+            'directors',
+            'date_location_description',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'isan',
+            'material_format',
+            'duration',
+            'language',
+        ],
+        'list': ['contributors'],
+        # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
+    },
     'image': {
         'primary_details': [
             'headline',

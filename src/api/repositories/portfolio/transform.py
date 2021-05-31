@@ -40,14 +40,20 @@ def transform_field(field, data):
         'curators': get_curators,
         'date': get_date,
         'date_location': get_date_location,
+        'date_location_description': get_date_location_description,
         'date_range_time_range_location': get_date_range_time_range_location,
+        'directors': get_directors,
         'documentation_url': get_documentation_url,
+        'duration': get_duration,
         'editors': get_editors,
         'git_url': get_git_url,
         'headline': get_headline,
+        'isan': get_isan,
         'isbn_doi': get_isbn_doi,
         'keywords': get_keywords,
+        'language': get_language,
         'language_format_material_edition': get_language_format_material_edition,
+        'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
         'open_source_license': get_open_source_license,
         'organisers': get_organisers,
@@ -247,7 +253,7 @@ def get_date(data):
     return transformed
 
 
-def get_date_location(data):
+def get_date_location(data, with_description=False):
     try:
         date_loc = data.get('data').get('date_location')
     except AttributeError:
@@ -263,6 +269,8 @@ def get_date_location(data):
             for location in locations:
                 if loc_label := location.get('label'):
                     line += loc_label + ', '
+        if with_description and (loc_desc := dl.get('location_description')):
+            line += loc_desc + ', '
     if line:
         line = line[:-2]  # remove trailing ', '
 
@@ -280,6 +288,10 @@ def get_date_location(data):
         }
 
     return transformed
+
+
+def get_date_location_description(data):
+    return get_date_location(data, with_description=True)
 
 
 def get_date_range_time_range_location(data):
@@ -361,6 +373,30 @@ def get_date_range_time_range_location(data):
     return transformed
 
 
+def get_directors(data):
+    try:
+        directors = data.get('data').get('directors')
+    except AttributeError:
+        return None
+    if not directors:
+        return None
+
+    lines = [d['label'] for d in directors]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(directors) > 1:
+            label = get_altlabel('director', lang=lang)
+        else:
+            label = get_preflabel('director', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
 def get_documentation_url(data):
     try:
         url = data.get('data').get('documentation_url')
@@ -381,6 +417,25 @@ def get_documentation_url(data):
             ],
         },
     }
+    return transformed
+
+
+def get_duration(data):
+    try:
+        duration = data.get('data').get('duration')
+    except AttributeError:
+        return None
+    if not duration:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        label = get_preflabel('duration', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': duration,
+        }
+
     return transformed
 
 
@@ -449,6 +504,29 @@ def get_headline(data):
     }
 
 
+def get_isan(data):
+    try:
+        isan = data.get('data').get('isan')
+    except AttributeError:
+        return None
+    if not isan:
+        return None
+
+    transformed = {
+        'default': {
+            'label': '',
+            'data': [
+                {
+                    'label': 'ISAN',
+                    'value': isan,
+                },
+            ],
+        },
+    }
+
+    return transformed
+
+
 def get_isbn_doi(data):
     try:
         isbn = data.get('data').get('isbn')
@@ -504,6 +582,28 @@ def get_keywords(data):
     return transformed
 
 
+def get_language(data):
+    try:
+        languages = data.get('data').get('language')
+    except AttributeError:
+        return None
+    if not languages:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': '',
+            'data': '',
+        }
+        for language in languages:
+            transformed[lang]['data'] += f'{language["label"].get(lang)}, '
+        # remove the trailing ', '
+        transformed[lang]['data'] = transformed[lang]['data'][:-2]
+
+    return transformed
+
+
 def get_language_format_material_edition(data):
     try:
         languages = data.get('data').get('language')
@@ -539,7 +639,7 @@ def get_language_format_material_edition(data):
     return transformed
 
 
-def get_material_format_dimensions(data):
+def get_material_format(data, with_dimensions=False):
     try:
         formats = data.get('data').get('format')
         materials = data.get('data').get('material')
@@ -561,13 +661,17 @@ def get_material_format_dimensions(data):
         if formats:
             for format_ in formats:
                 transformed[lang]['data'] += f'{format_["label"].get(lang)}, '
-        if dimensions:
+        if with_dimensions and dimensions:
             transformed[lang]['data'] += f'{dimensions}'
         else:
             # remove the trailing ", "
             transformed[lang]['data'] = transformed[lang]['data'][:-2]
 
     return transformed
+
+
+def get_material_format_dimensions(data):
+    return get_material_format(data, with_dimensions=True)
 
 
 def get_open_source_license(data):
