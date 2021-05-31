@@ -39,6 +39,7 @@ def transform_field(field, data):
         'contributors': get_contributors,
         'curators': get_curators,
         'date': get_date,
+        'date_location': get_date_location,
         'date_range_time_range_location': get_date_range_time_range_location,
         'documentation_url': get_documentation_url,
         'editors': get_editors,
@@ -47,6 +48,7 @@ def transform_field(field, data):
         'isbn_doi': get_isbn_doi,
         'keywords': get_keywords,
         'language_format_material_edition': get_language_format_material_edition,
+        'material_format_dimensions': get_material_format_dimensions,
         'open_source_license': get_open_source_license,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
@@ -242,6 +244,41 @@ def get_date(data):
             'label': get_preflabel('date', lang=lang).capitalize(),
             'data': date,
         }
+    return transformed
+
+
+def get_date_location(data):
+    try:
+        date_loc = data.get('data').get('date_location')
+    except AttributeError:
+        return None
+    if not date_loc:
+        return None
+
+    line = ''
+    for dl in date_loc:
+        if date := dl.get('date'):
+            line += date + ', '
+        if locations := dl.get('location'):
+            for location in locations:
+                if loc_label := location.get('label'):
+                    line += loc_label + ', '
+    if line:
+        line = line[:-2]  # remove trailing ', '
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(date_loc) > 1:
+            label_date = get_altlabel('date', lang=lang)
+            label_loc = get_altlabel('location', lang=lang)
+        else:
+            label_date = get_preflabel('date', lang=lang)
+            label_loc = get_preflabel('location', lang=lang)
+        transformed[lang] = {
+            'label': f'{label_date.capitalize()}, {label_loc.capitalize()}',
+            'data': line,
+        }
+
     return transformed
 
 
@@ -495,6 +532,37 @@ def get_language_format_material_edition(data):
                 transformed[lang]['data'] += f'{material["label"].get(lang)}, '
         if edition:
             transformed[lang]['data'] += f'{edition}'
+        else:
+            # remove the trailing ", "
+            transformed[lang]['data'] = transformed[lang]['data'][:-2]
+
+    return transformed
+
+
+def get_material_format_dimensions(data):
+    try:
+        formats = data.get('data').get('format')
+        materials = data.get('data').get('material')
+        dimensions = data.get('data').get('dimensions')
+    except AttributeError:
+        return None
+    if not formats and not materials and not dimensions:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': '',
+            'data': '',
+        }
+        if materials:
+            for material in materials:
+                transformed[lang]['data'] += f'{material["label"].get(lang)}, '
+        if formats:
+            for format_ in formats:
+                transformed[lang]['data'] += f'{format_["label"].get(lang)}, '
+        if dimensions:
+            transformed[lang]['data'] += f'{dimensions}'
         else:
             # remove the trailing ", "
             transformed[lang]['data'] = transformed[lang]['data'][:-2]

@@ -38,6 +38,22 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'image': {
+        'primary_details': [
+            'headline',
+            'type',
+            'artists',
+            'date_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'material_format_dimensions',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'software': {
         'primary_details': [
             'headline',
