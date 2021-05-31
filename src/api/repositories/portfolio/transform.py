@@ -42,6 +42,7 @@ def transform_field(field, data):
         'date': get_date,
         'date_location': get_date_location,
         'date_location_description': get_date_location_description,
+        'date_opening_location': get_date_opening_location,
         'date_range_time_range_location': get_date_range_time_range_location,
         'dimensions': get_dimensions,
         'directors': get_directors,
@@ -58,6 +59,7 @@ def transform_field(field, data):
         'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
         'open_source_license': get_open_source_license,
+        'opening': get_opening,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
         'published_in': get_published_in,
@@ -318,6 +320,50 @@ def get_date_location(data, with_description=False):
 
 def get_date_location_description(data):
     return get_date_location(data, with_description=True)
+
+
+def get_date_opening_location(data):
+    try:
+        date_loc = data.get('data').get('date_opening_location')
+    except AttributeError:
+        return None
+    if not date_loc:
+        return None
+
+    transformed = []
+    for dl in date_loc:
+        line = ''
+        if date := dl.get('date'):
+            date_from = date.get('date_from')
+            date_to = date.get('date_to')
+            if date_from:
+                line += date_from
+            if date_from and date_to:
+                line += ' - '
+            if date_to:
+                line += date_to
+
+        if loc := dl.get('location'):
+            if line:
+                line += ', '
+            locations = [location.get('label') for location in loc]
+            line += ', '.join(locations)
+
+        if loc_desc := dl.get('location_description'):
+            if line:
+                line += ', '
+            line += loc_desc
+
+        transformed.append(
+            {
+                'default': {
+                    'label': '',
+                    'data': line,
+                }
+            }
+        )
+
+    return transformed
 
 
 def get_date_range_time_range_location(data):
@@ -733,6 +779,35 @@ def get_open_source_license(data):
             'label': get_preflabel('open_source_license', lang=lang).capitalize(),
             'data': sw_license,
         }
+    return transformed
+
+
+def get_opening(data):
+    try:
+        date_loc = data.get('data').get('date_opening_location')
+    except AttributeError:
+        return None
+    if not date_loc:
+        return None
+
+    transformed = []
+    for dl in date_loc:
+        if opening := dl.get('opening'):
+            t = {}
+            for lang in LANGUAGES:
+                date = opening.get('date')
+                time_from = opening.get('time_from')
+                time_to = opening.get('time_to')
+                time = (
+                    '-'.join(filter(None, [time_from, time_to])) if time_from else None
+                )
+                line = ' '.join(filter(None, [date, time]))
+                t[lang] = {
+                    'label': get_preflabel('opening', lang=lang).capitalize(),
+                    'data': line,
+                }
+            transformed.append(t)
+
     return transformed
 
 

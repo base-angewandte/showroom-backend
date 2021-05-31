@@ -60,6 +60,23 @@ mapping = {
         ],
         # for entries of this type category no location map should be shown
     },
+    'exhibition': {
+        'primary_details': [
+            'headline',
+            'type',
+            'artists',
+            'curators',
+            'date_opening_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'opening',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'festival': {
         'primary_details': [
             'headline',
