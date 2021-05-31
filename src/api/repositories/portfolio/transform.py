@@ -33,6 +33,7 @@ def transform_data(data, schema):
 
 def transform_field(field, data):
     functions = {
+        'architecture': get_architecture,
         'artists': get_artists,
         'authors': get_authors,
         'combined_locations': get_combined_locations,
@@ -101,6 +102,30 @@ def transform_field(field, data):
 #
 # If the transformed data is translation independent the a 'default' language key can be used:
 #   { 'default': CommonText }
+
+
+def get_architecture(data):
+    try:
+        architectures = data.get('data').get('architecture')
+    except AttributeError:
+        return None
+    if not architectures:
+        return None
+
+    lines = [a['label'] for a in architectures]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(architectures) > 1:
+            label = get_altlabel('architecture', lang=lang)
+        else:
+            label = get_preflabel('architecture', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
 
 
 def get_artists(data):

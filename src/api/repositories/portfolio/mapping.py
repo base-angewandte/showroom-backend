@@ -1,4 +1,21 @@
 mapping = {
+    'architecture': {
+        'primary_details': [
+            'headline',
+            'type',
+            'architecture',
+            'date_location_description',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'material_format',
+            'dimensions',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'audio': {
         'primary_details': [
             'headline',
