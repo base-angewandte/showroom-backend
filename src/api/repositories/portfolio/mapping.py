@@ -1,4 +1,23 @@
 mapping = {
+    'audio': {
+        'primary_details': [
+            'headline',
+            'type',
+            'authors',
+            'artists',
+            'date_location_description',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'material_format',
+            'duration',
+            'language',
+        ],
+        'list': ['contributors'],
+        # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
+    },
     'document_publication': {
         'primary_details': [
             'headline',  # consists of title and subtitle
