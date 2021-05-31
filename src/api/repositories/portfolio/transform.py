@@ -37,6 +37,8 @@ def transform_field(field, data):
         'artists': get_artists,
         'authors': get_authors,
         'combined_locations': get_combined_locations,
+        'composition': get_composition,
+        'conductors': get_conductors,
         'contributors': get_contributors,
         'curators': get_curators,
         'date': get_date,
@@ -44,6 +46,7 @@ def transform_field(field, data):
         'date_location_description': get_date_location_description,
         'date_opening_location': get_date_opening_location,
         'date_range_time_range_location': get_date_range_time_range_location,
+        'date_time_range_location': get_date_time_range_location,
         'dimensions': get_dimensions,
         'directors': get_directors,
         'documentation_url': get_documentation_url,
@@ -58,6 +61,7 @@ def transform_field(field, data):
         'language_format_material_edition': get_language_format_material_edition,
         'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
+        'music': get_music,
         'open_source_license': get_open_source_license,
         'opening': get_opening,
         'organisers': get_organisers,
@@ -213,6 +217,54 @@ def get_combined_locations(data):
         transformed.extend(extract_locations(do_locations))
     if locations := inner_data.get('location'):
         transformed.extend(extract_locations([{'location': locations}]))
+    return transformed
+
+
+def get_composition(data):
+    try:
+        composition = data.get('data').get('composition')
+    except AttributeError:
+        return None
+    if not composition:
+        return None
+
+    lines = [c['label'] for c in composition]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(composition) > 1:
+            label = get_altlabel('composition', lang=lang)
+        else:
+            label = get_preflabel('composition', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_conductors(data):
+    try:
+        conductors = data.get('data').get('conductors')
+    except AttributeError:
+        return None
+    if not conductors:
+        return None
+
+    lines = [c['label'] for c in conductors]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(conductors) > 1:
+            label = get_altlabel('conductor', lang=lang)
+        else:
+            label = get_preflabel('conductor', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
     return transformed
 
 
@@ -441,6 +493,48 @@ def get_date_range_time_range_location(data):
             'label': label.capitalize(),
             'data': line,
         }
+
+    return transformed
+
+
+def get_date_time_range_location(data):
+    try:
+        date_loc = data.get('data').get('date_time_range_location')
+    except AttributeError:
+        return None
+    if not date_loc:
+        return None
+
+    transformed = []
+    for dl in date_loc:
+        line = ''
+        if date := dl.get('date'):
+            if date_string := date.get('date'):
+                line += date_string
+                if time_from := date.get('time_from'):
+                    line += f' {time_from}'
+                    if time_to := date.get('time_to'):
+                        line += f'-{time_to}'
+
+        if loc := dl.get('location'):
+            if line:
+                line += ', '
+            locations = [location.get('label') for location in loc]
+            line += ', '.join(locations)
+
+        if loc_desc := dl.get('location_description'):
+            if line:
+                line += ', '
+            line += loc_desc
+
+        transformed.append(
+            {
+                'default': {
+                    'label': '',
+                    'data': line,
+                }
+            }
+        )
 
     return transformed
 
@@ -763,6 +857,30 @@ def get_material_format(data, with_dimensions=False):
 
 def get_material_format_dimensions(data):
     return get_material_format(data, with_dimensions=True)
+
+
+def get_music(data):
+    try:
+        musics = data.get('data').get('music')
+    except AttributeError:
+        return None
+    if not musics:
+        return None
+
+    lines = [m['label'] for m in musics]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(musics) > 1:
+            label = get_altlabel('music', lang=lang)
+        else:
+            label = get_preflabel('music', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
 
 
 def get_open_source_license(data):

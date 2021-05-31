@@ -38,6 +38,24 @@ mapping = {
         ],
         # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
     },
+    'concert': {
+        'primary_details': [
+            'headline',
+            'type',
+            'music',
+            'composition',
+            'date_time_range_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'conductors',
+            'opening',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'document_publication': {
         'primary_details': [
             'headline',  # consists of title and subtitle
