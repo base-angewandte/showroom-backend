@@ -741,31 +741,40 @@ def get_published_in(data):
     if not published_in:
         return None
 
-    transformed = []
-    for pub in published_in:
-        t = {}
+    if type(published_in) == str:
+        transformed = {}
         for lang in LANGUAGES:
             label = get_preflabel('published_in', lang=lang)
-            line = ''
-            if editors := pub.get('editor'):
-                eds = [ed.get('label') for ed in editors]
-                line += ', '.join(eds) + ': '
-            if title := pub.get('title'):
-                line += title + '. '
-            if subtitle := pub.get('subtitle'):
-                line += subtitle + '. '
-            if publishers := pub.get('publisher'):
-                pubs = [p.get('label') for p in publishers]
-                line += ', '.join(pubs)
-            if date:
-                line += '. ' + date
-
-            t[lang] = {
+            transformed[lang] = {
                 'label': label.capitalize(),
-                'data': line,
+                'data': published_in,
             }
+    else:
+        transformed = []
+        for pub in published_in:
+            t = {}
+            for lang in LANGUAGES:
+                label = get_preflabel('published_in', lang=lang)
+                line = ''
+                if editors := pub.get('editor'):
+                    eds = [ed.get('label') for ed in editors]
+                    line += ', '.join(eds) + ': '
+                if title := pub.get('title'):
+                    line += title + '. '
+                if subtitle := pub.get('subtitle'):
+                    line += subtitle + '. '
+                if publishers := pub.get('publisher'):
+                    pubs = [p.get('label') for p in publishers]
+                    line += ', '.join(pubs)
+                if date:
+                    line += '. ' + date
 
-        transformed.append(t)
+                t[lang] = {
+                    'label': label.capitalize(),
+                    'data': line,
+                }
+
+            transformed.append(t)
 
     return transformed
 
