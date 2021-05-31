@@ -42,6 +42,7 @@ def transform_field(field, data):
         'date_location': get_date_location,
         'date_location_description': get_date_location_description,
         'date_range_time_range_location': get_date_range_time_range_location,
+        'dimensions': get_dimensions,
         'directors': get_directors,
         'documentation_url': get_documentation_url,
         'duration': get_duration,
@@ -368,6 +369,25 @@ def get_date_range_time_range_location(data):
         transformed[lang] = {
             'label': label.capitalize(),
             'data': line,
+        }
+
+    return transformed
+
+
+def get_dimensions(data):
+    try:
+        dimensions = data.get('data').get('dimensions')
+    except AttributeError:
+        return None
+    if not dimensions:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        label = get_preflabel('dimensions', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': dimensions,
         }
 
     return transformed
