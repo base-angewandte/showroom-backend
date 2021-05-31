@@ -15,7 +15,10 @@ mapping = {
             'duration',
             'language',
         ],
-        'list': ['contributors'],
+        'list': [
+            'contributors',
+            'published_in',
+        ],
         # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
     },
     'document_publication': {
@@ -73,7 +76,10 @@ mapping = {
             'duration',
             'language',
         ],
-        'list': ['contributors'],
+        'list': [
+            'contributors',
+            'published_in',
+        ],
         # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
     },
     'image': {
@@ -88,6 +94,23 @@ mapping = {
         'secondary_details': [
             'texts_with_types',
             'material_format_dimensions',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
+    'sculpture': {
+        'primary_details': [
+            'headline',
+            'type',
+            'artists',
+            'date_location_description',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'material_format',
+            'dimensions',
         ],
         'list': ['contributors'],
         'locations': ['combined_locations'],
