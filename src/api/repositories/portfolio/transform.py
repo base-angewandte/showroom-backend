@@ -41,6 +41,7 @@ def transform_field(field, data):
         'category': get_category,
         'combined_locations': get_combined_locations,
         'composition': get_composition,
+        'commissions': get_commissions,
         'conductors': get_conductors,
         'contributors': get_contributors,
         'curators': get_curators,
@@ -51,6 +52,7 @@ def transform_field(field, data):
         'date_range': get_date_range,
         'date_range_time_range_location': get_date_range_time_range_location,
         'date_time_range_location': get_date_time_range_location,
+        'design': get_design,
         'dimensions': get_dimensions,
         'directors': get_directors,
         'documentation_url': get_documentation_url,
@@ -315,6 +317,30 @@ def get_combined_locations(data):
         transformed.extend(extract_locations(do_locations))
     if locations := inner_data.get('location'):
         transformed.extend(extract_locations([{'location': locations}]))
+    return transformed
+
+
+def get_commissions(data):
+    try:
+        commissions = data.get('data').get('commissions')
+    except AttributeError:
+        return None
+    if not commissions:
+        return None
+
+    lines = [c['label'] for c in commissions]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(commissions) > 1:
+            label = get_altlabel('commissions_orders_for_works', lang=lang)
+        else:
+            label = get_preflabel('commissions_orders_for_works', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
     return transformed
 
 
@@ -670,6 +696,30 @@ def get_date_time_range_location(data):
                 }
             }
         )
+
+    return transformed
+
+
+def get_design(data):
+    try:
+        designers = data.get('data').get('design')
+    except AttributeError:
+        return None
+    if not designers:
+        return None
+
+    lines = [d['label'] for d in designers]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(designers) > 1:
+            label = get_altlabel('design', lang=lang)
+        else:
+            label = get_preflabel('design', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
 
     return transformed
 

@@ -108,6 +108,23 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'design': {
+        'primary_details': [
+            'headline',
+            'type',
+            'design',
+            'date_location_description',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'commissions',
+            'texts_with_types',
+            'material_format',
+        ],
+        'list': ['contributors'],
+        # for entries of category design no location map should be shown
+    },
     'document_publication': {
         'primary_details': [
             'headline',  # consists of title and subtitle
