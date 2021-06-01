@@ -59,6 +59,7 @@ def transform_field(field, data):
         'keywords': get_keywords,
         'language': get_language,
         'language_format_material_edition': get_language_format_material_edition,
+        'lecturers': get_lecturers,
         'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
         'music': get_music,
@@ -820,6 +821,30 @@ def get_language_format_material_edition(data):
         else:
             # remove the trailing ", "
             transformed[lang]['data'] = transformed[lang]['data'][:-2]
+
+    return transformed
+
+
+def get_lecturers(data):
+    try:
+        lecturers = data.get('data').get('lecturers')
+    except AttributeError:
+        return None
+    if not lecturers:
+        return None
+
+    lines = [c['label'] for c in lecturers]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(lecturers) > 1:
+            label = get_altlabel('lecturer', lang=lang)
+        else:
+            label = get_preflabel('lecturer', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
 
     return transformed
 

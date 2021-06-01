@@ -56,6 +56,22 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'conference': {
+        'primary_details': [
+            'headline',
+            'type',
+            'organisers',
+            'date_range_time_range_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'lecturers',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'document_publication': {
         'primary_details': [
             'headline',  # consists of title and subtitle
