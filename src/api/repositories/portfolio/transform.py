@@ -72,6 +72,7 @@ def transform_field(field, data):
         'software_developers': get_software_developers,
         'software_version': get_software_version,
         'texts_with_types': get_texts_with_types,
+        'title_of_event': get_title_of_event,
         'type': get_type,
         'url': get_url,
         'volume_issue_pages': get_volume_issue_pages,
@@ -1125,6 +1126,25 @@ def get_texts_with_types(data):
             lang = lang.split('/')[-1]
             t[lang] = localised_text.get('text')
         transformed.append(t)
+    return transformed
+
+
+def get_title_of_event(data):
+    try:
+        title = data.get('data').get('title_of_event')
+    except AttributeError:
+        return None
+    if not title:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        label = get_preflabel('title_of_event', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': title,
+        }
+
     return transformed
 
 
