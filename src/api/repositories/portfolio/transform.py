@@ -50,6 +50,7 @@ def transform_field(field, data):
         'date_location_description': get_date_location_description,
         'date_opening_location': get_date_opening_location,
         'date_range': get_date_range,
+        'date_range_location': get_date_range_location,
         'date_range_time_range_location': get_date_range_time_range_location,
         'date_time_range_location': get_date_time_range_location,
         'design': get_design,
@@ -58,6 +59,7 @@ def transform_field(field, data):
         'documentation_url': get_documentation_url,
         'duration': get_duration,
         'editors': get_editors,
+        'fellow': get_fellow,
         'format': get_format,
         'funding': get_funding,
         'funding_category': get_funding_category,
@@ -77,6 +79,7 @@ def transform_field(field, data):
         'music': get_music,
         'open_source_license': get_open_source_license,
         'opening': get_opening,
+        'organisations': get_organisations,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
         'project_lead': get_project_lead,
@@ -579,9 +582,16 @@ def get_date_range(data):
     return transformed
 
 
-def get_date_range_time_range_location(data):
+def get_date_range_location(data):
+    return get_date_range_time_range_location(data, data_field='date_range_location')
+
+
+def get_date_range_time_range_location(data, data_field=None):
     try:
-        daterange = data.get('data').get('date_range_time_range_location')
+        if data_field:
+            daterange = data.get('data').get(data_field)
+        else:
+            daterange = data.get('data').get('date_range_time_range_location')
     except AttributeError:
         return None
     if not daterange:
@@ -825,6 +835,30 @@ def get_editors(data):
             label = get_altlabel('editor', lang=lang)
         else:
             label = get_preflabel('editor', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_fellow(data):
+    try:
+        fellows = data.get('data').get('fellow_scholar')
+    except AttributeError:
+        return None
+    if not fellows:
+        return None
+
+    lines = [f['label'] for f in fellows]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(fellows) > 1:
+            label = get_altlabel('fellow_scholar', lang=lang)
+        else:
+            label = get_preflabel('fellow_scholar', lang=lang)
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
@@ -1280,6 +1314,30 @@ def get_opening(data):
                     'data': line,
                 }
             transformed.append(t)
+
+    return transformed
+
+
+def get_organisations(data):
+    try:
+        organisations = data.get('data').get('organisations')
+    except AttributeError:
+        return None
+    if not organisations:
+        return None
+
+    lines = [o['label'] for o in organisations]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(organisations) > 1:
+            label = get_altlabel('organisation', lang=lang)
+        else:
+            label = get_preflabel('organisation', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
 
     return transformed
 

@@ -176,6 +176,24 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'fellowship_visiting_affiliation': {
+        'primary_details': [
+            'headline',
+            'type',
+            'fellow',
+            'date_range_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'commissions',
+            'funding',
+            'organisations',
+            'texts_with_types',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'festival': {
         'primary_details': [
             'headline',
@@ -302,12 +320,6 @@ mapping = {
         ],
         'list': ['contributors'],
         # for entries of category software no location map should be shown
-    },
-    'empty_placeholder': {
-        'primary_details': [],
-        'secondary_details': [],
-        'list': [],
-        'locations': ['combined_locations'],
     },
 }
 
