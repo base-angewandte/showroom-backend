@@ -36,7 +36,7 @@ mapping = {
             'contributors',
             'published_in',
         ],
-        # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
+        # for entries of category audio no location map should be shown
     },
     'concert': {
         'primary_details': [
@@ -165,7 +165,7 @@ mapping = {
             'contributors',
             'published_in',
         ],
-        # 'locations': ['combined_locations'],  # TODO: not yet defined in the specs if we need this here
+        # for entries of category film/video no location map should be shown
     },
     'image': {
         'primary_details': [
