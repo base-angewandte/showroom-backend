@@ -366,7 +366,7 @@ def get_conductors(data):
     return transformed
 
 
-def get_contributors(data):
+def get_contributors(data, with_roles=True):
     try:
         contributors = data.get('data').get('contributors')
     except AttributeError:
@@ -374,7 +374,8 @@ def get_contributors(data):
     if not contributors:
         return None
 
-    lines = [c['label'] for c in contributors]
+    if not with_roles:
+        lines = [c['label'] for c in contributors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -382,6 +383,16 @@ def get_contributors(data):
             label = get_altlabel('contributor', lang=lang)
         else:
             label = get_preflabel('contributor', lang=lang)
+
+        if with_roles:
+            lines = []
+            for contributor in contributors:
+                line = contributor.get('label')
+                if roles := contributor.get('roles'):
+                    for role in roles:
+                        line += f' ({role.get("label").get(lang)})'
+                lines.append(line)
+
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
