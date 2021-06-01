@@ -130,6 +130,18 @@ mapping = {
         ],
         # for entries of this type category no location map should be shown
     },
+    'event': {  # is now labeled "activity", the potax id still collection_event
+        'primary_details': [
+            'headline',
+            'type',
+            'date_range_time_range_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': ['texts_with_types'],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'exhibition': {
         'primary_details': [
             'headline',
