@@ -45,6 +45,7 @@ def transform_field(field, data):
         'date_location': get_date_location,
         'date_location_description': get_date_location_description,
         'date_opening_location': get_date_opening_location,
+        'date_range': get_date_range,
         'date_range_time_range_location': get_date_range_time_range_location,
         'date_time_range_location': get_date_time_range_location,
         'dimensions': get_dimensions,
@@ -52,6 +53,8 @@ def transform_field(field, data):
         'documentation_url': get_documentation_url,
         'duration': get_duration,
         'editors': get_editors,
+        'funding': get_funding,
+        'funding_category': get_funding_category,
         'git_url': get_git_url,
         'headline': get_headline,
         'isan': get_isan,
@@ -67,6 +70,8 @@ def transform_field(field, data):
         'opening': get_opening,
         'organisers': get_organisers,
         'programming_language': get_programming_language,
+        'project_lead': get_project_lead,
+        'project_partners': get_project_partners,
         'published_in': get_published_in,
         'publisher_place_date': get_publisher_place_date,
         'software_developers': get_software_developers,
@@ -420,6 +425,32 @@ def get_date_opening_location(data):
     return transformed
 
 
+def get_date_range(data):
+    try:
+        daterange = data.get('data').get('date_range')
+    except AttributeError:
+        return None
+    if not daterange:
+        return None
+
+    # TODO: discuss: should duration only be shown if date_from is set. if not,
+    #       how should it be displayed? something like "Until {date_to}"?
+    if not (date_from := daterange.get('date_from')):
+        return None
+    line = date_from
+    if date_to := daterange.get('date_to'):
+        line += f' - {date_to}'
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('duration', lang=lang).capitalize(),
+            'data': line,
+        }
+
+    return transformed
+
+
 def get_date_range_time_range_location(data):
     try:
         daterange = data.get('data').get('date_range_time_range_location')
@@ -645,6 +676,48 @@ def get_editors(data):
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
+        }
+
+    return transformed
+
+
+def get_funding(data):
+    try:
+        funding = data.get('data').get('funding')
+    except AttributeError:
+        return None
+    if not funding:
+        return None
+
+    lines = [f['label'] for f in funding]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(funding) > 1:
+            label = get_altlabel('funding', lang=lang)
+        else:
+            label = get_preflabel('funding', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_funding_category(data):
+    try:
+        funding_category = data.get('data').get('funding_category')
+    except AttributeError:
+        return None
+    if not funding_category:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('funding_category', lang=lang).capitalize(),
+            'data': funding_category,
         }
 
     return transformed
@@ -993,6 +1066,54 @@ def get_programming_language(data):
             'label': get_preflabel('programming_language', lang=lang).capitalize(),
             'data': p_lang,
         }
+    return transformed
+
+
+def get_project_lead(data):
+    try:
+        project_leads = data.get('data').get('project_lead')
+    except AttributeError:
+        return None
+    if not project_leads:
+        return None
+
+    lines = [p['label'] for p in project_leads]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(project_leads) > 1:
+            label = get_altlabel('project_lead', lang=lang)
+        else:
+            label = get_preflabel('project_lead', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def get_project_partners(data):
+    try:
+        project_partners = data.get('data').get('project_partnership')
+    except AttributeError:
+        return None
+    if not project_partners:
+        return None
+
+    lines = [p['label'] for p in project_partners]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(project_partners) > 1:
+            label = get_altlabel('project_partnership', lang=lang)
+        else:
+            label = get_preflabel('project_partnership', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
     return transformed
 
 

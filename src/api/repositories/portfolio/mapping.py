@@ -183,6 +183,24 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'research_project': {
+        'primary_details': [
+            'headline',
+            'type',
+            'project_lead',
+            'project_partners',
+            'date_range',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'funding',
+            'funding_category',
+        ],
+        'list': ['contributors'],
+        # for entries of category research project no location map should be shown
+    },
     'sculpture': {
         'primary_details': [
             'headline',
