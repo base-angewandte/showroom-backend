@@ -56,6 +56,7 @@ def transform_field(field, data):
         'documentation_url': get_documentation_url,
         'duration': get_duration,
         'editors': get_editors,
+        'format': get_format,
         'funding': get_funding,
         'funding_category': get_funding_category,
         'git_url': get_git_url,
@@ -68,6 +69,7 @@ def transform_field(field, data):
         'language': get_language,
         'language_format_material_edition': get_language_format_material_edition,
         'lecturers': get_lecturers,
+        'material': get_material,
         'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
         'music': get_music,
@@ -770,6 +772,34 @@ def get_editors(data):
     return transformed
 
 
+def get_format(data):
+    try:
+        formats = data.get('data').get('format')
+    except AttributeError:
+        return None
+    if not formats:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(formats) > 1:
+            label = get_altlabel('format', lang=lang)
+        else:
+            label = get_preflabel('format', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': '',
+        }
+        if formats:
+            for material in formats:
+                transformed[lang]['data'] += f'{material["label"].get(lang)}, '
+        if transformed[lang]['data']:
+            # remove trailing ', '
+            transformed[lang]['data'] = transformed[lang]['data'][:-2]
+
+    return transformed
+
+
 def get_funding(data):
     try:
         funding = data.get('data').get('funding')
@@ -1056,6 +1086,34 @@ def get_lecturers(data):
             'label': label.capitalize(),
             'data': lines,
         }
+
+    return transformed
+
+
+def get_material(data):
+    try:
+        materials = data.get('data').get('material')
+    except AttributeError:
+        return None
+    if not materials:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(materials) > 1:
+            label = get_altlabel('material', lang=lang)
+        else:
+            label = get_preflabel('material', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': '',
+        }
+        if materials:
+            for material in materials:
+                transformed[lang]['data'] += f'{material["label"].get(lang)}, '
+        if transformed[lang]['data']:
+            # remove trailing ', '
+            transformed[lang]['data'] = transformed[lang]['data'][:-2]
 
     return transformed
 

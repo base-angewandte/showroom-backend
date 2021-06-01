@@ -202,6 +202,23 @@ mapping = {
         'list': ['contributors'],
         'locations': ['combined_locations'],
     },
+    'performance': {
+        'primary_details': [
+            'headline',
+            'type',
+            'artists',
+            'date_range_time_range_location',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'material',
+            'format',
+        ],
+        'list': ['contributors'],
+        'locations': ['combined_locations'],
+    },
     'research_project': {
         'primary_details': [
             'headline',
