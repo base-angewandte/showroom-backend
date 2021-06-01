@@ -38,6 +38,25 @@ mapping = {
         ],
         # for entries of category audio no location map should be shown
     },
+    'awards_and_grants': {
+        'primary_details': [
+            'headline',
+            'type',
+            'winners',
+            'granted_by',
+            'award_date',
+            'keywords',
+            'url',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+            'category',
+            'jury',
+            'award_ceremony_location_description',
+        ],
+        'list': ['contributors'],
+        # for entries of category awards and grants no location map should be shown
+    },
     'concert': {
         'primary_details': [
             'headline',

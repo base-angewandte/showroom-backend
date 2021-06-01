@@ -36,6 +36,9 @@ def transform_field(field, data):
         'architecture': get_architecture,
         'artists': get_artists,
         'authors': get_authors,
+        'award_ceremony_location_description': get_award_ceremony_location_description,
+        'award_date': get_award_date,
+        'category': get_category,
         'combined_locations': get_combined_locations,
         'composition': get_composition,
         'conductors': get_conductors,
@@ -56,9 +59,11 @@ def transform_field(field, data):
         'funding': get_funding,
         'funding_category': get_funding_category,
         'git_url': get_git_url,
+        'granted_by': get_granted_by,
         'headline': get_headline,
         'isan': get_isan,
         'isbn_doi': get_isbn_doi,
+        'jury': get_jury,
         'keywords': get_keywords,
         'language': get_language,
         'language_format_material_edition': get_language_format_material_edition,
@@ -81,6 +86,7 @@ def transform_field(field, data):
         'type': get_type,
         'url': get_url,
         'volume_issue_pages': get_volume_issue_pages,
+        'winners': get_winners,
     }
 
     field_transformer = functions.get(field)
@@ -184,6 +190,89 @@ def get_authors(data):
         transformed[lang] = {
             'label': label.capitalize(),
             'data': lines,
+        }
+
+    return transformed
+
+
+def get_award_ceremony_location_description(data):
+    try:
+        date_loc = data.get('data').get('date_location')
+        award_ceremony = data.get('data').get('award_ceremony')
+    except AttributeError:
+        return None
+    if not date_loc and not award_ceremony:
+        return None
+
+    # TODO: discuss: for simplicity now only the first date_location is taken
+    #       combined with date and time of the award ceremony. is there a
+    #       use case where further date_locations should be taken into account?
+    line = ''
+    if award_ceremony:
+        time = award_ceremony.get('time')
+        if date := award_ceremony.get('date'):
+            line += date
+        if date and time:
+            line += ' '
+        if time:
+            line += time
+        line += ', '
+    if date_loc:
+        dl = date_loc[0]
+        if locs := dl.get('location'):
+            loc_strings = [loc.get('label') for loc in locs]
+            line += ', '.join(loc_strings) + ', '
+        if loc_desc := dl.get('location_description'):
+            line += loc_desc + ', '
+    if line:
+        line = line[:-2]  # remove trailing ', '
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('award_ceremony', lang=lang).capitalize(),
+            'data': line,
+        }
+
+    return transformed
+
+
+def get_award_date(data):
+    # TODO: discuss: should we take the date of the first date_location or all
+    #       listed date_location dates combined? or the date of the award_ceremony?
+    try:
+        date = data.get('data').get('award_ceremony')
+    except AttributeError:
+        return None
+    if not date:
+        return None
+
+    if not (date_string := date.get('date')):
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('date', lang=lang).capitalize(),
+            'data': date_string,
+        }
+
+    return transformed
+
+
+def get_category(data):
+    try:
+        category = data.get('data').get('category')
+    except AttributeError:
+        return None
+    if not category:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('category', lang=lang).capitalize(),
+            'data': category,
         }
 
     return transformed
@@ -746,6 +835,30 @@ def get_git_url(data):
     return transformed
 
 
+def get_granted_by(data):
+    try:
+        granted_by = data.get('data').get('granted_by')
+    except AttributeError:
+        return None
+    if not granted_by:
+        return None
+
+    lines = [g['label'] for g in granted_by]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(granted_by) > 1:
+            label = get_altlabel('granted_by', lang=lang)
+        else:
+            label = get_preflabel('granted_by', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
 def get_headline(data):
     title = data.get('title')
     subtitle = data.get('subtitle')
@@ -817,6 +930,30 @@ def get_isbn_doi(data):
                 'url': f'https://dx.doi.org/{doi}',
             }
         )
+
+    return transformed
+
+
+def get_jury(data):
+    try:
+        jury = data.get('data').get('jury')
+    except AttributeError:
+        return None
+    if not jury:
+        return None
+
+    lines = [j['label'] for j in jury]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(jury) > 1:
+            label = get_altlabel('jury', lang=lang)
+        else:
+            label = get_preflabel('jury', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
 
     return transformed
 
@@ -1331,6 +1468,30 @@ def get_volume_issue_pages(data):
         transformed['default']['data'] += ', '
     if pages:
         transformed['default']['data'] += f'{pages}'
+
+    return transformed
+
+
+def get_winners(data):
+    try:
+        winners = data.get('data').get('winners')
+    except AttributeError:
+        return None
+    if not winners:
+        return None
+
+    lines = [w['label'] for w in winners]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        if len(winners) > 1:
+            label = get_altlabel('winner', lang=lang)
+        else:
+            label = get_preflabel('winner', lang=lang)
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
 
     return transformed
 
