@@ -65,6 +65,7 @@ class Entity(AbstractShowroomObject):
 
 class Activity(AbstractShowroomObject):
     type = JSONField(blank=True, null=True)
+    source_repo_owner_id = models.CharField(max_length=255)
     source_repo_data = JSONField(blank=True, null=True)
     featured_media = models.ForeignKey(
         'Media',
@@ -76,7 +77,7 @@ class Activity(AbstractShowroomObject):
     # TODO@review: is cascading the right constraint here?
     #   reasoning: if an entity that has activities (which should be a person) is deleted from the DB, all their
     #              activities should be deleted as well
-    belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE)
+    belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True)
     parents = models.ManyToManyField(
         'self', symmetrical=False, related_name='children', blank=True
     )

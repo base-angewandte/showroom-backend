@@ -46,6 +46,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = abstract_showroom_object_fields + [
+            'source_repo_owner_id',
             'source_repo_data',
             'featured_media',
             'belongs_to',
@@ -56,8 +57,8 @@ class ActivitySerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         new_data = {
             'source_repo_entry_id': data.get('source_repo_entry_id'),
+            'source_repo_owner_id': data.get('source_repo_owner_id'),
             'source_repo': data.get('source_repo'),
-            'belongs_to': data.get('belongs_to'),
         }
         repo_data = data.get('data')
         if not type(repo_data) is dict:
@@ -77,6 +78,12 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data['subtext'] = [repo_data.get('subtitle')]
         new_data['type'] = repo_data.get('type')
 
+        try:
+            new_data['belongs_to'] = Entity.objects.get(
+                source_repo_entry_id=data.get('source_repo_owner_id')
+            ).id
+        except Entity.DoesNotExist:
+            new_data['belongs_to'] = None
         new_data['source_repo_data'] = repo_data
 
         # now fetch the schema and apply transformations for the optimised display data
