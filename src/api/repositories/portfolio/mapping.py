@@ -13,7 +13,7 @@ mapping = {
             'material_format',
             'dimensions',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'audio': {
@@ -33,8 +33,8 @@ mapping = {
             'language',
         ],
         'list': [
-            'contributors',
-            'published_in',
+            'list_contributors',
+            'list_published_in',
         ],
         # for entries of category audio no location map should be shown
     },
@@ -54,7 +54,7 @@ mapping = {
             'jury',
             'award_ceremony_location_description',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         # for entries of category awards and grants no location map should be shown
     },
     'concert': {
@@ -72,7 +72,7 @@ mapping = {
             'conductors',
             'opening',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'conference': {
@@ -88,7 +88,7 @@ mapping = {
             'texts_with_types',
             'lecturers',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'conference_contribution': {
@@ -105,7 +105,7 @@ mapping = {
             'title_of_event',
             'organisers',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'design': {
@@ -122,7 +122,7 @@ mapping = {
             'texts_with_types',
             'material_format',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         # for entries of category design no location map should be shown
     },
     'document_publication': {
@@ -142,8 +142,8 @@ mapping = {
             'language_format_material_edition',
         ],
         'list': [
-            'published_in',
-            'contributors',
+            'list_published_in',
+            'list_contributors',
         ],
         # for entries of this type category no location map should be shown
     },
@@ -156,7 +156,7 @@ mapping = {
             'url',
         ],
         'secondary_details': ['texts_with_types'],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'exhibition': {
@@ -173,7 +173,7 @@ mapping = {
             'texts_with_types',
             'opening',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'fellowship_visiting_affiliation': {
@@ -191,7 +191,7 @@ mapping = {
             'organisations',
             'texts_with_types',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'festival': {
@@ -208,7 +208,7 @@ mapping = {
             'texts_with_types',
             'organisers',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'film_video': {
@@ -228,8 +228,8 @@ mapping = {
             'language',
         ],
         'list': [
-            'contributors',
-            'published_in',
+            'list_contributors',
+            'list_published_in',
         ],
         # for entries of category film/video no location map should be shown
     },
@@ -246,7 +246,7 @@ mapping = {
             'texts_with_types',
             'material_format_dimensions',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'performance': {
@@ -263,7 +263,7 @@ mapping = {
             'material',
             'format',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'research_project': {
@@ -281,7 +281,7 @@ mapping = {
             'funding',
             'funding_category',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         # for entries of category research project no location map should be shown
     },
     'sculpture': {
@@ -298,7 +298,7 @@ mapping = {
             'material_format',
             'dimensions',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         'locations': ['combined_locations'],
     },
     'software': {
@@ -318,7 +318,7 @@ mapping = {
             'documentation_url',
             'software_version',
         ],
-        'list': ['contributors'],
+        'list': ['list_contributors'],
         # for entries of category software no location map should be shown
     },
 }

@@ -73,6 +73,8 @@ def transform_field(field, data):
         'language': get_language,
         'language_format_material_edition': get_language_format_material_edition,
         'lecturers': get_lecturers,
+        'list_contributors': list_contributors,
+        'list_published_in': list_published_in,
         'material': get_material,
         'material_format': get_material_format,
         'material_format_dimensions': get_material_format_dimensions,
@@ -1675,3 +1677,98 @@ def get_winners(data):
 
 # def get_(data):
 #    return data.get('')
+
+
+# According to the docs/api/api_v1_showroom.yml definition in the showroom-frontend repo
+# and the docs/showroom-model-classes.drawio diagram in this repo a CommonList item
+# is composed of:
+#
+#   * a label
+#   * a hidden flag
+#   * and a data property which is a list of CommonList and/or CommonListItem
+#
+# The CommonListItem consists of:
+#
+#   * a value
+#   * and a list of attributes
+#
+# (There is an additional id for ordering for both of the above in the API spec
+#  but this is only used for user editable information updates)
+#
+# The following list field transformation functions should therefore always
+# return all localised versions of the above as a dict in the format of
+#   { 'en': CommonList, 'de': CommonList, ... }
+
+
+def list_contributors(data):
+    try:
+        contributors = data.get('data').get('contributors')
+    except AttributeError:
+        return None
+    if not contributors:
+        return None
+
+    lines = [c['label'] for c in contributors]
+
+    transformed = {}
+    for lang in LANGUAGES:
+        label = get_altlabel('contributor', lang=lang)
+
+        lines = []
+        for contributor in contributors:
+            roles = contributor.get('roles') or []
+            line = {
+                'value': contributor.get('label'),
+                'attributes': [role.get('label').get(lang) for role in roles],
+            }
+            lines.append(line)
+
+        transformed[lang] = {
+            'label': label.capitalize(),
+            'data': lines,
+        }
+
+    return transformed
+
+
+def list_published_in(data):
+    try:
+        published_in = data.get('data').get('published_in')
+        date = data.get('data').get('date')
+    except AttributeError:
+        return None
+    if not published_in:
+        return None
+
+    if type(published_in) == str:
+        transformed = {}
+        for lang in LANGUAGES:
+            label = get_preflabel('published_in', lang=lang)
+            transformed[lang] = {
+                'label': label.capitalize(),
+                'data': [{'value': published_in, 'attributes': []}],
+            }
+    else:
+        transformed = {}
+        for lang in LANGUAGES:
+            label = get_preflabel('published_in', lang=lang)
+            lines = []
+            for pub in published_in:
+                line = ''
+                if editors := pub.get('editor'):
+                    eds = [ed.get('label') for ed in editors]
+                    line += ', '.join(eds) + ': '
+                if title := pub.get('title'):
+                    line += title + '. '
+                if subtitle := pub.get('subtitle'):
+                    line += subtitle + '. '
+                if publishers := pub.get('publisher'):
+                    pubs = [p.get('label') for p in publishers]
+                    line += ', '.join(pubs)
+                if date:
+                    line += '. ' + date
+                lines.append({'value': line, 'attributes': []})
+
+            transformed[lang] = {'label': label.capitalize(), 'data': lines}
+
+    return transformed
