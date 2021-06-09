@@ -21,6 +21,7 @@ class SourceRepository(models.Model):
 class AbstractShowroomObject(AbstractBaseModel):
     id = ShortUUIDField(primary_key=True)
     title = models.CharField(max_length=255)
+    subtext = JSONField(blank=True, null=True)
     list = JSONField(blank=True, null=True)
     primary_details = JSONField(blank=True, null=True)
     secondary_details = JSONField(blank=True, null=True)
@@ -63,6 +64,7 @@ class Entity(AbstractShowroomObject):
 
 
 class Activity(AbstractShowroomObject):
+    type = JSONField(blank=True, null=True)
     source_repo_data = JSONField(blank=True, null=True)
     featured_media = models.ForeignKey(
         'Media',

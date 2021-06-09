@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 abstract_showroom_object_fields = [
     'id',
     'title',
+    'subtext',
     'list',
     'primary_details',
     'secondary_details',
@@ -49,6 +50,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             'featured_media',
             'belongs_to',
             'parents',
+            'type',
         ]
 
     def to_internal_value(self, data):
@@ -72,6 +74,9 @@ class ActivitySerializer(serializers.ModelSerializer):
                 {'data.type': ['Invalid type - has to be an object']}
             )
         new_data['title'] = repo_data.get('title')
+        new_data['subtext'] = [repo_data.get('subtitle')]
+        new_data['type'] = repo_data.get('type')
+
         new_data['source_repo_data'] = repo_data
 
         # now fetch the schema and apply transformations for the optimised display data

@@ -1,8 +1,6 @@
 mapping = {
     'architecture': {
         'primary_details': [
-            'headline',
-            'type',
             'architecture',
             'date_location_description',
             'keywords',
@@ -18,8 +16,6 @@ mapping = {
     },
     'audio': {
         'primary_details': [
-            'headline',
-            'type',
             'authors',
             'artists',
             'date_location_description',
@@ -40,8 +36,6 @@ mapping = {
     },
     'awards_and_grants': {
         'primary_details': [
-            'headline',
-            'type',
             'winners',
             'granted_by',
             'award_date',
@@ -59,8 +53,6 @@ mapping = {
     },
     'concert': {
         'primary_details': [
-            'headline',
-            'type',
             'music',
             'composition',
             'date_time_range_location',
@@ -77,8 +69,6 @@ mapping = {
     },
     'conference': {
         'primary_details': [
-            'headline',
-            'type',
             'organisers',
             'date_range_time_range_location',
             'keywords',
@@ -93,8 +83,6 @@ mapping = {
     },
     'conference_contribution': {
         'primary_details': [
-            'headline',
-            'type',
             'lecturers',
             'date_range_time_range_location',
             'keywords',
@@ -110,8 +98,6 @@ mapping = {
     },
     'design': {
         'primary_details': [
-            'headline',
-            'type',
             'design',
             'date_location_description',
             'keywords',
@@ -127,8 +113,6 @@ mapping = {
     },
     'document_publication': {
         'primary_details': [
-            'headline',  # consists of title and subtitle
-            'type',
             'authors',
             'editors',
             'publisher_place_date',
@@ -149,8 +133,6 @@ mapping = {
     },
     'event': {  # is now labeled "activity", the potax id still collection_event
         'primary_details': [
-            'headline',
-            'type',
             'date_range_time_range_location',
             'keywords',
             'url',
@@ -161,8 +143,6 @@ mapping = {
     },
     'exhibition': {
         'primary_details': [
-            'headline',
-            'type',
             'artists',
             'curators',
             'date_opening_location',
@@ -178,8 +158,6 @@ mapping = {
     },
     'fellowship_visiting_affiliation': {
         'primary_details': [
-            'headline',
-            'type',
             'fellow',
             'date_range_location',
             'keywords',
@@ -196,8 +174,6 @@ mapping = {
     },
     'festival': {
         'primary_details': [
-            'headline',
-            'type',
             'artists',
             'curators',
             'date_range_time_range_location',
@@ -213,8 +189,6 @@ mapping = {
     },
     'film_video': {
         'primary_details': [
-            'headline',
-            'type',
             'directors',
             'date_location_description',
             'keywords',
@@ -235,8 +209,6 @@ mapping = {
     },
     'image': {
         'primary_details': [
-            'headline',
-            'type',
             'artists',
             'date_location',
             'keywords',
@@ -251,8 +223,6 @@ mapping = {
     },
     'performance': {
         'primary_details': [
-            'headline',
-            'type',
             'artists',
             'date_range_time_range_location',
             'keywords',
@@ -268,8 +238,6 @@ mapping = {
     },
     'research_project': {
         'primary_details': [
-            'headline',
-            'type',
             'project_lead',
             'project_partners',
             'date_range',
@@ -286,8 +254,6 @@ mapping = {
     },
     'sculpture': {
         'primary_details': [
-            'headline',
-            'type',
             'artists',
             'date_location_description',
             'keywords',
@@ -303,8 +269,6 @@ mapping = {
     },
     'software': {
         'primary_details': [
-            'headline',
-            'type',
             'software_developers',
             'date',
             'open_source_license',
