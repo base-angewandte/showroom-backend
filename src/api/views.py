@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -142,6 +142,48 @@ class ActivityViewSet(
     def list(self, request, *args, **kwargs):
         # Similar to list in EntitiyViewSet
         raise MethodNotAllowed(method='GET')
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            instance = Activity.objects.get(
+                source_repo_entry_id=serializer.validated_data['source_repo_entry_id'],
+                source_repo=serializer.validated_data['source_repo'],
+            )
+            serializer.instance = instance
+        except Activity.DoesNotExist:
+            instance = False
+        except Activity.MultipleObjectsReturned:
+            return Response(
+                {
+                    'detail': 'More than one activity with this id exists. This should not happen. Contact the showroom admin.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        serializer.save()
+
+        response = {
+            'created': [],
+            'updated': [],
+            'errors': [],
+        }
+        if instance:
+            response['updated'].append(
+                {
+                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'showroom_id': serializer.data['id'],
+                }
+            )
+        else:
+            response['created'].append(
+                {
+                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'showroom_id': serializer.data['id'],
+                }
+            )
+
+        return Response(response, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def media(self, request, *args, **kwargs):
