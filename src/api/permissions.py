@@ -19,4 +19,10 @@ class ActivityPermission(permissions.BasePermission):
                 return False
             if request.headers['X-Api-Key'] != repo.api_key:
                 return False
+
+            # check whether the data contains a `source_repo` key and only
+            # allow the operation if its value is the same
+            if source_repo := request.data.get('source_repo'):
+                if source_repo != repo.id:
+                    return False
         return True
