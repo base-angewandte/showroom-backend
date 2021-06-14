@@ -125,6 +125,67 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data.update(transformed)
         return super().to_internal_value(new_data)
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # remove plain repo data
+        ret.pop('source_repo')
+        ret.pop('source_repo_data')
+        ret.pop('source_repo_entry_id')
+        ret.pop('source_repo_owner_id')
+        # add timestamps
+        ret['date_changed'] = instance.date_changed
+        ret['date_created'] = instance.date_created
+        # TODO: entries are currently empty, until media and relations are pushed
+        ret['entries'] = {
+            'media': [],
+            'linked': [],
+        }
+        # publisher currently is only the entity this activity belongs to
+        ret.pop('belongs_to')
+        ret['publisher'] = []
+        if instance.belongs_to:
+            ret['publisher'].append(
+                {
+                    'name': instance.belongs_to.title,
+                    'source': instance.belongs_to.id,
+                }
+            )
+        # include the source institutions details
+        ret['source_institution'] = {
+            'label': instance.source_repo.label_institution,
+            'url': instance.source_repo.url_institution,
+            'icon': instance.source_repo.icon,
+        }
+
+        # now filter out the requested languages for the detail fields and lists
+        new_data = {}
+        lang = self.context['request'].LANGUAGE_CODE
+        detail_fields = ['primary_details', 'secondary_details', 'list']
+        for field in detail_fields:
+            new_data[field] = []
+            for data in ret[field]:
+                if data_localised := data.get(lang):
+                    new_data[field].append(data_localised)
+                else:
+                    # If no localised data could be found, we try to find
+                    # another one in the order of the languages defined
+                    # in the settings
+                    for alt_lang in settings.LANGUAGES:
+                        if data_localised := data.get(alt_lang[0]):
+                            data_localised['language'] = {
+                                'iso': alt_lang[0],
+                                'label': alt_lang[1],
+                            }
+                            new_data[field].append(data_localised)
+                            break
+                    # Theoretically there could be other localised content in
+                    # languages that are not configured in the settings. We
+                    # will ignore those.
+            ret.pop(field)
+        ret.update(new_data)
+
+        return ret
+
 
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
