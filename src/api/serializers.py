@@ -181,6 +181,10 @@ class ActivitySerializer(serializers.ModelSerializer):
                     # Theoretically there could be other localised content in
                     # languages that are not configured in the settings. We
                     # will ignore those.
+                    # But if we did internally story a 'default' localisation,
+                    # because the data is language independent, we'll use this
+                    if data_default := data.get('default'):
+                        new_data[field].append(data_default)
             ret.pop(field)
         ret.update(new_data)
 
