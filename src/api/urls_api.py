@@ -1,4 +1,8 @@
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularJSONAPIView,
+    SpectacularSwaggerView,
+)
 from rest_framework.routers import DefaultRouter
 
 from django.urls import include, path
@@ -17,6 +21,7 @@ router.register(r'autocomplete', views.AutocompleteViewSet, basename='autocomple
 urlpatterns = [
     path('', include(router.urls)),
     path('schema/openapi3.yaml', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/openapi3.json', SpectacularJSONAPIView.as_view(), name='schema'),
     path(
         'schema/swagger-ui',
         SpectacularSwaggerView.as_view(url_name='schema'),
