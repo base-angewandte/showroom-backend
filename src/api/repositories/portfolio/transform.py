@@ -1561,7 +1561,10 @@ def get_texts_with_types(data):
             lang = localised_text.get('language').get('source')
             # we want e.g. the 'en' out of 'http://base.uni-ak.ac.at/portfolio/languages/en'
             lang = lang.split('/')[-1]
-            t[lang] = localised_text.get('text')
+            t[lang] = {
+                'label': '',
+                'data': localised_text.get('text'),
+            }
         transformed.append(t)
     return transformed
 
