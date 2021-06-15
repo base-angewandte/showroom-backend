@@ -41,6 +41,7 @@ start-dev-docker:
 		showroom-redis \
 		showroom-postgres \
 		showroom-django
+	docker exec showroom-django-dev python manage.py migrate
 	docker logs -f showroom-django-dev
 
 pip-compile:
