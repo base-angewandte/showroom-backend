@@ -21,7 +21,7 @@ from .serializers import (
 
 @extend_schema_view(
     create=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             201: EntitySerializer,
             400: view_spec.Responses.Error400,
@@ -36,7 +36,7 @@ from .serializers import (
         },
     ),
     partial_update=extend_schema(
-        tags=['private'],
+        tags=['auth'],
         responses={
             204: None,
             400: view_spec.Responses.Error400,
@@ -96,7 +96,7 @@ class EntityViewSet(
 
 @extend_schema_view(
     create=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             201: ActivitySerializer,
             400: view_spec.Responses.Error400,
@@ -104,7 +104,7 @@ class EntityViewSet(
         },
     ),
     destroy=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             204: None,
             400: view_spec.Responses.Error400,
@@ -192,7 +192,7 @@ class ActivityViewSet(
 
 @extend_schema_view(
     create=extend_schema(
-        tags=['private'],
+        tags=['auth'],
         responses={
             201: AlbumSerializer,
             400: view_spec.Responses.Error400,
@@ -200,7 +200,7 @@ class ActivityViewSet(
         },
     ),
     partial_update=extend_schema(
-        tags=['private'],
+        tags=['auth'],
         responses={
             200: AlbumSerializer,
             400: view_spec.Responses.Error400,
@@ -209,7 +209,7 @@ class ActivityViewSet(
         },
     ),
     destroy=extend_schema(
-        tags=['private'],
+        tags=['auth'],
         responses={
             204: None,
             400: view_spec.Responses.Error400,
@@ -239,7 +239,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
 
 @extend_schema_view(
     create=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             201: MediaSerializer,
             400: view_spec.Responses.Error400,
@@ -248,7 +248,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
         },
     ),
     update=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             200: MediaSerializer,
             400: view_spec.Responses.Error400,
@@ -257,7 +257,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
         },
     ),
     destroy=extend_schema(
-        tags=['protected'],
+        tags=['repo'],
         responses={
             204: None,
             400: view_spec.Responses.Error400,

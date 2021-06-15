@@ -421,7 +421,10 @@ SPECTACULAR_SETTINGS = {
     description visit the [Portfolio/Showroom website](https://portfolio-showroom.ac.at), for the sources and
     documentation of this component go to **TODO:insertlinktogithubrepo**.
     """,
-    'TAGS': ['public', 'private', 'protected', 'api'],
+    'TAGS': ['public', 'auth', 'repo', 'api'],
+    'SERVERS': [
+        {'url': 'http://127.0.0.1:8500', 'description': 'Local Dev Server'},
+    ],
     # available SwaggerUI configuration parameters
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {
