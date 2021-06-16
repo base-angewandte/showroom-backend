@@ -546,14 +546,16 @@ def get_date_opening_location(data):
                 line += ', '
             line += loc_desc
 
-        transformed.append(
-            {
-                'default': {
-                    'label': '',
-                    'data': line,
-                }
+        tr = {}
+        for lang in LANGUAGES:
+            label_date = get_preflabel('date', lang='lang').capitalize()
+            label_loc = get_preflabel('location', lang=lang).capitalize()
+            label = f'{label_date}, {label_loc}'
+            tr[lang] = {
+                'label': label,
+                'data': line,
             }
-        )
+        transformed.append(tr)
 
     return transformed
 
@@ -700,14 +702,17 @@ def get_date_time_range_location(data):
                 line += ', '
             line += loc_desc
 
-        transformed.append(
-            {
-                'default': {
-                    'label': '',
-                    'data': line,
-                }
+        tr = {}
+        for lang in LANGUAGES:
+            label_date = get_preflabel('date', lang=lang).capitalize()
+            label_loc = get_preflabel('location', lang=lang).capitalize()
+            label_desc = get_preflabel('location_description', lang=lang).capitalize()
+            label = f'{label_date}, {label_loc}, {label_desc}'
+            tr[lang] = {
+                'label': label,
+                'data': line,
             }
-        )
+        transformed.append(tr)
 
     return transformed
 
@@ -1012,17 +1017,13 @@ def get_isan(data):
     if not isan:
         return None
 
-    transformed = {
-        'default': {
-            'label': '',
-            'data': [
-                {
-                    'label': 'ISAN',
-                    'value': isan,
-                },
-            ],
-        },
-    }
+    transformed = {}
+    for lang in LANGUAGES:
+        label = get_preflabel('isan', lang=lang)
+        transformed[lang] = {
+            'label': label,
+            'data': isan,
+        }
 
     return transformed
 
@@ -1036,27 +1037,28 @@ def get_isbn_doi(data):
     if not isbn and not doi:
         return None
 
-    transformed = {
-        'default': {
-            'label': '',
-            'data': [],
-        },
-    }
-    if isbn:
-        transformed['default']['data'].append(
-            {
-                'label': 'ISBN',
-                'value': isbn,
-            }
-        )
-    if doi:
-        transformed['default']['data'].append(
-            {
-                'label': 'DOI',
-                'value': doi,
-                'url': f'https://dx.doi.org/{doi}',
-            }
-        )
+    transformed = {}
+    for lang in LANGUAGES:
+        label_isbn = get_preflabel('isbn', lang=lang)
+        label_doi = get_preflabel('doi', lang=lang)
+        label = f'{label_isbn, label_doi}'
+        transformed[lang] = {'label': label, 'data': []}
+
+        if isbn:
+            transformed[lang]['data'].append(
+                {
+                    'label': label_isbn,
+                    'value': isbn,
+                }
+            )
+        if doi:
+            transformed[lang]['data'].append(
+                {
+                    'label': label_doi,
+                    'value': doi,
+                    'url': f'https://dx.doi.org/{doi}',
+                }
+            )
 
     return transformed
 
@@ -1096,11 +1098,8 @@ def get_keywords(data):
             label for kw in keywords if (label := kw.get('label').get(lang))
         ]
         transformed[lang] = {
-            'label': '',
-            'data': {
-                'label': get_preflabel('keywords', lang=lang),
-                'value': ', '.join(keyword_labels),
-            },
+            'label': get_preflabel('keywords', lang=lang).capitalize(),
+            'data': ', '.join(keyword_labels),
         }
 
     return transformed
@@ -1116,14 +1115,13 @@ def get_language(data):
 
     transformed = {}
     for lang in LANGUAGES:
+        language_labels = [
+            ln_label for ln in languages if (ln_label := ln['label'].get(lang))
+        ]
         transformed[lang] = {
-            'label': '',
-            'data': '',
+            'label': get_preflabel('language', lang=lang).capitalize(),
+            'data': ', '.join(language_labels),
         }
-        for language in languages:
-            transformed[lang]['data'] += f'{language["label"].get(lang)}, '
-        # remove the trailing ', '
-        transformed[lang]['data'] = transformed[lang]['data'][:-2]
 
     return transformed
 
@@ -1141,8 +1139,13 @@ def get_language_format_material_edition(data):
 
     transformed = {}
     for lang in LANGUAGES:
+        label_lang = get_preflabel('language', lang=lang).capitalize()
+        label_format = get_preflabel('format', lang=lang).capitalize()
+        label_material = get_preflabel('material', lang=lang).capitalize()
+        label_edition = get_preflabel('edition', lang=lang).capitalize()
+        label = f'{label_lang}, {label_format}, {label_material}, {label_edition}'
         transformed[lang] = {
-            'label': '',
+            'label': label,
             'data': '',
         }
         if languages:
@@ -1227,8 +1230,14 @@ def get_material_format(data, with_dimensions=False):
 
     transformed = {}
     for lang in LANGUAGES:
+        label_material = get_preflabel('material', lang=lang).capitalize()
+        label_format = get_preflabel('format', lang=lang).capitalize()
+        label = f'{label_material}, {label_format}'
+        if with_dimensions:
+            label_dimensions = get_preflabel('format', lang=lang).capitalize()
+            label += f', {label_dimensions}'
         transformed[lang] = {
-            'label': '',
+            'label': label,
             'data': '',
         }
         if materials:
@@ -1562,7 +1571,7 @@ def get_texts_with_types(data):
             # we want e.g. the 'en' out of 'http://base.uni-ak.ac.at/portfolio/languages/en'
             lang = lang.split('/')[-1]
             t[lang] = {
-                'label': '',
+                'label': get_preflabel('text', lang=lang).capitalize(),
                 'data': localised_text.get('text'),
             }
         transformed.append(t)
@@ -1598,7 +1607,7 @@ def get_type(data):
         label = typ.get('label').get(lang)
         if label:
             transformed[lang] = {
-                'label': '',
+                'label': get_preflabel('type', lang=lang).capitalize(),
                 'data': label,
             }
 
@@ -1638,18 +1647,21 @@ def get_volume_issue_pages(data):
     if not volume_issue and not pages:
         return None
 
-    transformed = {
-        'default': {
-            'label': '',
+    transformed = {}
+    for lang in LANGUAGES:
+        label_volume = get_preflabel('volume_issue', lang=lang).capitalize()
+        label_pages = get_preflabel('pages', lang=lang).capitalize()
+        label = f'{label_volume}, {label_pages}'
+        transformed[lang] = {
+            'label': label,
             'data': '',
         }
-    }
-    if volume_issue:
-        transformed['default']['data'] += f'{volume_issue}'
-    if volume_issue and pages:
-        transformed['default']['data'] += ', '
-    if pages:
-        transformed['default']['data'] += f'{pages}'
+        if volume_issue:
+            transformed[lang]['data'] += f'{volume_issue}'
+        if volume_issue and pages:
+            transformed[lang]['data'] += ', '
+        if pages:
+            transformed[lang]['data'] += f'{pages}'
 
     return transformed
 
