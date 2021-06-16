@@ -66,13 +66,9 @@ class ActivitySerializer(serializers.ModelSerializer):
                 {'data': ['Invalid type - has to be an object']}
             )
         entry_type = repo_data.get('type')
-        if not entry_type:
+        if not type(entry_type) is dict and entry_type is not None:
             raise serializers.ValidationError(
-                {'data.type': ['This field may not be null.']}
-            )
-        if not type(entry_type) is dict:
-            raise serializers.ValidationError(
-                {'data.type': ['Invalid type - has to be an object']}
+                {'data.type': ['Invalid type - has to be an object or null']}
             )
         new_data['title'] = repo_data.get('title')
         new_data['subtext'] = [repo_data.get('subtitle')]
@@ -87,7 +83,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data['source_repo_data'] = repo_data
 
         # now fetch the schema and apply transformations for the optimised display data
-        schema = portfolio.get_schema(entry_type.get('source'))
+        if entry_type:
+            schema = portfolio.get_schema(entry_type.get('source'))
+        else:
+            schema = '__none__'
         try:
             transformed = transform.transform_data(repo_data, schema)
         except MappingNotFoundError as e:

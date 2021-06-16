@@ -1,4 +1,13 @@
 mapping = {
+    '__none__': {
+        'primary_details': [
+            'keywords',
+        ],
+        'secondary_details': [
+            'texts_with_types',
+        ],
+        'list': [],
+    },
     'architecture': {
         'primary_details': [
             'architecture',
