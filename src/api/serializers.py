@@ -174,7 +174,9 @@ class ActivitySerializer(serializers.ModelSerializer):
                         if data_localised := data.get(alt_lang[0]):
                             data_localised['language'] = {
                                 'iso': alt_lang[0],
-                                'label': alt_lang[1],
+                                'label': {
+                                    alt_lang[0]: alt_lang[1],
+                                },
                             }
                             new_data[field].append(data_localised)
                             break
