@@ -294,10 +294,32 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         s = view_spec.SearchSerializer(data=request.data)
         s.is_valid(raise_exception=True)
-        return Response(
-            {'detail': 'Not yet implemented', 'filters_used': s.validated_data},
-            status=400,
-        )
+
+        lang = request.LANGUAGE_CODE
+        queryset = Activity.objects.all()
+        response = {
+            'label': 'All Showroom Activities',
+            'total': len(queryset),
+            'data': [],
+        }
+        for activity in queryset:
+            activity_type = '' if not activity.type else activity.type['label'][lang]
+            item = {
+                'id': activity.id,
+                'type': 'activity',
+                'date_created': activity.date_created,
+                'title': activity.title,
+                'subtitle': activity.subtext,  # TODO: join array items?
+                'description': activity_type,
+                'uid': activity.belongs_to,  # TODO: ???
+                'subtext': activity.subtext,  # TODO: ???
+                'additional': '',
+                'imageUrl': '',
+                'href': '',
+                'previews': [],
+            }
+            response['data'].append(item)
+        return Response(response, status=200)
 
 
 @extend_schema_view(
