@@ -295,8 +295,28 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         s = view_spec.SearchSerializer(data=request.data)
         s.is_valid(raise_exception=True)
 
+        limit = s.data.get('limit')
+        offset = s.data.get('offset')
         lang = request.LANGUAGE_CODE
         queryset = Activity.objects.all()
+        if limit or offset:
+            if offset is None:
+                offset = 0
+            elif offset >= len(queryset):
+                return Response({'detail': 'offset too high'}, status=400)
+            elif offset < 0:
+                return Response({'detail': 'negative offset not allowed'}, status=400)
+            if limit is None:
+                end = len(queryset) - 1
+            elif limit < 1:
+                return Response(
+                    {'detail': 'negative or zero limit not allowed'}, status=400
+                )
+            elif offset + limit < len(queryset):
+                end = offset + limit
+            else:
+                end = len(queryset)
+            queryset = queryset[offset:end]
         response = {
             'label': 'All Showroom Activities',
             'total': len(queryset),
@@ -309,11 +329,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'type': 'activity',
                 'date_created': activity.date_created,
                 'title': activity.title,
-                'subtitle': activity.subtext,  # TODO: join array items?
                 'description': activity_type,
-                'uid': activity.belongs_to,  # TODO: ???
-                'subtext': activity.subtext,  # TODO: ???
-                'additional': '',
                 'imageUrl': '',
                 'href': '',
                 'previews': [],
