@@ -1563,6 +1563,9 @@ def get_software_version(data):
 
 def get_texts_with_types(data):
     texts = data.get('texts')
+    if not texts:
+        return None
+
     transformed = []
     for text in texts:
         t = {}
