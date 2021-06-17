@@ -299,7 +299,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         offset = s.data.get('offset')
         lang = request.LANGUAGE_CODE
         queryset = Activity.objects.all()
-        if limit or offset:
+        if limit is not None or offset is not None:
             if offset is None:
                 offset = 0
             elif offset >= len(queryset):
@@ -307,7 +307,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             elif offset < 0:
                 return Response({'detail': 'negative offset not allowed'}, status=400)
             if limit is None:
-                end = len(queryset) - 1
+                end = len(queryset)
             elif limit < 1:
                 return Response(
                     {'detail': 'negative or zero limit not allowed'}, status=400
