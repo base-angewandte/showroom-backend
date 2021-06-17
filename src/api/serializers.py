@@ -71,7 +71,8 @@ class ActivitySerializer(serializers.ModelSerializer):
                 {'data.type': ['Invalid type - has to be an object or null']}
             )
         new_data['title'] = repo_data.get('title')
-        new_data['subtext'] = [repo_data.get('subtitle')]
+        subtext = repo_data.get('subtitle')
+        new_data['subtext'] = [subtext] if subtext else []
         new_data['type'] = repo_data.get('type')
 
         try:
