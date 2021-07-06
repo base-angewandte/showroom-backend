@@ -125,6 +125,7 @@ class Media(models.Model):
     mime_type = models.CharField(max_length=255)
     exif = JSONField(blank=True, null=True)
     license = JSONField(blank=True, null=True)
+    specifics = JSONField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 
