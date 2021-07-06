@@ -149,7 +149,7 @@ def get_architecture(data):
         else:
             label = get_preflabel('architecture', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -173,7 +173,7 @@ def get_artists(data):
         else:
             label = get_preflabel('artist', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -197,7 +197,7 @@ def get_authors(data):
         else:
             label = get_preflabel('author', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -239,7 +239,7 @@ def get_award_ceremony_location_description(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('award_ceremony', lang=lang).capitalize(),
+            'label': get_preflabel('award_ceremony', lang=lang),
             'data': line,
         }
 
@@ -262,7 +262,7 @@ def get_award_date(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('date', lang=lang).capitalize(),
+            'label': get_preflabel('date', lang=lang),
             'data': date_string,
         }
 
@@ -280,7 +280,7 @@ def get_category(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('category', lang=lang).capitalize(),
+            'label': get_preflabel('category', lang=lang),
             'data': category,
         }
 
@@ -342,7 +342,7 @@ def get_commissions(data):
         else:
             label = get_preflabel('commissions_orders_for_works', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -366,7 +366,7 @@ def get_composition(data):
         else:
             label = get_preflabel('composition', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -390,7 +390,7 @@ def get_conductors(data):
         else:
             label = get_preflabel('conductor', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -425,7 +425,7 @@ def get_contributors(data, with_roles=True):
                 lines.append(line)
 
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -449,7 +449,7 @@ def get_curators(data):
         else:
             label = get_preflabel('curator', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -467,7 +467,7 @@ def get_date(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('date', lang=lang).capitalize(),
+            'label': get_preflabel('date', lang=lang),
             'data': date,
         }
     return transformed
@@ -503,7 +503,7 @@ def get_date_location(data, with_description=False):
             label_date = get_preflabel('date', lang=lang)
             label_loc = get_preflabel('location', lang=lang)
         transformed[lang] = {
-            'label': f'{label_date.capitalize()}, {label_loc.capitalize()}',
+            'label': f'{label_date}, {label_loc}',
             'data': line,
         }
 
@@ -548,8 +548,8 @@ def get_date_opening_location(data):
 
         tr = {}
         for lang in LANGUAGES:
-            label_date = get_preflabel('date', lang='lang').capitalize()
-            label_loc = get_preflabel('location', lang=lang).capitalize()
+            label_date = get_preflabel('date', lang='lang')
+            label_loc = get_preflabel('location', lang=lang)
             label = f'{label_date}, {label_loc}'
             tr[lang] = {
                 'label': label,
@@ -579,7 +579,7 @@ def get_date_range(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('duration', lang=lang).capitalize(),
+            'label': get_preflabel('duration', lang=lang),
             'data': line,
         }
 
@@ -665,7 +665,7 @@ def get_date_range_time_range_location(data, data_field=None):
         else:
             label = get_preflabel('date', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': line,
         }
 
@@ -704,9 +704,9 @@ def get_date_time_range_location(data):
 
         tr = {}
         for lang in LANGUAGES:
-            label_date = get_preflabel('date', lang=lang).capitalize()
-            label_loc = get_preflabel('location', lang=lang).capitalize()
-            label_desc = get_preflabel('location_description', lang=lang).capitalize()
+            label_date = get_preflabel('date', lang=lang)
+            label_loc = get_preflabel('location', lang=lang)
+            label_desc = get_preflabel('location_description', lang=lang)
             label = f'{label_date}, {label_loc}, {label_desc}'
             tr[lang] = {
                 'label': label,
@@ -734,7 +734,7 @@ def get_design(data):
         else:
             label = get_preflabel('design', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -753,7 +753,7 @@ def get_dimensions(data):
     for lang in LANGUAGES:
         label = get_preflabel('dimensions', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': dimensions,
         }
 
@@ -777,7 +777,7 @@ def get_directors(data):
         else:
             label = get_preflabel('director', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -819,7 +819,7 @@ def get_duration(data):
     for lang in LANGUAGES:
         label = get_preflabel('duration', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': duration,
         }
 
@@ -843,7 +843,7 @@ def get_editors(data):
         else:
             label = get_preflabel('editor', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -867,7 +867,7 @@ def get_fellow(data):
         else:
             label = get_preflabel('fellow_scholar', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -889,7 +889,7 @@ def get_format(data):
         else:
             label = get_preflabel('format', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': '',
         }
         if formats:
@@ -919,7 +919,7 @@ def get_funding(data):
         else:
             label = get_preflabel('funding', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -937,7 +937,7 @@ def get_funding_category(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('funding_category', lang=lang).capitalize(),
+            'label': get_preflabel('funding_category', lang=lang),
             'data': funding_category,
         }
 
@@ -984,7 +984,7 @@ def get_granted_by(data):
         else:
             label = get_preflabel('granted_by', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1080,7 +1080,7 @@ def get_jury(data):
         else:
             label = get_preflabel('jury', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1098,7 +1098,7 @@ def get_keywords(data):
             label for kw in keywords if (label := kw.get('label').get(lang))
         ]
         transformed[lang] = {
-            'label': get_preflabel('keywords', lang=lang).capitalize(),
+            'label': get_preflabel('keywords', lang=lang),
             'data': ', '.join(keyword_labels),
         }
 
@@ -1119,7 +1119,7 @@ def get_language(data):
             ln_label for ln in languages if (ln_label := ln['label'].get(lang))
         ]
         transformed[lang] = {
-            'label': get_preflabel('language', lang=lang).capitalize(),
+            'label': get_preflabel('language', lang=lang),
             'data': ', '.join(language_labels),
         }
 
@@ -1139,10 +1139,10 @@ def get_language_format_material_edition(data):
 
     transformed = {}
     for lang in LANGUAGES:
-        label_lang = get_preflabel('language', lang=lang).capitalize()
-        label_format = get_preflabel('format', lang=lang).capitalize()
-        label_material = get_preflabel('material', lang=lang).capitalize()
-        label_edition = get_preflabel('edition', lang=lang).capitalize()
+        label_lang = get_preflabel('language', lang=lang)
+        label_format = get_preflabel('format', lang=lang)
+        label_material = get_preflabel('material', lang=lang)
+        label_edition = get_preflabel('edition', lang=lang)
         label = f'{label_lang}, {label_format}, {label_material}, {label_edition}'
         transformed[lang] = {
             'label': label,
@@ -1183,7 +1183,7 @@ def get_lecturers(data):
         else:
             label = get_preflabel('lecturer', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1205,7 +1205,7 @@ def get_material(data):
         else:
             label = get_preflabel('material', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': '',
         }
         if materials:
@@ -1230,11 +1230,11 @@ def get_material_format(data, with_dimensions=False):
 
     transformed = {}
     for lang in LANGUAGES:
-        label_material = get_preflabel('material', lang=lang).capitalize()
-        label_format = get_preflabel('format', lang=lang).capitalize()
+        label_material = get_preflabel('material', lang=lang)
+        label_format = get_preflabel('format', lang=lang)
         label = f'{label_material}, {label_format}'
         if with_dimensions:
-            label_dimensions = get_preflabel('format', lang=lang).capitalize()
+            label_dimensions = get_preflabel('format', lang=lang)
             label += f', {label_dimensions}'
         transformed[lang] = {
             'label': label,
@@ -1276,7 +1276,7 @@ def get_music(data):
         else:
             label = get_preflabel('music', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1294,7 +1294,7 @@ def get_open_source_license(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('open_source_license', lang=lang).capitalize(),
+            'label': get_preflabel('open_source_license', lang=lang),
             'data': sw_license,
         }
     return transformed
@@ -1321,7 +1321,7 @@ def get_opening(data):
                 )
                 line = ' '.join(filter(None, [date, time]))
                 t[lang] = {
-                    'label': get_preflabel('opening', lang=lang).capitalize(),
+                    'label': get_preflabel('opening', lang=lang),
                     'data': line,
                 }
             transformed.append(t)
@@ -1346,7 +1346,7 @@ def get_organisations(data):
         else:
             label = get_preflabel('organisation', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1370,7 +1370,7 @@ def get_organisers(data):
         else:
             label = get_preflabel('organiser_management', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1388,7 +1388,7 @@ def get_programming_language(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('programming_language', lang=lang).capitalize(),
+            'label': get_preflabel('programming_language', lang=lang),
             'data': p_lang,
         }
     return transformed
@@ -1411,7 +1411,7 @@ def get_project_lead(data):
         else:
             label = get_preflabel('project_lead', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1435,7 +1435,7 @@ def get_project_partners(data):
         else:
             label = get_preflabel('project_partnership', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1456,7 +1456,7 @@ def get_published_in(data):
         for lang in LANGUAGES:
             label = get_preflabel('published_in', lang=lang)
             transformed[lang] = {
-                'label': label.capitalize(),
+                'label': label,
                 'data': published_in,
             }
     else:
@@ -1480,7 +1480,7 @@ def get_published_in(data):
                     line += '. ' + date
 
                 t[lang] = {
-                    'label': label.capitalize(),
+                    'label': label,
                     'data': line,
                 }
 
@@ -1512,7 +1512,7 @@ def get_publisher_place_date(data):
         else:
             label = get_preflabel('publisher', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': line,
         }
 
@@ -1536,7 +1536,7 @@ def get_software_developers(data):
         else:
             label = get_preflabel('software_developer', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1554,7 +1554,7 @@ def get_software_version(data):
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('software_version', lang=lang).capitalize(),
+            'label': get_preflabel('software_version', lang=lang),
             'data': version,
         }
 
@@ -1581,7 +1581,7 @@ def get_texts_with_types(data):
             if text_type := text.get('type'):
                 label = text_type['label'][lang]
             else:
-                label = get_preflabel('text', lang=lang).capitalize()
+                label = get_preflabel('text', lang=lang)
 
             t[lang] = {
                 'label': label,
@@ -1603,7 +1603,7 @@ def get_title_of_event(data):
     for lang in LANGUAGES:
         label = get_preflabel('title_of_event', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': title,
         }
 
@@ -1620,7 +1620,7 @@ def get_type(data):
         label = typ.get('label').get(lang)
         if label:
             transformed[lang] = {
-                'label': get_preflabel('type', lang=lang).capitalize(),
+                'label': get_preflabel('type', lang=lang),
                 'data': label,
             }
 
@@ -1662,8 +1662,8 @@ def get_volume_issue_pages(data):
 
     transformed = {}
     for lang in LANGUAGES:
-        label_volume = get_preflabel('volume_issue', lang=lang).capitalize()
-        label_pages = get_preflabel('pages', lang=lang).capitalize()
+        label_volume = get_preflabel('volume_issue', lang=lang)
+        label_pages = get_preflabel('pages', lang=lang)
         label = f'{label_volume}, {label_pages}'
         transformed[lang] = {
             'label': label,
@@ -1696,7 +1696,7 @@ def get_winners(data):
         else:
             label = get_preflabel('winner', lang=lang)
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1752,7 +1752,7 @@ def list_contributors(data):
             lines.append(line)
 
         transformed[lang] = {
-            'label': label.capitalize(),
+            'label': label,
             'data': lines,
         }
 
@@ -1773,7 +1773,7 @@ def list_published_in(data):
         for lang in LANGUAGES:
             label = get_preflabel('published_in', lang=lang)
             transformed[lang] = {
-                'label': label.capitalize(),
+                'label': label,
                 'data': [{'value': published_in, 'attributes': []}],
             }
     else:
@@ -1797,6 +1797,6 @@ def list_published_in(data):
                     line += '. ' + date
                 lines.append({'value': line, 'attributes': []})
 
-            transformed[lang] = {'label': label.capitalize(), 'data': lines}
+            transformed[lang] = {'label': label, 'data': lines}
 
     return transformed
