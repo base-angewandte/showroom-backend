@@ -276,6 +276,47 @@ class MediaViewSet(
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            instance = Media.objects.get(
+                source_repo_id=serializer.validated_data['source_repo_id'],
+            )
+            serializer.instance = instance
+        except Media.DoesNotExist:
+            instance = False
+        except Media.MultipleObjectsReturned:
+            return Response(
+                {
+                    'detail': 'More than one medium with this id exists. This should not happen. Contact the showroom admin.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        serializer.save()
+
+        response = {
+            'created': [],
+            'updated': [],
+            'errors': [],
+        }
+        if instance:
+            response['updated'].append(
+                {
+                    'id': serializer.validated_data['source_repo_id'],
+                    'showroom_id': serializer.data['id'],
+                }
+            )
+        else:
+            response['created'].append(
+                {
+                    'id': serializer.validated_data['source_repo_id'],
+                    'showroom_id': serializer.data['id'],
+                }
+            )
+
+        return Response(response, status=status.HTTP_201_CREATED)
+
 
 @extend_schema_view(
     create=extend_schema(

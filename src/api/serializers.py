@@ -209,4 +209,14 @@ class AlbumSerializer(serializers.ModelSerializer):
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
-        fields = ['id', 'type', 'file', 'activity', 'mime_type', 'exif', 'license']
+        fields = [
+            'id',
+            'type',
+            'file',
+            'activity',
+            'mime_type',
+            'exif',
+            'license',
+            'specifics',
+            'source_repo_id',
+        ]
