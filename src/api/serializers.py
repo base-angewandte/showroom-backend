@@ -135,9 +135,15 @@ class ActivitySerializer(serializers.ModelSerializer):
         # add timestamps
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created
-        # TODO: entries are currently empty, until media and relations are pushed
+        # add aggregated media and related activities
+        media = instance.media_set.all()
+        media_entries = []
+        if media:
+            context = {'repo_base': instance.source_repo.url_repository}
+            media_entries = MediaSerializer(media, many=True, context=context).data
         ret['entries'] = {
-            'media': [],
+            'media': media_entries,
+            # TODO: linked activities are currently empty, until relationships are pushed
             'linked': [],
         }
         # publisher currently is only the entity this activity belongs to
@@ -220,3 +226,62 @@ class MediaSerializer(serializers.ModelSerializer):
             'specifics',
             'source_repo_id',
         ]
+
+    def to_internal_value(self, data):
+        # if a new media is posted, we need to inject the repos base url
+        # into all properties that represent links
+        if self.context['request'].method == 'POST':
+            # for link transformations at least file and specifics have to be set
+            if 'file' not in data:
+                raise serializers.ValidationError({'file': ['This field is required.']})
+            if 'specifics' not in data:
+                raise serializers.ValidationError(
+                    {'specifics': ['This field is required.']}
+                )
+            # activity also has to be set to an existing activity, so we can get
+            # the repos base url
+            try:
+                activity = Activity.objects.get(pk=data.get('activity'))
+            except Activity.DoesNotExist:
+                raise serializers.ValidationError(
+                    {
+                        'activity': [
+                            'This field is required and has to refer to an existing activity.'
+                        ]
+                    }
+                )
+            print(activity)
+            repo_base = activity.source_repo.url_repository
+            # now check for links and add the repo_base url
+            data['file'] = repo_base + data['file']
+            if previews := data['specifics'].get('previews'):
+                for preview in previews:
+                    for key in preview.keys():
+                        preview[key] = repo_base + preview[key]
+            if 'thumbnail' in data['specifics']:
+                data['specifics']['thumbnail'] = (
+                    repo_base + data['specifics']['thumbnail']
+                )
+            if 'mp3' in data['specifics']:
+                data['specifics']['mp3'] = repo_base + data['specifics']['mp3']
+            if cover := data['specifics'].get('cover'):
+                for key in cover.keys():
+                    cover[key] = repo_base + cover[key]
+            if 'playlist' in data['specifics']:
+                data['specifics']['playlist'] = (
+                    repo_base + data['specifics']['playlist']
+                )
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # throw out things we don't need / don't want to show
+        ret.pop('activity')  # media are only read-accessible via an activity
+        ret.pop('source_repo_id')
+        ret.pop('exif')
+        # rename file to original and add repo_base
+        ret['original'] = ret.pop('file')
+        # flatten the specifics into the media dict
+        specifics = ret.pop('specifics')
+        ret.update(specifics)
+        return ret
