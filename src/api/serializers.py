@@ -133,6 +133,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.pop('source_repo_data')
         ret.pop('source_repo_entry_id')
         ret.pop('source_repo_owner_id')
+        ret.pop('relations')
         # add timestamps
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created
@@ -142,10 +143,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         if media:
             context = {'repo_base': instance.source_repo.url_repository}
             media_entries = MediaSerializer(media, many=True, context=context).data
+        relations = self.serialize_related()
         ret['entries'] = {
             'media': media_entries,
-            # TODO: linked activities are currently empty, until relationships are pushed
-            'linked': [],
+            'linked': relations,
         }
         # publisher currently is only the entity this activity belongs to
         ret.pop('belongs_to')
@@ -198,6 +199,36 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.update(new_data)
 
         return ret
+
+    def serialize_related(self):
+        data = {
+            'to': [],
+            'from': [],
+        }
+        if relations_to := Relation.objects.filter(from_entry=self.instance.id):
+            for relation in relations_to:
+                data['to'].append(self.serialize_related_activity(relation.to_entry))
+        if relations_from := Relation.objects.filter(to_entry=self.instance.id):
+            for relation in relations_from:
+                data['from'].append(
+                    self.serialize_related_activity(relation.from_entry)
+                )
+
+        return data
+
+    def serialize_related_activity(self, activity):
+        # This should conform to the SearchItem schema
+        data = {
+            'id': activity.id,
+            'alternative_text': [],  # TODO: what should go in here?
+            'media_url': '',  # TODO: fill with featured media and rename in api spec (currently: mediaUrl)
+            'source': '',  # TODO: ? same as id ?
+            'source_institution': activity.source_repo.label_institution,
+            'score': None,  # No scoring for related activities
+            'title': activity.title,
+            'type': activity.type,
+        }
+        return data
 
 
 class AlbumSerializer(serializers.ModelSerializer):
