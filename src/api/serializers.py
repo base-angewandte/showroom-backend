@@ -250,7 +250,6 @@ class MediaSerializer(serializers.ModelSerializer):
                         ]
                     }
                 )
-            print(activity)
             repo_base = activity.source_repo.url_repository
             # now check for links and add the repo_base url
             data['file'] = repo_base + data['file']
