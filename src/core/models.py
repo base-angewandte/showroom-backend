@@ -78,8 +78,8 @@ class Activity(AbstractShowroomObject):
     #   reasoning: if an entity that has activities (which should be a person) is deleted from the DB, all their
     #              activities should be deleted as well
     belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True)
-    parents = models.ManyToManyField(
-        'self', symmetrical=False, related_name='children', blank=True
+    relations = models.ManyToManyField(
+        'self', through='Relation', symmetrical=False, related_name='related_to'
     )
 
     def __str__(self):
@@ -132,3 +132,19 @@ class Media(models.Model):
 
     def __str__(self):
         return f'[{self.id}] {self.type}: {self.file}'
+
+
+class Relation(models.Model):
+    id = ShortUUIDField(primary_key=True)
+    from_entry = models.ForeignKey(
+        Activity, related_name='from_entries', on_delete=models.CASCADE
+    )
+    to_entry = models.ForeignKey(
+        Activity, related_name='to_entries', on_delete=models.CASCADE
+    )
+
+    class Meta:
+        unique_together = (
+            'from_entry',
+            'to_entry',
+        )

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Activity, Album, Entity, Media, SourceRepository
+from .models import Activity, Album, Entity, Media, Relation, SourceRepository
 
 
 class SourceRepoAdmin(admin.ModelAdmin):
@@ -12,8 +12,13 @@ class SourceRepoAdmin(admin.ModelAdmin):
     repo_label.short_description = 'Source repository'
 
 
+class RelationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'from_entry', 'to_entry')
+
+
 admin.site.register(SourceRepository, SourceRepoAdmin)
 admin.site.register(Entity)
 admin.site.register(Activity)
 admin.site.register(Album)
 admin.site.register(Media)
+admin.site.register(Relation, RelationAdmin)

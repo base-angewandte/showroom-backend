@@ -5,7 +5,7 @@ from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from core.models import Activity, Album, Entity, Media
+from core.models import Activity, Album, Entity, Media, Relation
 
 from . import view_spec
 from .permissions import ActivityPermission
@@ -14,6 +14,7 @@ from .serializers import (
     AlbumSerializer,
     EntitySerializer,
     MediaSerializer,
+    RelationSerializer,
 )
 
 # Create your views here.
@@ -409,3 +410,26 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
+
+
+@extend_schema_view(
+    create=extend_schema(
+        tags=['repo'],
+        responses={
+            200: RelationSerializer,
+        },
+    ),
+    destroy=extend_schema(
+        tags=['repo'],
+        responses={
+            200: RelationSerializer,
+        },
+    ),
+)
+class RelationViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = Relation.objects.all()
+    serializer_class = RelationSerializer

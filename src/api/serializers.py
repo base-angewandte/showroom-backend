@@ -3,10 +3,11 @@ import sys
 from traceback import print_tb
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from django.conf import settings
 
-from core.models import Activity, Album, Entity, Media
+from core.models import Activity, Album, Entity, Media, Relation
 
 from .repositories import portfolio
 from .repositories.portfolio import (
@@ -50,7 +51,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             'source_repo_data',
             'featured_media',
             'belongs_to',
-            'parents',
+            'relations',
             'type',
         ]
 
@@ -250,7 +251,6 @@ class MediaSerializer(serializers.ModelSerializer):
                         ]
                     }
                 )
-            print(activity)
             repo_base = activity.source_repo.url_repository
             # now check for links and add the repo_base url
             data['file'] = repo_base + data['file']
@@ -285,3 +285,20 @@ class MediaSerializer(serializers.ModelSerializer):
         specifics = ret.pop('specifics')
         ret.update(specifics)
         return ret
+
+
+class RelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Relation
+        fields = (
+            'from_entry',
+            'to_entry',
+        )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Relation.objects.all(),
+                fields=Relation._meta.unique_together[0],
+                message='Relation already exists',
+            )
+        ]
