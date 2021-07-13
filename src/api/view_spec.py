@@ -146,6 +146,10 @@ class AutocompleteItemSerializer(serializers.Serializer):
     data = AutocompleteItemDataSerializer(many=True)
 
 
+class ActivityRelationSerializer(serializers.Serializer):
+    activity_id = serializers.CharField()
+
+
 class Responses:
     Error400 = error(
         status_code=400,
@@ -183,4 +187,9 @@ class Responses:
         description='',
         response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
         # TODO: add description and examples
+    )
+
+    RelationAdded = OpenApiResponse(
+        description='The relationship was successfully added.',
+        response=None,
     )

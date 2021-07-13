@@ -189,6 +189,55 @@ class ActivityViewSet(
     def media(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
 
+    @extend_schema(
+        tags=['repo'],
+        request=view_spec.ActivityRelationSerializer,
+        responses={
+            201: view_spec.Responses.RelationAdded,
+            400: view_spec.Responses.Error400,
+            404: view_spec.Responses.Error404,
+        },
+    )
+    @action(detail=True, methods=['post'])
+    def relations(self, request, *args, **kwargs):
+        try:
+            activity = Activity.objects.get(pk=kwargs['pk'])
+        except Activity.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if not (activity_id := request.data.get('activity_id')):
+            return Response(
+                {'activity_id': ['This field is required']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            related = Activity.objects.get(id=activity_id)
+        except Activity.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        activity.relations_to.add(related)
+        return Response(status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=['repo'],
+        responses={
+            204: None,
+            404: view_spec.Responses.Error404,
+        },
+    )
+    @action(
+        detail=True, methods=['delete'], url_path='relations/(?P<related_id>[^/.]+)'
+    )
+    def relations_delete(self, request, *args, **kwargs):
+        try:
+            activity = Activity.objects.get(pk=kwargs['pk'])
+        except Activity.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            related = activity.relations_to.get(id=kwargs['related_id'])
+        except Activity.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        activity.relations_to.remove(related)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @extend_schema_view(
     create=extend_schema(
