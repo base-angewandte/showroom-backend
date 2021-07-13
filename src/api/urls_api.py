@@ -17,7 +17,6 @@ router.register(r'media', views.MediaViewSet)
 router.register(r'search', views.SearchViewSet, basename='search')
 router.register(r'filters', views.FilterViewSet, basename='filters')
 router.register(r'autocomplete', views.AutocompleteViewSet, basename='autocomplete')
-router.register(r'relations', views.RelationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

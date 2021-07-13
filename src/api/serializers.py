@@ -3,11 +3,10 @@ import sys
 from traceback import print_tb
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from django.conf import settings
 
-from core.models import Activity, Album, Entity, Media, Relation
+from core.models import Activity, Album, Entity, Media
 
 from .repositories import portfolio
 from .repositories.portfolio import (
@@ -51,7 +50,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             'source_repo_data',
             'featured_media',
             'belongs_to',
-            'relations',
+            'relations_to',
             'type',
         ]
 
@@ -133,7 +132,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.pop('source_repo_data')
         ret.pop('source_repo_entry_id')
         ret.pop('source_repo_owner_id')
-        ret.pop('relations')
+        ret.pop('relations_to')
         # add timestamps
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created
@@ -205,14 +204,10 @@ class ActivitySerializer(serializers.ModelSerializer):
             'to': [],
             'from': [],
         }
-        if relations_to := Relation.objects.filter(from_entry=self.instance.id):
-            for relation in relations_to:
-                data['to'].append(self.serialize_related_activity(relation.to_entry))
-        if relations_from := Relation.objects.filter(to_entry=self.instance.id):
-            for relation in relations_from:
-                data['from'].append(
-                    self.serialize_related_activity(relation.from_entry)
-                )
+        for relation in self.instance.relations_to.all():
+            data['to'].append(self.serialize_related_activity(relation))
+        for relation in self.instance.relations_from.all():
+            data['from'].append(self.serialize_related_activity(relation))
 
         return data
 
@@ -316,20 +311,3 @@ class MediaSerializer(serializers.ModelSerializer):
         specifics = ret.pop('specifics')
         ret.update(specifics)
         return ret
-
-
-class RelationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Relation
-        fields = (
-            'from_entry',
-            'to_entry',
-        )
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Relation.objects.all(),
-                fields=Relation._meta.unique_together[0],
-                message='Relation already exists',
-            )
-        ]
