@@ -212,7 +212,18 @@ class ActivityViewSet(
         try:
             related = Activity.objects.get(id=activity_id)
         except Activity.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            # TODO: discuss whether we want to look for an activity where the
+            #       source repo id matches the provided id
+            try:
+                related = Activity.objects.get(
+                    source_repo_entry_id=activity_id,
+                    source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
+                )
+            except Activity.DoesNotExist:
+                return Response(
+                    {'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND
+                )
+
         activity.relations_to.add(related)
         return Response(status=status.HTTP_201_CREATED)
 
