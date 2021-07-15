@@ -44,22 +44,6 @@ from .serializers import (
             404: view_spec.Responses.Error404,
         },
     ),
-    list=extend_schema(exclude=True),
-    activities_list=extend_schema(
-        tags=['public'],
-        responses={
-            200: view_spec.Responses.CommonList,
-            404: view_spec.Responses.Error404,
-        },
-    ),
-    search=extend_schema(
-        tags=['public'],
-        responses={
-            200: view_spec.Responses.SearchCollection,
-            404: view_spec.Responses.Error404,
-        },
-        # TODO: change parameters
-    ),
 )
 class EntityViewSet(
     mixins.CreateModelMixin,
@@ -74,16 +58,32 @@ class EntityViewSet(
     # we only want partial updates enabled, therefore removing put from the allowed methods
     http_method_names = ['get', 'head', 'options', 'patch', 'post']
 
+    @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
         # If we do not include the ListModelMixin and define this here, Django would provide a standard 404
         # HTML page. So to be consistent with the APIs error scheme we raise a rest_framework 405, and exclude
         # the list method in the schema (through the list parameter in the extend_schema_view decorator above)
         raise MethodNotAllowed(method='GET')
 
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: view_spec.Responses.CommonList,
+            404: view_spec.Responses.Error404,
+        },
+    )
     @action(detail=True, methods=['get'], url_path='list')
     def activities_list(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
 
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: view_spec.Responses.SearchCollection,
+            404: view_spec.Responses.Error404,
+        },
+        # TODO: change parameters
+    )
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def search(self, request, *args, **kwargs):
         s = view_spec.SearchSerializer(data=request.data)
@@ -95,12 +95,11 @@ class EntityViewSet(
 
 
 @extend_schema_view(
-    create=extend_schema(
-        tags=['repo'],
+    retrieve=extend_schema(
+        tags=['public'],
         responses={
-            201: ActivitySerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
+            200: ActivitySerializer,
+            404: view_spec.Responses.Error404,
         },
     ),
     destroy=extend_schema(
@@ -112,21 +111,6 @@ class EntityViewSet(
             404: view_spec.Responses.Error404,
         },
     ),
-    retrieve=extend_schema(
-        tags=['public'],
-        responses={
-            200: ActivitySerializer,
-            404: view_spec.Responses.Error404,
-        },
-    ),
-    media=extend_schema(
-        tags=['public'],
-        responses={
-            200: MediaSerializer(many=True),
-            404: view_spec.Responses.Error404,
-        },
-    ),
-    list=extend_schema(exclude=True),
 )
 class ActivityViewSet(
     mixins.CreateModelMixin,
@@ -139,10 +123,19 @@ class ActivityViewSet(
     serializer_class = ActivitySerializer
     permission_classes = [ActivityPermission]
 
+    @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
         # Similar to list in EntitiyViewSet
         raise MethodNotAllowed(method='GET')
 
+    @extend_schema(
+        tags=['repo'],
+        responses={
+            201: ActivitySerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+        },
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -185,6 +178,13 @@ class ActivityViewSet(
 
         return Response(response, status=status.HTTP_201_CREATED)
 
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: MediaSerializer(many=True),
+            404: view_spec.Responses.Error404,
+        },
+    )
     @action(detail=True, methods=['get'])
     def media(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
@@ -220,8 +220,6 @@ class ActivityViewSet(
                 {'related_to': ['This field is required']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print(related_to)
-        print(type(related_to))
         if type(related_to) is not list:
             return Response(
                 {'related_to': ['Has to be a list of repo entry ids']},
@@ -296,28 +294,19 @@ class ActivityViewSet(
         },
     ),
     update=extend_schema(exclude=True),
-    list=extend_schema(exclude=True),
 )
 class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
         # Similar to list in EntitiyViewSet
         raise MethodNotAllowed(method='GET')
 
 
 @extend_schema_view(
-    create=extend_schema(
-        tags=['repo'],
-        responses={
-            201: MediaSerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
-        },
-    ),
     update=extend_schema(
         tags=['repo'],
         responses={
@@ -347,6 +336,15 @@ class MediaViewSet(
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
 
+    @extend_schema(
+        tags=['repo'],
+        responses={
+            201: MediaSerializer,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -389,20 +387,18 @@ class MediaViewSet(
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(
-    create=extend_schema(
+class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """Submit a search to Showroom."""
+
+    serializer_class = view_spec.SearchSerializer
+
+    @extend_schema(
         tags=['public'],
         responses={
             200: view_spec.Responses.SearchCollection,
             400: view_spec.Responses.Error400,
         },
     )
-)
-class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    """Submit a search to Showroom."""
-
-    serializer_class = view_spec.SearchSerializer
-
     def create(self, request, *args, **kwargs):
         s = view_spec.SearchSerializer(data=request.data)
         s.is_valid(raise_exception=True)
@@ -450,33 +446,29 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         return Response(response, status=200)
 
 
-@extend_schema_view(
-    list=extend_schema(
+class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Get all the available filters that can be used in search and
+    autocomplete."""
+
+    @extend_schema(
         tags=['public'],
         responses={
             200: view_spec.Responses.Filters,
         },
     )
-)
-class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """Get all the available filters that can be used in search and
-    autocomplete."""
-
     def list(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
 
 
-@extend_schema_view(
-    create=extend_schema(
+class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """Retrieves available autocomplete results for a specific string and
+    filter."""
+
+    @extend_schema(
         tags=['public'],
         responses={
             200: view_spec.Responses.AutoComplete,
         },
     )
-)
-class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    """Retrieves available autocomplete results for a specific string and
-    filter."""
-
     def create(self, request, *args, **kwargs):
         return Response({'detail': 'Not yet implemented'}, status=400)
