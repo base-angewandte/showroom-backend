@@ -126,7 +126,7 @@ class Media(models.Model):
     exif = JSONField(blank=True, null=True)
     license = JSONField(blank=True, null=True)
     specifics = JSONField(blank=True, null=True)
-    source_repo_id = models.CharField(max_length=255)
+    source_repo_media_id = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 

@@ -251,7 +251,7 @@ class MediaSerializer(serializers.ModelSerializer):
             'exif',
             'license',
             'specifics',
-            'source_repo_id',
+            'source_repo_media_id',
         ]
 
     def to_internal_value(self, data):
@@ -268,12 +268,14 @@ class MediaSerializer(serializers.ModelSerializer):
             # activity also has to be set to an existing activity, so we can get
             # the repos base url
             try:
-                activity = Activity.objects.get(pk=data.get('activity'))
+                activity = Activity.objects.get(
+                    source_repo_entry_id=data.get('source_repo_entry_id')
+                )
             except Activity.DoesNotExist:
                 raise serializers.ValidationError(
                     {
-                        'activity': [
-                            'This field is required and has to refer to an existing activity.'
+                        'source_repo_entry_id': [
+                            'This field is required and has to refer to an existing activity by its originial source repo\'s entry id.'
                         ]
                     }
                 )
@@ -303,7 +305,7 @@ class MediaSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         # throw out things we don't need / don't want to show
         ret.pop('activity')  # media are only read-accessible via an activity
-        ret.pop('source_repo_id')
+        ret.pop('source_repo_media_id')
         ret.pop('exif')
         # rename file to original and add repo_base
         ret['original'] = ret.pop('file')
