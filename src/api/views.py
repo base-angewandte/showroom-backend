@@ -102,15 +102,6 @@ class EntityViewSet(
             404: view_spec.Responses.Error404,
         },
     ),
-    destroy=extend_schema(
-        tags=['repo'],
-        responses={
-            204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
-        },
-    ),
 )
 class ActivityViewSet(
     mixins.CreateModelMixin,
@@ -177,6 +168,34 @@ class ActivityViewSet(
             )
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=['repo'],
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=str,
+                location=OpenApiParameter.PATH,
+                description='The source repo\'s id for this activity',
+            ),
+        ],
+        responses={
+            204: None,
+            400: view_spec.Responses.Error400,
+            403: view_spec.Responses.Error403,
+            404: view_spec.Responses.Error404,
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        try:
+            activity = Activity.objects.get(
+                source_repo_entry_id=kwargs['pk'],
+                source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
+            )
+        except Activity.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        self.perform_destroy(activity)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
         tags=['public'],
