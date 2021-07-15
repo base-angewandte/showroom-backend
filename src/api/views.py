@@ -345,8 +345,7 @@ class MediaViewSet(
 ):
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
-    # TODO: add permission class
-    # permission_classes = [MediaPermission]
+    permission_classes = [ActivityPermission]
 
     @extend_schema(
         tags=['repo'],
