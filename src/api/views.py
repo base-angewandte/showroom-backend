@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
@@ -197,57 +197,68 @@ class ActivityViewSet(
             400: view_spec.Responses.Error400,
             404: view_spec.Responses.Error404,
         },
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=str,
+                location=OpenApiParameter.PATH,
+                description='The source repo\'s id for this activity',
+            ),
+        ],
     )
     @action(detail=True, methods=['post'])
     def relations(self, request, *args, **kwargs):
         try:
-            activity = Activity.objects.get(pk=kwargs['pk'])
+            activity = Activity.objects.get(
+                source_repo_entry_id=kwargs['pk'],
+                source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
+            )
         except Activity.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        if not (activity_id := request.data.get('activity_id')):
+        if (related_to := request.data.get('related_to')) is None:
             return Response(
-                {'activity_id': ['This field is required']},
+                {'related_to': ['This field is required']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            related = Activity.objects.get(id=activity_id)
-        except Activity.DoesNotExist:
-            # TODO: discuss whether we want to look for an activity where the
-            #       source repo id matches the provided id
+        print(related_to)
+        print(type(related_to))
+        if type(related_to) is not list:
+            return Response(
+                {'related_to': ['Has to be a list of repo entry ids']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # check first if all items are strings before we change anything
+        for related in related_to:
+            if type(related) is not str:
+                return Response(
+                    {'related_to': 'Must only contain strings'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        # Now clear all existing relations and add the new ones
+        activity.relations_to.clear()
+        relations_added = []
+        relations_not_added = []
+        for related in related_to:
+            if type(related) is not str:
+                return Response(
+                    {'related_to': 'Must only contain strings'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             try:
-                related = Activity.objects.get(
-                    source_repo_entry_id=activity_id,
+                related_activity = Activity.objects.get(
+                    source_repo_entry_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )
+                relations_added.append(related)
+                activity.relations_to.add(related_activity)
             except Activity.DoesNotExist:
-                return Response(
-                    {'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND
-                )
+                relations_not_added.append(related)
 
-        activity.relations_to.add(related)
-        return Response(status=status.HTTP_201_CREATED)
-
-    @extend_schema(
-        tags=['repo'],
-        responses={
-            204: None,
-            404: view_spec.Responses.Error404,
-        },
-    )
-    @action(
-        detail=True, methods=['delete'], url_path='relations/(?P<related_id>[^/.]+)'
-    )
-    def relations_delete(self, request, *args, **kwargs):
-        try:
-            activity = Activity.objects.get(pk=kwargs['pk'])
-        except Activity.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            related = activity.relations_to.get(id=kwargs['related_id'])
-        except Activity.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        activity.relations_to.remove(related)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        ret = {
+            'created': relations_added,
+            'not_found': relations_not_added,
+        }
+        return Response(ret, status=status.HTTP_201_CREATED)
 
 
 @extend_schema_view(
