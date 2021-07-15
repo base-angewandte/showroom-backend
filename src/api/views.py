@@ -325,21 +325,8 @@ class AlbumViewSet(viewsets.ModelViewSet):
         raise MethodNotAllowed(method='GET')
 
 
-@extend_schema_view(
-    update=extend_schema(
-        tags=['repo'],
-        responses={
-            200: MediaSerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
-        },
-    ),
-    partial_update=extend_schema(exclude=True),
-)
 class MediaViewSet(
     mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
