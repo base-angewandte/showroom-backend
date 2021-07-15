@@ -147,6 +147,14 @@ class ActivitySerializer(serializers.ModelSerializer):
             'media': media_entries,
             'linked': relations,
         }
+        # featured_media currently cannot be set explicitly in portfolio
+        # therefore we just go through all available media and take the first
+        # image we can find
+        ret['featured_media'] = None
+        for medium in media:
+            if medium.type == 'i':
+                ret['featured_media'] = MediaSerializer(medium, context=context).data
+                break
         # publisher currently is only the entity this activity belongs to
         ret.pop('belongs_to')
         ret['publisher'] = []
@@ -211,7 +219,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 
         return data
 
-    def serialize_related_activity(self, activity):
+    @staticmethod
+    def serialize_related_activity(activity):
         # This should conform to the SearchItem schema
         data = {
             'id': activity.id,
