@@ -7,16 +7,22 @@ from rest_framework.routers import DefaultRouter
 
 from django.urls import include, path
 
-from . import views
+from .views.activity import ActivityViewSet
+from .views.album import AlbumViewSet
+from .views.autocomplete import AutocompleteViewSet
+from .views.entity import EntityViewSet
+from .views.filter import FilterViewSet
+from .views.media import MediaViewSet
+from .views.search import SearchViewSet
 
 router = DefaultRouter()
-router.register(r'entities', views.EntityViewSet)
-router.register(r'activities', views.ActivityViewSet)
-router.register(r'albums', views.AlbumViewSet)
-router.register(r'media', views.MediaViewSet)
-router.register(r'search', views.SearchViewSet, basename='search')
-router.register(r'filters', views.FilterViewSet, basename='filters')
-router.register(r'autocomplete', views.AutocompleteViewSet, basename='autocomplete')
+router.register(r'entities', EntityViewSet)
+router.register(r'activities', ActivityViewSet)
+router.register(r'albums', AlbumViewSet)
+router.register(r'media', MediaViewSet)
+router.register(r'search', SearchViewSet, basename='search')
+router.register(r'filters', FilterViewSet, basename='filters')
+router.register(r'autocomplete', AutocompleteViewSet, basename='autocomplete')
 
 urlpatterns = [
     path('', include(router.urls)),
