@@ -10,6 +10,7 @@ from django.urls import include, path
 from .views.activity import ActivityViewSet
 from .views.album import AlbumViewSet
 from .views.autocomplete import AutocompleteViewSet
+from .views.category import CategoryViewSet
 from .views.entity import EntityViewSet
 from .views.filter import FilterViewSet
 from .views.media import MediaViewSet
@@ -23,6 +24,7 @@ router.register(r'media', MediaViewSet)
 router.register(r'search', SearchViewSet, basename='search')
 router.register(r'filters', FilterViewSet, basename='filters')
 router.register(r'autocomplete', AutocompleteViewSet, basename='autocomplete')
+router.register(r'categories', CategoryViewSet, basename='categories')
 
 urlpatterns = [
     path('', include(router.urls)),
