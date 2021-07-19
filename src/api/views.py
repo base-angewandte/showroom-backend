@@ -9,12 +9,10 @@ from core.models import Activity, Album, Entity, Media
 
 from . import view_spec
 from .permissions import ActivityPermission
-from .serializers import (
-    ActivitySerializer,
-    AlbumSerializer,
-    EntitySerializer,
-    MediaSerializer,
-)
+from .serializers.activity import ActivitySerializer
+from .serializers.album import AlbumSerializer
+from .serializers.entity import EntitySerializer
+from .serializers.media import MediaSerializer
 
 # Create your views here.
 
@@ -55,14 +53,17 @@ class EntityViewSet(
     queryset = Entity.objects.all()
     serializer_class = EntitySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    # we only want partial updates enabled, therefore removing put from the allowed methods
+    # we only want partial updates enabled, therefore removing put
+    # from the allowed methods
     http_method_names = ['get', 'head', 'options', 'patch', 'post']
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
-        # If we do not include the ListModelMixin and define this here, Django would provide a standard 404
-        # HTML page. So to be consistent with the APIs error scheme we raise a rest_framework 405, and exclude
-        # the list method in the schema (through the list parameter in the extend_schema_view decorator above)
+        # If we do not include the ListModelMixin and define this here, Django would
+        # provide a standard 404 HTML page. So to be consistent with the APIs error
+        # scheme we raise a rest_framework 405, and exclude the list method in the
+        # schema (through the list parameter in the extend_schema_view decorator
+        # above)
         raise MethodNotAllowed(method='GET')
 
     @extend_schema(
@@ -141,7 +142,8 @@ class ActivityViewSet(
         except Activity.MultipleObjectsReturned:
             return Response(
                 {
-                    'detail': 'More than one activity with this id exists. This should not happen. Contact the showroom admin.'
+                    'detail': 'More than one activity with this id exists. '
+                    + 'This should not happen. Contact the showroom admin.'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
@@ -378,7 +380,8 @@ class MediaViewSet(
         except Media.MultipleObjectsReturned:
             return Response(
                 {
-                    'detail': 'More than one medium with this id exists. This should not happen. Contact the showroom admin.'
+                    'detail': 'More than one medium with this id exists. '
+                    + 'This should not happen. Contact the showroom admin.'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
