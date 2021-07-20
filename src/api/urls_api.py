@@ -15,6 +15,7 @@ from .views.entity import EntityViewSet
 from .views.filter import FilterViewSet
 from .views.media import MediaViewSet
 from .views.search import SearchViewSet
+from .views.user import UserViewSet
 
 router = DefaultRouter()
 router.register(r'entities', EntityViewSet)
@@ -25,6 +26,7 @@ router.register(r'search', SearchViewSet, basename='search')
 router.register(r'filters', FilterViewSet, basename='filters')
 router.register(r'autocomplete', AutocompleteViewSet, basename='autocomplete')
 router.register(r'categories', CategoryViewSet, basename='categories')
+router.register(r'user', UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),
