@@ -1,8 +1,9 @@
-from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, viewsets
+from drf_spectacular.utils import OpenApiExample, extend_schema, inline_serializer
+from rest_framework import mixins, serializers, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api import view_spec
 from core.models import Entity
 
 
@@ -13,6 +14,31 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     @extend_schema(
         tags=['auth'],
+        responses={
+            200: inline_serializer(
+                name='User',
+                fields={
+                    'id': serializers.CharField(),
+                    'name': serializers.CharField(),
+                    'email': serializers.CharField(),
+                    'entry_id': serializers.CharField(),
+                },
+            ),
+            403: view_spec.Responses.Error403,
+        },
+        examples=[
+            OpenApiExample(
+                name='User',
+                value={
+                    'id': 'sourcce_repo_uuid',
+                    'name': 'Firstname Lastname',
+                    'email': 'addy@example.org',
+                    'entry_id': 'showroom_entry_shortuuid_or_null',
+                },
+                status_codes=['200'],
+                response_only=True,
+            ),
+        ],
     )
     def list(self, request, *args, **kwargs):
         attributes = request.session.get('attributes')
