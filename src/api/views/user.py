@@ -22,6 +22,10 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     'name': serializers.CharField(),
                     'email': serializers.CharField(),
                     'entry_id': serializers.CharField(),
+                    'groups': serializers.ListSerializer(child=serializers.CharField()),
+                    'permissions': serializers.ListSerializer(
+                        child=serializers.CharField()
+                    ),
                 },
             ),
             403: view_spec.Responses.Error403,
@@ -30,10 +34,12 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             OpenApiExample(
                 name='User',
                 value={
-                    'id': 'sourcce_repo_uuid',
+                    'id': 'source_repo_uuid',
                     'name': 'Firstname Lastname',
                     'email': 'addy@example.org',
                     'entry_id': 'showroom_entry_shortuuid_or_null',
+                    'groups': ['foo_users', 'bar_members'],
+                    'permissions': ['view_foo', 'view_bar', 'edit_bar'],
                 },
                 status_codes=['200'],
                 response_only=True,
@@ -52,5 +58,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'name': attributes.get('display_name'),
             'email': attributes.get('email'),
             'entity_id': entity_id,
+            'groups': attributes.get('groups'),
+            'permissions': attributes.get('permissions'),
         }
         return Response(ret, status=200)
