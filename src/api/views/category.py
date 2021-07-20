@@ -2,10 +2,24 @@ from drf_spectacular.utils import OpenApiExample, extend_schema, inline_serializ
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.response import Response
 
+from django.conf import settings
+
 search_categories = [
-    {'id': 'persons', 'label': 'Persons'},
-    {'id': 'activities', 'label': 'Activities'},
+    {'id': 'persons', 'label': {'en': 'Persons', 'de': 'Personen'}},
+    {'id': 'activities', 'label': {'en': 'Activities', 'de': 'Aktivitäten'}},
 ]
+
+
+def get_localised_search_categories(lang):
+    if lang not in [ln[0] for ln in settings.LANGUAGES]:
+        lang = settings.LANGUAGES[0][0]
+    return [
+        {
+            'id': cat['id'],
+            'label': cat['label'][lang],
+        }
+        for cat in search_categories
+    ]
 
 
 class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -33,5 +47,4 @@ class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         lang = request.LANGUAGE_CODE
-        print(lang)
-        return Response(search_categories, status=200)
+        return Response(get_localised_search_categories(lang), status=200)
