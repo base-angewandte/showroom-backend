@@ -15,6 +15,7 @@ from .views.entity import EntityViewSet
 from .views.filter import FilterViewSet
 from .views.media import MediaViewSet
 from .views.search import SearchViewSet
+from .views.user import get_user_data
 
 router = DefaultRouter()
 router.register(r'entities', EntityViewSet)
@@ -28,6 +29,7 @@ router.register(r'categories', CategoryViewSet, basename='categories')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('user/', get_user_data, name='user'),
     path('schema/openapi3.yaml', SpectacularAPIView.as_view(), name='schema'),
     path('schema/openapi3.json', SpectacularJSONAPIView.as_view(), name='schema'),
     path(
