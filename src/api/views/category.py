@@ -38,7 +38,7 @@ class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         },
         examples=[
             OpenApiExample(
-                name='Error',
+                name='Categories',
                 value=search_categories,
                 status_codes=['200'],
                 response_only=True,
