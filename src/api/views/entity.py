@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from api import view_spec
 from api.serializers.entity import EntitySerializer
+from api.serializers.search import SearchCollectionSerializer, SearchRequestSerializer
 from core.models import Entity
 
 
@@ -73,14 +74,14 @@ class EntityViewSet(
     @extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.SearchCollection,
+            200: SearchCollectionSerializer,
             404: view_spec.Responses.Error404,
         },
         # TODO: change parameters
     )
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def search(self, request, *args, **kwargs):
-        s = view_spec.SearchSerializer(data=request.data)
+        s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         return Response(
             {'detail': 'Not yet implemented', 'filters_used': s.validated_data},

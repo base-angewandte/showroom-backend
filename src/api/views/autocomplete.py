@@ -9,6 +9,9 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Retrieves available autocomplete results for a specific string and
     filter."""
 
+    # TODO: create serializer module (only quick fix to get rid of error for now)
+    serializer_class = view_spec.AutocompleteItemSerializer
+
     @extend_schema(
         tags=['public'],
         responses={

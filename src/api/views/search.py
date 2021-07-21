@@ -1,25 +1,29 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from api import view_spec
+from api.serializers.search import SearchCollectionSerializer, SearchRequestSerializer
 from core.models import Activity
 
 
 class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Submit a search to Showroom."""
 
-    serializer_class = view_spec.SearchSerializer
+    serializer_class = SearchRequestSerializer
 
     @extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.SearchCollection,
+            200: OpenApiResponse(
+                description='',
+                response=SearchCollectionSerializer,
+            ),
             400: view_spec.Responses.Error400,
         },
     )
     def create(self, request, *args, **kwargs):
-        s = view_spec.SearchSerializer(data=request.data)
+        s = self.get_serializer(data=request.data)
         s.is_valid(raise_exception=True)
 
         limit = s.data.get('limit')

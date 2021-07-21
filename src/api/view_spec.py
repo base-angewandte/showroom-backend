@@ -71,34 +71,6 @@ class CommonListSerializer(serializers.Serializer):
     data = serializers.ListField(child=CommonListDataField())
 
 
-class SearchItemAlternativeTextSerializer(serializers.Serializer):
-    label = serializers.CharField()
-    value = serializers.CharField()
-
-
-class SearchItemSourceInstitutionSerializer(serializers.Serializer):
-    label = serializers.CharField()
-    url = serializers.URLField()
-    icon = serializers.URLField()
-
-
-class SearchItemSerializer(serializers.Serializer):
-    id = serializers.CharField()
-    alternative_text = SearchItemAlternativeTextSerializer(many=True)
-    media_url = serializers.URLField()
-    source = serializers.URLField()
-    source_institution = SearchItemSourceInstitutionSerializer()
-    score = serializers.IntegerField()
-    title = serializers.CharField()
-    type = serializers.CharField()
-
-
-class SearchCollectionSerializer(serializers.Serializer):
-    collection = serializers.CharField()
-    total = serializers.IntegerField()
-    data = SearchItemSerializer(many=True)
-
-
 @extend_schema_field(
     field={'type': 'string', 'enum': ['text', 'date', 'daterange', 'chips']},
     component_name='FilterTypes',
@@ -110,18 +82,6 @@ class FilterTypesField(serializers.ChoiceField):
             kwargs.pop('choices')
 
         super().__init__(choices=['text', 'date', 'daterange', 'chips'], **kwargs)
-
-
-class CommonSearchFilterSerializer(serializers.Serializer):
-    name = serializers.CharField()
-    type = FilterTypesField()
-    filter_values = serializers.ListField(child=serializers.JSONField())
-
-
-class SearchSerializer(serializers.Serializer):
-    filter = serializers.ListField(child=CommonSearchFilterSerializer())
-    limit = serializers.IntegerField(required=False)
-    offset = serializers.IntegerField(required=False)
 
 
 class AutocompleteItemDataSerializer(serializers.Serializer):
@@ -159,12 +119,6 @@ class Responses:
     CommonList = OpenApiResponse(
         description='a list of things',
         response=CommonListSerializer,
-        # TODO: add examples
-    )
-
-    SearchCollection = OpenApiResponse(
-        description='',
-        response=SearchCollectionSerializer,
         # TODO: add examples
     )
 
