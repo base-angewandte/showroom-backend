@@ -1,10 +1,10 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from django.conf import settings
 
-from api import view_spec
+from api.serializers.filter import FilterSerializer
 from core.models import Activity
 
 static_filters = [
@@ -69,7 +69,7 @@ label_activity_types = {
 }
 
 
-def get_dynamic_filters(lang=settings.LANGUAGES[0][0]):
+def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
     """Returns the filter definitions for keywords and activity type
     searches."""
     # TODO: cache the dynamic filters for 30 min
@@ -77,26 +77,27 @@ def get_dynamic_filters(lang=settings.LANGUAGES[0][0]):
     activities = Activity.objects.exclude(source_repo_data__keywords=None)
     keywords = set()
     for activity in activities:
-        for keyword in activity.source_repo_data['keywords']:
-            keywords.add(keyword['label'][lang])
+        for kw in activity.source_repo_data['keywords']:
+            # keywords should be sortable by localised value
+            keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
     keyword_filter = {
         'id': 'keywords',
         'type': 'chips',
         'label': label_keywords[lang],
-        'freetext_allowed': True,
-        'options': [{'id': kw, 'label': kw} for kw in sorted(keywords)],
+        'freetext_allowed': False,
+        'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
     }
 
-    activities = Activity.objects.exclude(type__isnull=True)
+    activities = Activity.objects.exclude(type__isnull=True).exclude(type={})
     types = set()
-    for activity in activities:
-        types.add(activity.type['label'][lang])
+    for ac in activities:
+        types.add((ac.type['label'][lang], ac.type['label'][settings.LANGUAGE_CODE]))
     activity_types_filter = {
         'id': 'type',
         'type': 'chips',
         'label': label_activity_types[lang],
         'freetext_allowed': False,
-        'options': [{'id': kw, 'label': kw} for kw in sorted(types)],
+        'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
     }
     return [keyword_filter, activity_types_filter]
 
@@ -107,14 +108,23 @@ class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     @extend_schema(
         tags=['public'],
+        parameters=[
+            OpenApiParameter(
+                name='Accept-Language',
+                type=str,
+                default=settings.LANGUAGE_CODE,
+                location=OpenApiParameter.HEADER,
+                description='The ISO 2 letter language code to use for localisation',
+            ),
+        ],
         responses={
-            200: view_spec.Responses.Filters,
+            200: FilterSerializer,
         },
     )
     def list(self, request, *args, **kwargs):
         lang = request.LANGUAGE_CODE
         if lang not in [ln[0] for ln in settings.LANGUAGES]:
-            lang = settings.LANGUAGES[0][0]
+            lang = settings.LANGUAGE_CODE
 
         filters = [
             {

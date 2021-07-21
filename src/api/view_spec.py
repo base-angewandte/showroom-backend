@@ -124,15 +124,6 @@ class SearchSerializer(serializers.Serializer):
     offset = serializers.IntegerField(required=False)
 
 
-class FilterSerializer(serializers.Serializer):
-    label = serializers.CharField()
-    type = FilterTypesField()
-    # The following fields are only used for 'chips' filters
-    options = serializers.ListField(child=serializers.JSONField(), required=False)
-    freetext_allowed = serializers.BooleanField(required=False)
-    autocomplete_url = serializers.URLField(required=False)
-
-
 class AutocompleteItemDataSerializer(serializers.Serializer):
     id = serializers.CharField()  # ShortUUID
     title = serializers.CharField()
@@ -175,12 +166,6 @@ class Responses:
         description='',
         response=SearchCollectionSerializer,
         # TODO: add examples
-    )
-
-    Filters = OpenApiResponse(
-        description='',
-        response=serializers.ListSerializer(child=FilterSerializer()),
-        # TODO: add description and examples
     )
 
     AutoComplete = OpenApiResponse(
