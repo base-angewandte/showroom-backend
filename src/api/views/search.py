@@ -123,6 +123,21 @@ def search_activities(filters, limit, offset):
                         q_filter = q_filter | Q(type__label__contains={'en': typ})
                     queryset = queryset.filter(q_filter)
 
+            if flt['id'] == 'keywords':
+                for idx, value in enumerate(flt['filter_values']):
+                    if type(value) is not dict:
+                        raise ParseError('Malformed keyword filter', 400)
+                    if not (kw := value.get('id')):
+                        raise ParseError('Malformed keyword filter', 400)
+                    if type(kw) is not str:
+                        raise ParseError('Malformed keyword filter', 400)
+                    if idx == 0:
+                        q_filter = Q(keywords__has_key=kw)
+                    else:
+                        # TODO: check why this is not working
+                        q_filter = q_filter | Q(keywords__has_key=kw)
+                    queryset = queryset.filter(q_filter)
+
         if limit is not None:
             end = offset + limit
             queryset = queryset[offset:end]

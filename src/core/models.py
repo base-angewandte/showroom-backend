@@ -81,6 +81,8 @@ class Activity(AbstractShowroomObject):
     relations_to = models.ManyToManyField(
         'self', symmetrical=False, related_name='relations_from', blank=True
     )
+    # the following fields are only needed to be more efficient in search
+    keywords = JSONField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'

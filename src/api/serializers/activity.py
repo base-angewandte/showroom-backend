@@ -27,6 +27,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             'belongs_to',
             'relations_to',
             'type',
+            'keywords',
         ]
 
     def to_internal_value(self, data):
@@ -49,6 +50,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         subtext = repo_data.get('subtitle')
         new_data['subtext'] = [subtext] if subtext else []
         new_data['type'] = repo_data.get('type')
+        new_data['keywords'] = {
+            kw['label'][settings.LANGUAGE_CODE]: True
+            for kw in repo_data.get('keywords')
+        }
 
         try:
             new_data['belongs_to'] = Entity.objects.get(
