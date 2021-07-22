@@ -69,6 +69,12 @@ label_activity_types = {
 }
 
 
+def get_static_filter_label(filter_id, lang=settings.LANGUAGE_CODE):
+    return next(
+        (f['label'][lang] for f in static_filters if f['id'] == filter_id), filter_id
+    )
+
+
 def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
     """Returns the filter definitions for keywords and activity type
     searches."""
