@@ -119,9 +119,8 @@ def search_activities(filters, limit, offset):
                     if idx == 0:
                         q_filter = Q(type__label__contains={'en': typ})
                     else:
-                        # TODO: check why this is not working
                         q_filter = q_filter | Q(type__label__contains={'en': typ})
-                    queryset = queryset.filter(q_filter)
+                queryset = queryset.filter(q_filter)
 
             if flt['id'] == 'keywords':
                 for idx, value in enumerate(flt['filter_values']):
@@ -134,9 +133,8 @@ def search_activities(filters, limit, offset):
                     if idx == 0:
                         q_filter = Q(keywords__has_key=kw)
                     else:
-                        # TODO: check why this is not working
                         q_filter = q_filter | Q(keywords__has_key=kw)
-                    queryset = queryset.filter(q_filter)
+                queryset = queryset.filter(q_filter)
 
         if limit is not None:
             end = offset + limit

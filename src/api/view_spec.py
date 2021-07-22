@@ -71,32 +71,6 @@ class CommonListSerializer(serializers.Serializer):
     data = serializers.ListField(child=CommonListDataField())
 
 
-@extend_schema_field(
-    field={'type': 'string', 'enum': ['text', 'date', 'daterange', 'chips']},
-    component_name='FilterTypes',
-)
-class FilterTypesField(serializers.ChoiceField):
-    def __init__(self, **kwargs):
-        if 'choices' in kwargs:
-            print('choices found. popping.')
-            kwargs.pop('choices')
-
-        super().__init__(choices=['text', 'date', 'daterange', 'chips'], **kwargs)
-
-
-class AutocompleteItemDataSerializer(serializers.Serializer):
-    id = serializers.CharField()  # ShortUUID
-    title = serializers.CharField()
-    subtext = serializers.ListField(child=serializers.CharField())
-    source = serializers.CharField()
-
-
-class AutocompleteItemSerializer(serializers.Serializer):
-    source = serializers.CharField()
-    label = serializers.CharField()
-    data = AutocompleteItemDataSerializer(many=True)
-
-
 class ActivityRelationSerializer(serializers.Serializer):
     activity_id = serializers.CharField()
 
@@ -120,12 +94,6 @@ class Responses:
         description='a list of things',
         response=CommonListSerializer,
         # TODO: add examples
-    )
-
-    AutoComplete = OpenApiResponse(
-        description='',
-        response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
-        # TODO: add description and examples
     )
 
     RelationAdded = OpenApiResponse(
