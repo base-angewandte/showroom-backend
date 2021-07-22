@@ -1,3 +1,4 @@
+import json
 import sys
 from traceback import print_tb
 
@@ -28,6 +29,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             'relations_to',
             'type',
             'keywords',
+            'source_repo_data_text',
         ]
 
     def to_internal_value(self, data):
@@ -54,6 +56,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             kw['label'][settings.LANGUAGE_CODE]: True
             for kw in repo_data.get('keywords')
         }
+        new_data['source_repo_data_text'] = json.dumps(repo_data)
 
         try:
             new_data['belongs_to'] = Entity.objects.get(

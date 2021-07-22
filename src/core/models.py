@@ -83,6 +83,7 @@ class Activity(AbstractShowroomObject):
     )
     # the following fields are only needed to be more efficient in search
     keywords = JSONField(blank=True, null=True)
+    source_repo_data_text = models.TextField(default='')
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'

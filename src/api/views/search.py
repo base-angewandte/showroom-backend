@@ -103,9 +103,9 @@ def search_activities(filters, limit, offset):
                         )
                     if idx == 0:
                         # TODO: find reasonable filter condition
-                        q_filter = Q(primary_details__contains=value)
+                        q_filter = Q(source_repo_data_text__icontains=value)
                     else:
-                        q_filter = q_filter | Q(primary_details__contains=value)
+                        q_filter = q_filter | Q(source_repo_data_text__icontains=value)
                 queryset = queryset.filter(q_filter)
 
             if flt['id'] == 'type':
