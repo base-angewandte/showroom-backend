@@ -61,3 +61,8 @@ POSTGRES_PASSWORD=password
 ## Similar to Postgres we also might need to change the Redis port, if
 ## the standard port is already in use by another container.
 # REDIS_PORT=6379
+
+# User Preferences data config parameters
+# CASE_API_BASE=
+# USER_PREFERENCES_API_KEY
+#
