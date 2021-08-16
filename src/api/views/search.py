@@ -29,7 +29,6 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         s = self.get_serializer(data=request.data)
         s.is_valid(raise_exception=True)
         filters = s.data.get('filters')
-        category = s.data.get('category')
         limit = s.data.get('limit')
         offset = s.data.get('offset')
         lang = request.LANGUAGE_CODE
@@ -43,12 +42,8 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 {'detail': 'negative or zero limit not allowed'}, status=400
             )
 
-        if not category:
-            label, results = search_all_showroom_objects(filters, limit, offset)
-        elif category == 'activities':
-            label, results = search_activities(filters, limit, offset)
-        else:
-            label, results = search_persons(filters, limit, offset)
+        label, results = search_all_showroom_objects(filters, limit, offset)
+        full_response = []
 
         response = {
             'label': label,
@@ -68,11 +63,18 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'previews': [],
             }
             response['data'].append(item)
+        full_response.append(response)
+
         return Response(response, status=200)
 
 
 def search_all_showroom_objects(filters, limit, offset):
-    return ('Filter is not yet implemented', [])
+    _l1, activities = search_activities(filters, limit, offset)
+    _l2, persons = search_persons(filters, limit, offset)
+    results = []
+    results.extend(activities)
+    results.extend(persons)
+    return ('Search results', results)
 
 
 def search_activities(filters, limit, offset):
