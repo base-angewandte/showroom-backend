@@ -56,6 +56,22 @@ static_filters = [
             'de': 'Alben',
         },
     },
+    {
+        'id': 'current_activities',
+        'type': 'text',
+        'label': {
+            'en': 'Current activities',
+            'de': 'Aktuelle Aktivitäten',
+        },
+    },
+    {
+        'id': 'start_page',
+        'type': 'text',
+        'label': {
+            'en': 'Start page',
+            'de': 'Startseite',
+        },
+    },
 ]
 
 label_keywords = {
