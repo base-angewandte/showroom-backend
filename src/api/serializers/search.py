@@ -57,7 +57,7 @@ class SearchItemSerializer(serializers.Serializer):
 
 
 # TODO: add some examples to the schema
-class SearchCollectionSerializer(serializers.Serializer):
+class SearchResultSerializer(serializers.Serializer):
     collection = serializers.CharField()
     total = serializers.IntegerField()
     data = SearchItemSerializer(many=True)

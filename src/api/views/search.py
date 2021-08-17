@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from api import view_spec
-from api.serializers.search import SearchCollectionSerializer, SearchRequestSerializer
+from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Activity
 
 
@@ -20,7 +20,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         responses={
             200: OpenApiResponse(
                 description='',
-                response=SearchCollectionSerializer,
+                response=SearchResultSerializer(many=True),
             ),
             400: view_spec.Responses.Error400,
         },
