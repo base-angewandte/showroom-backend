@@ -7,7 +7,12 @@ from django.db.models import Q
 
 from api import view_spec
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
-from core.models import Activity
+from core.models import Activity, Entity
+
+label_results_generic = {
+    'en': 'Search results',
+    'de': 'Suchergebnisse',
+}
 
 
 class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -42,30 +47,119 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 {'detail': 'negative or zero limit not allowed'}, status=400
             )
 
-        label, results = search_all_showroom_objects(filters, limit, offset)
-        full_response = []
+        results = []
+        for flt in filters:
+            if flt['id'] == 'activities':
+                results = filter_activities(flt['filter_values'], limit, offset, lang)
 
-        response = {
-            'label': label,
-            'total': len(results),
-            'data': [],
+        # TODO: add other filter types
+        # TODO: add consolidation of different filter type results.
+        #   - reduce items found in different result sets, but increase score
+        #     for result sets with the same label
+        #   - limit overall result set length
+
+        return Response(results, status=200)
+
+
+def filter_activities(values, limit, offset, language):
+    """Filters all showroom activities for certain text values.
+
+    ... matches title, primary and secondary details ...
+
+    :param values: A list of text strings to search for
+    :param limit: Maximum amount of activities to return
+    :param offset: The 0-indexed offset of the first activity in the result set
+    :return: A list of activities that have been found based on filter values
+    """
+    queryset = Activity.objects.all()
+    # TODO: discuss what the ordering criteria are
+    queryset = queryset.order_by('-date_created')
+
+    for idx, value in enumerate(values):
+        if type(value) is not str:
+            raise ParseError(
+                'Only strings are allowed for activities/persons/locations filters',
+                400,
+            )
+        if idx == 0:
+            # TODO: find reasonable filter condition
+            q_filter = Q(source_repo_data_text__icontains=value)
+        else:
+            q_filter = q_filter | Q(source_repo_data_text__icontains=value)
+    if len(value) > 0:
+        queryset = queryset.filter(q_filter)
+
+    found_activities_count = queryset.count()
+
+    if limit is not None:
+        end = offset + limit
+        queryset = queryset[offset:end]
+    elif offset > 0:
+        queryset = queryset[offset:]
+
+    results = []
+    for activity in queryset:
+        item = {
+            'id': activity.id,
+            'alternative_text': [],  # TODO
+            'media_url': None,  # TODO
+            'source_institution': {  # TODO
+                'label': None,
+                'url': None,
+                'icon': None,
+            },
+            'score': 1,  # TODO
+            'title': activity.title,
+            'type': 'activity',  # TODO: use translated labels
         }
-        for activity in results:
-            activity_type = '' if not activity.type else activity.type['label'][lang]
-            item = {
-                'id': activity.id,
-                'type': 'activity',
-                'date_created': activity.date_created,
-                'title': activity.title,
-                'description': activity_type,
-                'imageUrl': '',
-                'href': '',
-                'previews': [],
-            }
-            response['data'].append(item)
-        full_response.append(response)
+        results.append(item)
 
-        return Response(response, status=200)
+    # in case we found less activities than the supplied limits, we extend the
+    # search to entities, that relate to the found activities
+    if (num_results := len(results)) < limit:
+        queryset = Entity.objects.all()
+        # TODO: discuss what the ordering criteria are
+        queryset = queryset.order_by('-date_created')
+        if len(value) > 0:
+            queryset = queryset.filter(q_filter)
+
+        # if we already found some activities (but not enough for the limit), we start
+        # we want to take entities from the start of the filtered entities.
+        # otherwise the offset points behind the last activities, so we have to
+        # subtract the total number of filtered activities from the offset to know
+        # which is the first fount entity to be included in the result
+        if num_results > 0:
+            remainder_offset = 0
+        else:
+            remainder_offset = offset - found_activities_count
+
+        if limit is not None:
+            remainder_end = limit - num_results
+            queryset = queryset[remainder_offset:remainder_end]
+        elif offset > 0:
+            queryset[offset:]
+
+        for entity in queryset:
+            item = {
+                'id': entity.id,
+                'alternative_text': [],  # TODO
+                'media_url': None,  # TODO
+                'source_institution': {  # TODO
+                    'label': None,
+                    'url': None,
+                    'icon': None,
+                },
+                'score': 1,  # TODO
+                'title': entity.title,
+                'type': entity.type,  # TODO: use translated labels
+            }
+            results.append(item)
+
+    return {
+        'label': label_results_generic.get(language),
+        'total': len(results),
+        'data': results,
+    }
 
 
 def search_all_showroom_objects(filters, limit, offset):
