@@ -64,16 +64,18 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 def filter_activities(values, limit, offset, language):
     """Filters all showroom activities for certain text values.
 
-    ... matches title, primary and secondary details ...
+    Does a very generic (TBD) search on activities and related entities. The results
+    are paginated by limit and offset values, but a total count for all found
+    entities and activities will always be returned in the result.
 
     :param values: A list of text strings to search for
     :param limit: Maximum amount of activities to return
     :param offset: The 0-indexed offset of the first activity in the result set
-    :return: A list of activities that have been found based on filter values
+    :return: A SearchResult dictionary, as defined in the API spec.
     """
-    queryset = Activity.objects.all()
+    activities_queryset = Activity.objects.all()
     # TODO: discuss what the ordering criteria are
-    queryset = queryset.order_by('-date_created')
+    activities_queryset = activities_queryset.order_by('-date_created')
 
     for idx, value in enumerate(values):
         if type(value) is not str:
@@ -86,19 +88,45 @@ def filter_activities(values, limit, offset, language):
             q_filter = Q(source_repo_data_text__icontains=value)
         else:
             q_filter = q_filter | Q(source_repo_data_text__icontains=value)
-    if len(value) > 0:
-        queryset = queryset.filter(q_filter)
+    if len(values) > 0:
+        activities_queryset = activities_queryset.filter(q_filter)
 
-    found_activities_count = queryset.count()
+    found_activities_count = activities_queryset.count()
+
+    # Before we apply any pagination, we also search through all related entities, to
+    # get their total count as well.
+
+    entities_queryset = Entity.objects.all()
+    # TODO: discuss what the ordering criteria are
+    entities_queryset = entities_queryset.order_by('-date_created')
+    if len(values) > 0:
+        # TODO: this might be more efficient by just querying for all entities
+        #   with their ids taken from the activities result set above. especially
+        #   when the query becomes more complex.
+        for idx, value in enumerate(values):
+            if idx == 0:
+                q_filter = Q(activity__source_repo_data_text__icontains=value)
+            else:
+                q_filter = q_filter | Q(
+                    activity__source_repo_data_text__icontains=value
+                )
+
+        entities_queryset = entities_queryset.filter(q_filter).distinct()
+
+    found_entities_count = entities_queryset.count()
+
+    print(limit)
 
     if limit is not None:
         end = offset + limit
-        queryset = queryset[offset:end]
+        activities_queryset = activities_queryset[offset:end]
     elif offset > 0:
-        queryset = queryset[offset:]
+        activities_queryset = activities_queryset[offset:]
+
+    print(found_activities_count, activities_queryset.count(), activities_queryset)
 
     results = []
-    for activity in queryset:
+    for activity in activities_queryset:
         item = {
             'id': activity.id,
             'alternative_text': [],  # TODO
@@ -114,16 +142,13 @@ def filter_activities(values, limit, offset, language):
         }
         results.append(item)
 
-    # in case we found less activities than the supplied limits, we extend the
-    # search to entities, that relate to the found activities
-    if (num_results := len(results)) < limit:
-        queryset = Entity.objects.all()
-        # TODO: discuss what the ordering criteria are
-        queryset = queryset.order_by('-date_created')
-        if len(value) > 0:
-            queryset = queryset.filter(q_filter)
+    num_results = len(results)
 
-        # if we already found some activities (but not enough for the limit), we start
+    # in case we found less activities than the supplied limits, we extend the list
+    # by the related entities from the entities_queryset
+    if limit is None or num_results < limit:
+
+        # if we already found some activities (but not enough for the limit),
         # we want to take entities from the start of the filtered entities.
         # otherwise the offset points behind the last activities, so we have to
         # subtract the total number of filtered activities from the offset to know
@@ -135,11 +160,11 @@ def filter_activities(values, limit, offset, language):
 
         if limit is not None:
             remainder_end = limit - num_results
-            queryset = queryset[remainder_offset:remainder_end]
+            entities_queryset = entities_queryset[remainder_offset:remainder_end]
         elif offset > 0:
-            queryset[offset:]
+            entities_queryset[offset:]
 
-        for entity in queryset:
+        for entity in entities_queryset:
             item = {
                 'id': entity.id,
                 'alternative_text': [],  # TODO
@@ -157,7 +182,7 @@ def filter_activities(values, limit, offset, language):
 
     return {
         'label': label_results_generic.get(language),
-        'total': len(results),
+        'total': found_activities_count + found_entities_count,
         'data': results,
     }
 
