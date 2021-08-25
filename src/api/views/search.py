@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from api import view_spec
+from api.repositories.portfolio.search import get_search_item
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Activity, Entity
 
@@ -115,32 +116,13 @@ def filter_activities(values, limit, offset, language):
 
     found_entities_count = entities_queryset.count()
 
-    print(limit)
-
     if limit is not None:
         end = offset + limit
         activities_queryset = activities_queryset[offset:end]
     elif offset > 0:
         activities_queryset = activities_queryset[offset:]
 
-    print(found_activities_count, activities_queryset.count(), activities_queryset)
-
-    results = []
-    for activity in activities_queryset:
-        item = {
-            'id': activity.id,
-            'alternative_text': [],  # TODO
-            'media_url': None,  # TODO
-            'source_institution': {  # TODO
-                'label': None,
-                'url': None,
-                'icon': None,
-            },
-            'score': 1,  # TODO
-            'title': activity.title,
-            'type': 'activity',  # TODO: use translated labels
-        }
-        results.append(item)
+    results = [get_search_item(activity, language) for activity in activities_queryset]
 
     num_results = len(results)
 
@@ -164,21 +146,9 @@ def filter_activities(values, limit, offset, language):
         elif offset > 0:
             entities_queryset[offset:]
 
-        for entity in entities_queryset:
-            item = {
-                'id': entity.id,
-                'alternative_text': [],  # TODO
-                'media_url': None,  # TODO
-                'source_institution': {  # TODO
-                    'label': None,
-                    'url': None,
-                    'icon': None,
-                },
-                'score': 1,  # TODO
-                'title': entity.title,
-                'type': entity.type,  # TODO: use translated labels
-            }
-            results.append(item)
+        results.extend(
+            [get_search_item(entity, language) for entity in entities_queryset]
+        )
 
     return {
         'label': label_results_generic.get(language),

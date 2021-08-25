@@ -299,3 +299,41 @@ mapping = {
 
 def map(schema):
     return mapping.get(schema)
+
+
+search_mapping = {
+    'default': {
+        'title': 'title_subtitle',
+        'subtitle': None,
+        'description': 'activity_type_university',
+        'alternative_text': 'text_keywords',
+    },
+    'person': {
+        'title': 'name',
+        'description': 'university',
+        'alternative_text': 'skills',
+    },
+    'activity': {
+        'document_publication': {
+            'subtitle': 'author_editors',
+        },
+        'image': {
+            'subtitle': 'artists_contributors',
+        },
+        'film_video': {
+            'subtitle': 'directors_contributors',
+        },
+        '': {'subtitle': ''},
+    },
+}
+
+
+def map_search(schema, activity_schema=None):
+    mapping = dict(search_mapping['default'])
+    if schema == 'activity' and activity_schema:
+        if m := search_mapping['activity'].get(activity_schema):
+            mapping.update(m)
+    elif schema != 'activity':
+        if m := search_mapping.get(schema):
+            mapping.update(m)
+    return mapping
