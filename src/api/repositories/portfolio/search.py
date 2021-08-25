@@ -82,7 +82,8 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
 
 def get_activity_type_university(item, lang):
     ret = []
-    ret.append(item.type['label'].get(lang))
+    if type_label := item.type.get('label'):
+        ret.append(type_label.get(lang))
     ret.append(item.source_repo.label_institution)
     return ret
 
