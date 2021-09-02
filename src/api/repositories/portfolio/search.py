@@ -10,6 +10,12 @@ from .mapping import map_search
 logger = logging.getLogger(__name__)
 
 
+def gather_labels(items):
+    if not items:
+        return []
+    return [item.get('label') for item in items]
+
+
 def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     search_item = {
         'id': item.id,
@@ -48,15 +54,15 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
 
     functions = {
         'activity_type_university': get_activity_type_university,
-        'architecture_contributors': None,
+        'architecture_contributors': get_architecture_contributors,
         'artists_contributors': get_artists_contributors,
-        'artists_curators_contributors': None,
-        'authors_artists_contributors': None,
-        'authors_editors': None,
-        'contributors': None,
-        'developers_contributors': None,
-        'directors_contributors': None,
-        'lecturers_contributors': None,
+        'artists_curators_contributors': get_artists_curators_contributors,
+        'authors_artists_contributors': get_authors_artists_contributors,
+        'authors_editors': get_authors_editors,
+        'contributors': get_contributors,
+        'developers_contributors': get_developers_contributors,
+        'directors_contributors': get_directors_contributors,
+        'lecturers_contributors': get_lecturers_contributors,
         'music_conductors_composition_contributors': None,
         'name': get_name,
         'organisers_artists_curators': None,
@@ -89,6 +95,13 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     return search_item
 
 
+def get_architecture_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('architecture')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
 def get_activity_type_university(item, lang):
     ret = []
     if type_label := item.type.get('label'):
@@ -99,10 +112,58 @@ def get_activity_type_university(item, lang):
 
 def get_artists_contributors(item, lang):
     ret = []
-    if artists := item.source_repo_data['data'].get('artists'):
-        ret.extend(artist.get('label') for artist in artists)
-    if contributors := item.source_repo_data['data'].get('contributors'):
-        ret.extend([contributor.get('label') for contributor in contributors])
+    ret.extend(gather_labels(item.source_repo_data['data'].get('artists')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_artists_curators_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('artists')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('curators')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_authors_artists_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('authors')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('artists')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_authors_editors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('authors')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('editors')))
+    return ret
+
+
+def get_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_developers_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('software_developers')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_directors_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('directors')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_lecturers_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('lecturers')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
     return ret
 
 
