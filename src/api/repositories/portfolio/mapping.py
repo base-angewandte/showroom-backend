@@ -1,3 +1,10 @@
+import logging
+
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+
 mapping = {
     '__none__': {
         'primary_details': [
@@ -314,16 +321,22 @@ search_mapping = {
         'alternative_text': 'skills',
     },
     'activity': {
-        'document_publication': {
-            'subtitle': 'author_editors',
-        },
-        'image': {
-            'subtitle': 'artists_contributors',
-        },
-        'film_video': {
-            'subtitle': 'directors_contributors',
-        },
-        '': {'subtitle': ''},
+        'architecture': {'subtitle': 'architecture_contributors'},
+        'audio': {'subtitle': 'authors_artists_contributors'},
+        'awards_and_grants': {'subtitle': 'winners_jury_contributors'},
+        'concert': {'subtitle': 'music_conductors_composition_contributors'},
+        'conference': {'subtitle': 'organisers_lecturers_contributors'},
+        'conference_contribution': {'subtitle': 'lecturers_contributors'},
+        'document_publication': {'subtitle': 'authors_editors'},
+        'event': {'subtitle': 'contributors'},
+        'exhibition': {'subtitle': 'artists_curators_contributors'},
+        'festival': {'subtitle': 'organisers_artists_curators'},
+        'film_video': {'subtitle': 'directors_contributors'},
+        'image': {'subtitle': 'artists_contributors'},
+        'performance': {'subtitle': 'artists_contributors'},
+        'research_project': {'subtitle': 'project_lead_partners_funding'},
+        'sculpture': {'subtitle': 'artists_contributors'},
+        'software': {'subtitle': 'developers_contributors'},
     },
 }
 
@@ -333,6 +346,13 @@ def map_search(schema, activity_schema=None):
     if schema == 'activity' and activity_schema:
         if m := search_mapping['activity'].get(activity_schema):
             mapping.update(m)
+        else:
+            if settings.DEBUG:
+                # TODO: discuss: do we want this also in prod, or an admin notification?
+                logger.error(
+                    f'Missing search mapping for activity_schema: {activity_schema}'
+                )
+
     elif schema != 'activity':
         if m := search_mapping.get(schema):
             mapping.update(m)

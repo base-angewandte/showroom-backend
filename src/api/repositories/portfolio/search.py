@@ -48,17 +48,27 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
 
     functions = {
         'activity_type_university': get_activity_type_university,
+        'architecture_contributors': None,
         'artists_contributors': get_artists_contributors,
-        'author_editors': None,
+        'artists_curators_contributors': None,
+        'authors_artists_contributors': None,
+        'authors_editors': None,
+        'contributors': None,
+        'developers_contributors': None,
         'directors_contributors': None,
+        'lecturers_contributors': None,
+        'music_conductors_composition_contributors': None,
         'name': get_name,
+        'organisers_artists_curators': None,
+        'organisers_lecturers_contributors': None,
+        'project_lead_partners_funding': None,
         'skills': None,
         'text_keywords': get_text_keywords,
         'title_subtitle': get_title_subtitle,
         'university': get_university,
+        'winners_jury_contributors': None,
     }
 
-    print(item, search_item['type'], activity_schema)
     for field, map_function in mapping.items():
         if map_function is None:
             continue
@@ -70,7 +80,6 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 )
             continue
         transformed = transform_func(item, lang)
-        print('transformed:', transformed)
 
         if field == 'alternative_text':
             search_item[field] = transformed
