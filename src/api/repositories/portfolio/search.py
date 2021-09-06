@@ -60,8 +60,10 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         'authors_artists_contributors': get_authors_artists_contributors,
         'authors_editors': get_authors_editors,
         'contributors': get_contributors,
+        'design_contributors': get_design_contributors,
         'developers_contributors': get_developers_contributors,
         'directors_contributors': get_directors_contributors,
+        'fellow_scholar_funding': get_fellow_scholar_funding,
         'lecturers_contributors': get_lecturers_contributors,
         'music_conductors_composition_contributors': get_music_conductors_composition_contributors,
         'name': get_name,
@@ -146,6 +148,13 @@ def get_contributors(item, lang):
     return ret
 
 
+def get_design_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('design')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
 def get_developers_contributors(item, lang):
     ret = []
     ret.extend(gather_labels(item.source_repo_data['data'].get('software_developers')))
@@ -157,6 +166,13 @@ def get_directors_contributors(item, lang):
     ret = []
     ret.extend(gather_labels(item.source_repo_data['data'].get('directors')))
     ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_fellow_scholar_funding(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('fellow_scholar')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('funding')))
     return ret
 
 
