@@ -63,16 +63,16 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         'developers_contributors': get_developers_contributors,
         'directors_contributors': get_directors_contributors,
         'lecturers_contributors': get_lecturers_contributors,
-        'music_conductors_composition_contributors': None,
+        'music_conductors_composition_contributors': get_music_conductors_composition_contributors,
         'name': get_name,
-        'organisers_artists_curators': None,
-        'organisers_lecturers_contributors': None,
-        'project_lead_partners_funding': None,
+        'organisers_artists_curators': get_organisers_artists_curators,
+        'organisers_lecturers_contributors': get_organisers_lecturers_contributors,
+        'project_lead_partners_funding': get_project_lead_partners_funding,
         'skills': None,
         'text_keywords': get_text_keywords,
         'title_subtitle': get_title_subtitle,
         'university': get_university,
-        'winners_jury_contributors': None,
+        'winners_jury_contributors': get_winners_jury_contributors,
     }
 
     for field, map_function in mapping.items():
@@ -160,6 +160,15 @@ def get_directors_contributors(item, lang):
     return ret
 
 
+def get_music_conductors_composition_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('music')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('conductors')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('composition')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
 def get_lecturers_contributors(item, lang):
     ret = []
     ret.extend(gather_labels(item.source_repo_data['data'].get('lecturers')))
@@ -169,6 +178,30 @@ def get_lecturers_contributors(item, lang):
 
 def get_name(item, lang):
     return [item.title]
+
+
+def get_organisers_artists_curators(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('organisers')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('artists')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('curators')))
+    return ret
+
+
+def get_organisers_lecturers_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('organisers')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('lecturers')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
+
+
+def get_project_lead_partners_funding(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('project_lead')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('project_partnership')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('funding')))
+    return ret
 
 
 def get_text_keywords(item, lang):
@@ -195,3 +228,11 @@ def get_title_subtitle(item, lang):
 
 def get_university(item, lang):
     return [item.source_repo.label_institution]
+
+
+def get_winners_jury_contributors(item, lang):
+    ret = []
+    ret.extend(gather_labels(item.source_repo_data['data'].get('winners')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('jury')))
+    ret.extend(gather_labels(item.source_repo_data['data'].get('contributors')))
+    return ret
