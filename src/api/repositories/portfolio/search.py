@@ -47,6 +47,17 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         elif item.type == 'D':
             search_item['type'] = 'department'
 
+    if type(item) == Activity:
+        # featured_media currently cannot be set explicitly in portfolio
+        # therefore we just go through all available media and take the first
+        # image we can find
+        for medium in item.media_set.all():
+            if medium.type == 'i':
+                search_item['image_url'] = medium.file
+                break
+    else:
+        search_item['image_url'] = item.photo if item.photo else None
+
     activity_schema = None
     if type(item) == Activity and item.type:
         activity_schema = get_schema(item.type.get('source'))
