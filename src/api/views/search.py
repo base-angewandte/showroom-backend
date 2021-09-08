@@ -144,7 +144,7 @@ def filter_activities(values, limit, offset, language):
             remainder_end = limit - num_results
             entities_queryset = entities_queryset[remainder_offset:remainder_end]
         elif offset > 0:
-            entities_queryset[offset:]
+            entities_queryset = entities_queryset[offset:]
 
         results.extend(
             [get_search_item(entity, language) for entity in entities_queryset]
