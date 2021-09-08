@@ -1,4 +1,6 @@
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
@@ -87,6 +89,17 @@ class Activity(AbstractShowroomObject):
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'
+
+
+class ActivitySearch(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    language = models.CharField(max_length=255)
+    text = models.TextField(default='')
+    text_vector = SearchVectorField(null=True)
+
+    class Meta:
+        indexes = (GinIndex(fields=['text_vector']),)
 
 
 class Album(models.Model):
