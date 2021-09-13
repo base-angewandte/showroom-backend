@@ -52,10 +52,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         subtext = repo_data.get('subtitle')
         new_data['subtext'] = [subtext] if subtext else []
         new_data['type'] = repo_data.get('type')
-        new_data['keywords'] = {
-            kw['label'][settings.LANGUAGE_CODE]: True
-            for kw in repo_data.get('keywords')
-        }
+        new_data['keywords'] = (
+            {
+                kw['label'][settings.LANGUAGE_CODE]: True
+                for kw in repo_data.get('keywords')
+            }
+            if repo_data.get('keywords')
+            else {}
+        )
         new_data['source_repo_data_text'] = json.dumps(repo_data)
 
         try:
