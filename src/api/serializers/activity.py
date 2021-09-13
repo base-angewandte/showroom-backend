@@ -117,6 +117,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         # remove plain repo data
         ret.pop('source_repo')
         ret.pop('source_repo_data')
+        ret.pop('source_repo_data_text')
         ret.pop('source_repo_entry_id')
         ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
