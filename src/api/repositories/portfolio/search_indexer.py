@@ -5,6 +5,7 @@ from django.conf import settings
 from core.models import ActivitySearch
 
 from . import get_schema
+from .mapping import map_indexer
 
 logger = logging.getLogger(__name__)
 
@@ -30,28 +31,15 @@ def index_activity(activity):
 
     # Now run type/category-specific indexing functions, in case the data key is set
     if (inner_data := data.get('data')) and type(inner_data) == dict:
-        indexer_map = {
-            'default': ['contributors'],
-            'software': [
-                'contributors',
-                'license',
-                'documentation_url',
-                'software_developers',
-                'programming_language',
-            ],
-        }
         if entry_type := activity.source_repo_data.get('type'):
-            collection = get_schema(entry_type.get('source'))
-        else:
-            collection = None
-        if collection:
-            indexers = indexer_map.get(collection) or indexer_map.get('default')
+            if collection := get_schema(entry_type.get('source')):
+                indexers = map_indexer(collection)
 
-        for indexer in indexers:
-            indexer_result = get_index(indexer, inner_data)
-            for (lang, _lang_label) in settings.LANGUAGES:
-                if res := indexer_result.get(lang):
-                    indexed[lang].append(res)
+                for indexer in indexers:
+                    indexer_result = get_index(indexer, inner_data)
+                    for (lang, _lang_label) in settings.LANGUAGES:
+                        if res := indexer_result.get(lang):
+                            indexed[lang].append(res)
 
     for lang, values in indexed.items():
         try:

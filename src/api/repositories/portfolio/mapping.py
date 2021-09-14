@@ -359,3 +359,19 @@ def map_search(schema, activity_schema=None):
         if m := search_mapping.get(schema):
             mapping.update(m)
     return mapping
+
+
+indexer_mapping = {
+    'default': ['contributors'],
+    'software': [
+        'contributors',
+        'license',
+        'documentation_url',
+        'software_developers',
+        'programming_language',
+    ],
+}
+
+
+def map_indexer(schema):
+    return indexer_mapping.get(schema) or indexer_mapping['default']
