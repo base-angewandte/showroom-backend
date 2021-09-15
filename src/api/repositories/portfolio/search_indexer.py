@@ -59,19 +59,51 @@ def index_activity(activity):
 def get_index(indexer, data):
     function_map = {
         'contributors': get_contributors,
+        'documentation_url': get_documentation_url,
+        'license': get_license,
+        'programming_language': get_programming_language,
+        'software_developers': get_software_developers,
     }
 
     indexer_fn = function_map.get(indexer)
     if settings.DEBUG and not indexer_fn:
         logger.error(f'No indexer function is available for field: {indexer}')
-        return {}
-    return indexer_fn(data)
+    return indexer_fn(data) if indexer_fn else {}
 
 
 def get_contributors(data):
     contributors = data.get('contributors')
     if contributors and type(contributors) == list:
         text_index = ', '.join([c.get('label') for c in contributors])
+    else:
+        return {}
+    return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_documentation_url(data):
+    url = data.get('documentation_url')
+    return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_license(data):
+    license = data.get('open_source_license')
+    if type(license) is not dict:
+        return {}
+    label = license.get('label')
+    if type(label) is not dict:
+        return {}
+    return {lang: label.get(lang) for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_programming_language(data):
+    prog_lang = data.get('programming_language')
+    return {lang: prog_lang for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_software_developers(data):
+    devs = data.get('software_developers')
+    if devs and type(devs) == list:
+        text_index = ', '.join([d.get('label') for d in devs])
     else:
         return {}
     return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
