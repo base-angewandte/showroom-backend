@@ -85,10 +85,16 @@ def filter_activities(values, limit, offset, language):
                 400,
             )
         if idx == 0:
-            # TODO: find reasonable filter condition
-            q_filter = Q(source_repo_data_text__icontains=value)
+            # TODO: use SearchQuery to configure the search
+            q_filter = Q(
+                activitysearch__language=language,
+                activitysearch__text_vector__contains=value,
+            )
         else:
-            q_filter = q_filter | Q(source_repo_data_text__icontains=value)
+            q_filter = q_filter | Q(
+                activitysearch__language=language,
+                activitysearch__text_vector__contains=value,
+            )
     if len(values) > 0:
         activities_queryset = activities_queryset.filter(q_filter)
 
@@ -106,10 +112,14 @@ def filter_activities(values, limit, offset, language):
         #   when the query becomes more complex.
         for idx, value in enumerate(values):
             if idx == 0:
-                q_filter = Q(activity__source_repo_data_text__icontains=value)
+                q_filter = Q(
+                    activity__activitysearch__language=language,
+                    activity__activitysearch__text_vector__contains=value,
+                )
             else:
                 q_filter = q_filter | Q(
-                    activity__source_repo_data_text__icontains=value
+                    activity__activitysearch__language=language,
+                    activity__activitysearch__text_vector__contains=value,
                 )
 
         entities_queryset = entities_queryset.filter(q_filter).distinct()
