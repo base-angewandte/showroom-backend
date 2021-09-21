@@ -3,6 +3,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
+from django.contrib.postgres.search import SearchQuery
 from django.db.models import Q
 
 from api import view_spec
@@ -85,15 +86,18 @@ def filter_activities(values, limit, offset, language):
                 400,
             )
         if idx == 0:
-            # TODO: use SearchQuery to configure the search
             q_filter = Q(
                 activitysearch__language=language,
-                activitysearch__text_vector__contains=value,
+                activitysearch__text_vector=SearchQuery(
+                    value + ':*', config='simple', search_type='raw'
+                ),
             )
         else:
             q_filter = q_filter | Q(
                 activitysearch__language=language,
-                activitysearch__text_vector__contains=value,
+                activitysearch__text_vector=SearchQuery(
+                    value + ':*', config='simple', search_type='raw'
+                ),
             )
     if len(values) > 0:
         activities_queryset = activities_queryset.filter(q_filter)
@@ -114,12 +118,16 @@ def filter_activities(values, limit, offset, language):
             if idx == 0:
                 q_filter = Q(
                     activity__activitysearch__language=language,
-                    activity__activitysearch__text_vector__contains=value,
+                    activity__activitysearch__text_vector=SearchQuery(
+                        value + ':*', config='simple', search_type='raw'
+                    ),
                 )
             else:
                 q_filter = q_filter | Q(
                     activity__activitysearch__language=language,
-                    activity__activitysearch__text_vector__contains=value,
+                    activity__activitysearch__text_vector=SearchQuery(
+                        value + ':*', config='simple', search_type='raw'
+                    ),
                 )
 
         entities_queryset = entities_queryset.filter(q_filter).distinct()
