@@ -52,7 +52,15 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         results = []
         for flt in filters:
             if flt['id'] == 'activities':
-                results = filter_activities(flt['filter_values'], limit, offset, lang)
+                results.append(
+                    filter_activities(flt['filter_values'], limit, offset, lang)
+                )
+            if flt['id'] == 'type':
+                results.append(filter_type(flt['filter_values'], limit, offset, lang))
+            if flt['id'] == 'keywords':
+                results.append(
+                    filter_keywords(flt['filter_values'], limit, offset, lang)
+                )
 
         # TODO: add other filter types
         # TODO: add consolidation of different filter type results.
@@ -60,7 +68,13 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         #     for result sets with the same label
         #   - limit overall result set length
 
-        return Response(results, status=200)
+        if len(results) == 1:
+            return Response(results[0], status=200)
+        else:
+            return Response(
+                {'label': 'not yet consolidated', 'total': 0, 'data': results},
+                status=200,
+            )
 
 
 def filter_activities(values, limit, offset, language):
@@ -175,83 +189,93 @@ def filter_activities(values, limit, offset, language):
     }
 
 
-def search_all_showroom_objects(filters, limit, offset):
-    _l1, activities = search_activities(filters, limit, offset)
-    _l2, persons = search_persons(filters, limit, offset)
-    results = []
-    results.extend(activities)
-    results.extend(persons)
-    return ('Search results', results)
+def filter_type(values, limit, offset, language):
+    """Filters all showroom activities for certain types.
+
+    Filters all showroom activities for activities of certain types, that are
+    provided through the values parameter. Different values for types are combined
+    in a logical OR filter. So all activities will be returned that are of any of
+    the provided types.
+    The results are paginated by limit and offset values, but a total count for all
+    found entities and activities will always be returned in the result.
+
+    :param values: A list of filter id dicts listed by the GET /filters endpoint
+    :param limit: Maximum amount of activities to return
+    :param offset: The 0-indexed offset of the first activity in the result set
+    :return: A SearchResult dictionary, as defined in the API spec.
+    """
+    queryset = Activity.objects.all()
+    # TODO: discuss what the ordering criteria are
+    queryset = queryset.order_by('-date_created')
+    for idx, value in enumerate(values):
+        if type(value) is not dict:
+            raise ParseError('Malformed type filter', 400)
+        if not (typ := value.get('id')):
+            raise ParseError('Malformed type filter', 400)
+        if type(typ) is not str:
+            raise ParseError('Malformed type filter', 400)
+        if idx == 0:
+            q_filter = Q(type__label__contains={'en': typ})
+        else:
+            q_filter = q_filter | Q(type__label__contains={'en': typ})
+    queryset = queryset.filter(q_filter)
+
+    total_count = queryset.count()
+
+    if limit is not None:
+        end = offset + limit
+        queryset = queryset[offset:end]
+    elif offset > 0:
+        queryset = queryset[offset:]
+
+    return {
+        'label': 'Activities filtered by type',
+        'total': total_count,
+        'data': [get_search_item(activity, language) for activity in queryset],
+    }
 
 
-def search_activities(filters, limit, offset):
-    if not filters:
-        queryset = Activity.objects.all()
-        # TODO: discuss what the ordering criteria are
-        queryset = queryset.order_by('-date_created')
-        if limit is not None:
-            end = offset + limit
-            queryset = queryset[offset:end]
-        elif offset > 0:
-            queryset = queryset[offset:]
-        return ('Current activities', queryset)
+def filter_keywords(values, limit, offset, language):
+    """Filters all showroom activities for certain types.
 
-    else:
-        queryset = Activity.objects.all()
-        # TODO: discuss what the ordering criteria are
-        queryset = queryset.order_by('-date_created')
+    Filters all showroom activities for activities with certain keywords, that are
+    provided through the values parameter. Different values for keywords are combined
+    in a logical OR filter. So all activities will be returned that have any of
+    the provided keywords.
+    The results are paginated by limit and offset values, but a total count for all
+    found entities and activities will always be returned in the result.
 
-        for flt in filters:
+    :param values: A list of filter id dicts listed by the GET /filters endpoint
+    :param limit: Maximum amount of activities to return
+    :param offset: The 0-indexed offset of the first activity in the result set
+    :return: A SearchResult dictionary, as defined in the API spec.
+    """
+    queryset = Activity.objects.all()
+    # TODO: discuss what the ordering criteria are
+    queryset = queryset.order_by('-date_created')
+    for idx, value in enumerate(values):
+        if type(value) is not dict:
+            raise ParseError('Malformed keyword filter', 400)
+        if not (kw := value.get('id')):
+            raise ParseError('Malformed keyword filter', 400)
+        if type(kw) is not str:
+            raise ParseError('Malformed keyword filter', 400)
+        if idx == 0:
+            q_filter = Q(keywords__has_key=kw)
+        else:
+            q_filter = q_filter | Q(keywords__has_key=kw)
+    queryset = queryset.filter(q_filter)
 
-            if flt['id'] in ['activities', 'persons', 'locations']:
-                for idx, value in enumerate(flt['filter_values']):
-                    if type(value) is not str:
-                        raise ParseError(
-                            'Only strings are allowed for activities/persons/locations filters',
-                            400,
-                        )
-                    if idx == 0:
-                        # TODO: find reasonable filter condition
-                        q_filter = Q(source_repo_data_text__icontains=value)
-                    else:
-                        q_filter = q_filter | Q(source_repo_data_text__icontains=value)
-                queryset = queryset.filter(q_filter)
+    total_count = queryset.count()
 
-            if flt['id'] == 'type':
-                for idx, value in enumerate(flt['filter_values']):
-                    if type(value) is not dict:
-                        raise ParseError('Malformed keyword filter', 400)
-                    if not (typ := value.get('id')):
-                        raise ParseError('Malformed keyword filter', 400)
-                    if type(typ) is not str:
-                        raise ParseError('Malformed keyword filter', 400)
-                    if idx == 0:
-                        q_filter = Q(type__label__contains={'en': typ})
-                    else:
-                        q_filter = q_filter | Q(type__label__contains={'en': typ})
-                queryset = queryset.filter(q_filter)
+    if limit is not None:
+        end = offset + limit
+        queryset = queryset[offset:end]
+    elif offset > 0:
+        queryset = queryset[offset:]
 
-            if flt['id'] == 'keywords':
-                for idx, value in enumerate(flt['filter_values']):
-                    if type(value) is not dict:
-                        raise ParseError('Malformed keyword filter', 400)
-                    if not (kw := value.get('id')):
-                        raise ParseError('Malformed keyword filter', 400)
-                    if type(kw) is not str:
-                        raise ParseError('Malformed keyword filter', 400)
-                    if idx == 0:
-                        q_filter = Q(keywords__has_key=kw)
-                    else:
-                        q_filter = q_filter | Q(keywords__has_key=kw)
-                queryset = queryset.filter(q_filter)
-
-        if limit is not None:
-            end = offset + limit
-            queryset = queryset[offset:end]
-        elif offset > 0:
-            queryset = queryset[offset:]
-        return ('Activities', queryset)
-
-
-def search_persons(filters, limit, offset):
-    return ('Filter is not yet implemented', [])
+    return {
+        'label': 'Activities filtered by keywords',
+        'total': total_count,
+        'data': [get_search_item(activity, language) for activity in queryset],
+    }
