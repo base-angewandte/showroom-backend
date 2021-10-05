@@ -62,17 +62,30 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     filter_keywords(flt['filter_values'], limit, offset, lang)
                 )
 
-        # TODO: add other filter types
-        # TODO: add consolidation of different filter type results.
-        #   - reduce items found in different result sets, but increase score
-        #     for result sets with the same label
-        #   - limit overall result set length
-
         if len(results) == 1:
             return Response(results[0], status=200)
         else:
+            consolidated_label = 'Consolidated search results: ' + ', '.join(
+                [r['label'] for r in results]
+            )
+            consolidated_results = []
+            ids = []
+            for idx, r in enumerate(results):
+                if idx == 0:
+                    consolidated_results.extend(r['data'])
+                    ids.extend([r['id'] for r in consolidated_results])
+                else:
+                    for item in r['data']:
+                        if item['id'] not in ids:
+                            consolidated_results.append(item)
+                            ids.append(item['id'])
+
             return Response(
-                {'label': 'not yet consolidated', 'total': 0, 'data': results},
+                {
+                    'label': consolidated_label,
+                    'total': len(consolidated_results),
+                    'data': consolidated_results,
+                },
                 status=200,
             )
 
