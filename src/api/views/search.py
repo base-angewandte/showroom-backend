@@ -62,6 +62,9 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     filter_keywords(flt['filter_values'], limit, offset, lang)
                 )
 
+        return Response(results, status=200)
+        # TODO: discuss if/how search result consolidation should happen
+        """
         if len(results) == 1:
             return Response(results[0], status=200)
         else:
@@ -88,6 +91,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 },
                 status=200,
             )
+        """
 
 
 def filter_activities(values, limit, offset, language):
