@@ -36,7 +36,9 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         lang = request.LANGUAGE_CODE
 
         items = []
-        if filter_id == 'activities':
+        # for now the default filter is the same as activities
+        # TODO: change, as soon as we have entities and albums in our test data
+        if filter_id == 'activities' or filter_id == 'default':
             activities = Activity.objects.filter(title__icontains=q)
             if limit:
                 activities = activities[0:limit]
@@ -66,4 +68,4 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'data': items,
             }
         ]
-        return Response(ret, status=400)
+        return Response(ret, status=200)

@@ -51,7 +51,9 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         results = []
         for flt in filters:
-            if flt['id'] == 'activities':
+            # for now the default filter is the same as activities
+            # TODO: change, as soon as we have entities and albums in our test data
+            if flt['id'] == 'activities' or flt['id'] == 'default':
                 results.append(
                     filter_activities(flt['filter_values'], limit, offset, lang)
                 )
@@ -113,7 +115,7 @@ def filter_activities(values, limit, offset, language):
     for idx, value in enumerate(values):
         if type(value) is not str:
             raise ParseError(
-                'Only strings are allowed for activities/persons/locations filters',
+                'Only strings are allowed for activities/persons/locations/default filters',
                 400,
             )
         if idx == 0:
