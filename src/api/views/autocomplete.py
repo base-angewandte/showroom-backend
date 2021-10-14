@@ -59,9 +59,11 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 status=200,
             )
 
-        ret = {
-            'source': filter_id,
-            'label': get_static_filter_label(filter_id, lang),
-            'data': items,
-        }
+        ret = [
+            {
+                'source': filter_id,
+                'label': get_static_filter_label(filter_id, lang),
+                'data': items,
+            }
+        ]
         return Response(ret, status=400)
