@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 from api import view_spec
 from api.permissions import ActivityPermission
+from api.repositories.portfolio.search_indexer import index_activity
 from api.serializers.activity import ActivitySerializer
 from api.serializers.media import MediaSerializer
 from core.models import Activity
@@ -64,6 +65,9 @@ class ActivityViewSet(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer.save()
+        # as soon as the serializer is saved we want the full text search index to be
+        # built. TODO: refactor this to an async worker
+        index_activity(serializer.instance)
 
         response = {
             'created': [],

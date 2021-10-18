@@ -15,6 +15,7 @@ static_filters = [
             'en': 'Activities',
             'de': 'Aktivitäten',
         },
+        'hidden': False,
     },
     {
         'id': 'persons',
@@ -23,6 +24,7 @@ static_filters = [
             'en': 'Persons',
             'de': 'Personen',
         },
+        'hidden': False,
     },
     {
         'id': 'locations',
@@ -31,6 +33,7 @@ static_filters = [
             'en': 'Locations',
             'de': 'Orte',
         },
+        'hidden': False,
     },
     {
         'id': 'date_range',
@@ -39,6 +42,7 @@ static_filters = [
             'en': 'Date Range',
             'de': 'Datumsbereich',
         },
+        'hidden': False,
     },
     {
         'id': 'date',
@@ -47,6 +51,7 @@ static_filters = [
             'en': 'Date',
             'de': 'Datum',
         },
+        'hidden': False,
     },
     {
         'id': 'albums',
@@ -55,6 +60,34 @@ static_filters = [
             'en': 'Albums',
             'de': 'Alben',
         },
+        'hidden': False,
+    },
+    {
+        'id': 'current_activities',
+        'type': 'text',
+        'label': {
+            'en': 'Current activities',
+            'de': 'Aktuelle Aktivitäten',
+        },
+        'hidden': False,
+    },
+    {
+        'id': 'start_page',
+        'type': 'text',
+        'label': {
+            'en': 'Start page',
+            'de': 'Startseite',
+        },
+        'hidden': True,
+    },
+    {
+        'id': 'default',
+        'type': 'text',
+        'label': {
+            'en': 'Default filter for generic text search',
+            'de': 'Standardfilter für generische Textsuche',
+        },
+        'hidden': True,
     },
 ]
 
@@ -90,6 +123,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'id': 'keywords',
         'type': 'chips',
         'label': label_keywords[lang],
+        'hidden': False,
         'freetext_allowed': False,
         'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
     }
@@ -102,6 +136,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'id': 'type',
         'type': 'chips',
         'label': label_activity_types[lang],
+        'hidden': False,
         'freetext_allowed': False,
         'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
     }

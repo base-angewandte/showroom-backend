@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from api import view_spec
 from api.serializers.entity import EntitySerializer
-from api.serializers.search import SearchCollectionSerializer, SearchRequestSerializer
+from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Entity
 
 
@@ -74,7 +74,7 @@ class EntityViewSet(
     @extend_schema(
         tags=['public'],
         responses={
-            200: SearchCollectionSerializer,
+            200: SearchResultSerializer(many=True),
             404: view_spec.Responses.Error404,
         },
         # TODO: change parameters
