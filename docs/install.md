@@ -160,4 +160,55 @@ subsections.
     make start init init-static restart-gunicorn
     ```
 
-* Install nginx and configure it accordingly
+* Install nginx and configure it accordingly (clone the `nginx` repo to `/opt/base/nginx` and follow the setup docs there)
+
+* Adopt the CAS service to allow authentication for Showroom
+  - On the server where CAS is deployed, in /opt/base/cas/src/localsettings.py
+    add the showroom service in the `MAMA_CAS_SERVICES` list. Take the portfolio
+    service as a reference.
+  - Afterwards go to /opt/base/cas and do a quick rebuild of the CAS container:
+    ```bash
+    sudo docker-compose stop cas-django && sudo docker-compose up --build -d cas-django
+    ```
+
+
+### Notes and disclaimers on prod deployments 🚧🤔🤬💡
+
+Here are some notes on the deployment process, involving the nginx setup, but specific to the setup of Showroom.
+These might help you debug and not stumble across the same obstacles over and over again:
+
+* If this service is new and not yet configured, you will need to add at least the following files in the nginx repo:
+  `showroom.conf`, `showroom-local.conf`, and `showroom-upstream.conf` as well as their testing counterparts (with a 
+  `-dev`-suffix to `showroom`). Use the existing files for portfolio files as a reference.
+  - If you copy and modify the portfolio files, make sure to remove the `merge_slashes off` directive, otherwise nginx
+    will throw an error, because the directive already gets included in the portfolio proxy configuration
+* The `templates/nginx.conf.template` file has to be adopted for the new upstreams and includes.
+* According environment variable lines have to be added to `docker-compose.yaml` and `docker-compose.override.yaml`.
+  - Make sure to also add a network to the override template in `docker-compose.override.base.yaml` and your actual
+    override file.
+* For the nginx repo on the showroom node you will only need the showroom-specific environment variables and docker
+  compose override directives:
+  - for the .env file only the following four have to be set:
+    `BASE_HOSTNAME`, `LETSENCRYPT_EMAIL`, `LETSENCRYPT_STAGING`, `SHOWROOM_STATIC`
+  - the docker-compose.override.yaml should look like this (in this example for a testing server):
+    ```yaml
+    version: '3'
+    services:
+      nginx:
+        environment:
+          - SHOWROOM_DEV_LOCAL=
+        volumes:
+          - $SHOWROOM_STATIC:/showroom-static
+        networks:
+          showroom-backend_showroomnet:
+            aliases:
+              - $BASE_HOSTNAME
+    networks:
+      showroom-backend_showroomnet:
+        external: true
+    ```
+* When everything is running you still have to make sure to generate the static files for showroom by doing
+  `sudo docker exec showroom-django python manage.py collectstatic` on your deploy node.
+* When you restart the Showroom services after the nginx services are already up, and afterwards the proxy does not
+  work anymore, try restarting the nginx services as well. Because it might happen sometimes that the showroom-django
+  service receives a new IP, but the nginx service still uses the old IP for the showroom-django upstream.
