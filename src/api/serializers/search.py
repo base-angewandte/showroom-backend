@@ -25,11 +25,6 @@ class SearchRequestSerializer(serializers.Serializer):
         child=SearchFilterSerializer(),
         help_text='Array of logical AND filters that should be applied to the search.',
     )
-    category = serializers.CharField(
-        required=False,
-        help_text='If only a certain category of showroom objects should be returned.'
-        + ' Currently this can either be persons or activities',
-    )
     limit = serializers.IntegerField(required=False)
     offset = serializers.IntegerField(required=False)
 
