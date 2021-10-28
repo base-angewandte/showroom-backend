@@ -1,3 +1,5 @@
+import re
+
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
@@ -112,26 +114,36 @@ def filter_activities(values, limit, offset, language):
     # TODO: discuss what the ordering criteria are
     activities_queryset = activities_queryset.order_by('-date_created')
 
-    for idx, value in enumerate(values):
+    q_filter = None
+    for _idx, value in enumerate(values):
         if type(value) is not str:
             raise ParseError(
                 'Only strings are allowed for activities/persons/locations/default filters',
                 400,
             )
-        if idx == 0:
-            q_filter = Q(
-                activitysearch__language=language,
-                activitysearch__text_vector=SearchQuery(
-                    value + ':*', config='simple', search_type='raw'
-                ),
+        # TODO: quick fix for multi word FTS, as long as concrete search algo is not discussed
+        words = re.findall(r'[\w]+', value)
+        if not words:
+            raise ParseError(
+                f'The value "{value}" does not contain any valid search words',
+                400,
             )
-        else:
-            q_filter = q_filter | Q(
-                activitysearch__language=language,
-                activitysearch__text_vector=SearchQuery(
-                    value + ':*', config='simple', search_type='raw'
-                ),
-            )
+
+        for word in words:
+            if q_filter is None:
+                q_filter = Q(
+                    activitysearch__language=language,
+                    activitysearch__text_vector=SearchQuery(
+                        word + ':*', config='simple', search_type='raw'
+                    ),
+                )
+            else:
+                q_filter = q_filter | Q(
+                    activitysearch__language=language,
+                    activitysearch__text_vector=SearchQuery(
+                        word + ':*', config='simple', search_type='raw'
+                    ),
+                )
     if len(values) > 0:
         activities_queryset = activities_queryset.filter(q_filter)
 
@@ -147,19 +159,21 @@ def filter_activities(values, limit, offset, language):
         # TODO: this might be more efficient by just querying for all entities
         #   with their ids taken from the activities result set above. especially
         #   when the query becomes more complex.
-        for idx, value in enumerate(values):
-            if idx == 0:
+        q_filter = None
+        for _idx, value in enumerate(values):
+            words = re.findall(r'[\w]+', value)
+            if q_filter is None:
                 q_filter = Q(
                     activity__activitysearch__language=language,
                     activity__activitysearch__text_vector=SearchQuery(
-                        value + ':*', config='simple', search_type='raw'
+                        word + ':*', config='simple', search_type='raw'
                     ),
                 )
             else:
                 q_filter = q_filter | Q(
                     activity__activitysearch__language=language,
                     activity__activitysearch__text_vector=SearchQuery(
-                        value + ':*', config='simple', search_type='raw'
+                        word + ':*', config='simple', search_type='raw'
                     ),
                 )
 
