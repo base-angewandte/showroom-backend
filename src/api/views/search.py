@@ -5,6 +5,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
+from django.conf import settings
 from django.contrib.postgres.search import SearchQuery
 from django.db.models import Q
 
@@ -50,6 +51,8 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             return Response(
                 {'detail': 'negative or zero limit not allowed'}, status=400
             )
+        if limit is None:
+            limit = settings.SEARCH_LIMIT
 
         results = []
         for flt in filters:
@@ -181,11 +184,8 @@ def filter_activities(values, limit, offset, language):
 
     found_entities_count = entities_queryset.count()
 
-    if limit is not None:
-        end = offset + limit
-        activities_queryset = activities_queryset[offset:end]
-    elif offset > 0:
-        activities_queryset = activities_queryset[offset:]
+    end = offset + limit
+    activities_queryset = activities_queryset[offset:end]
 
     results = [get_search_item(activity, language) for activity in activities_queryset]
 
@@ -193,7 +193,7 @@ def filter_activities(values, limit, offset, language):
 
     # in case we found less activities than the supplied limits, we extend the list
     # by the related entities from the entities_queryset
-    if limit is None or num_results < limit:
+    if num_results < limit:
 
         # if we already found some activities (but not enough for the limit),
         # we want to take entities from the start of the filtered entities.
@@ -205,11 +205,8 @@ def filter_activities(values, limit, offset, language):
         else:
             remainder_offset = offset - found_activities_count
 
-        if limit is not None:
-            remainder_end = limit - num_results
-            entities_queryset = entities_queryset[remainder_offset:remainder_end]
-        elif offset > 0:
-            entities_queryset = entities_queryset[offset:]
+        remainder_end = limit - num_results
+        entities_queryset = entities_queryset[remainder_offset:remainder_end]
 
         results.extend(
             [get_search_item(entity, language) for entity in entities_queryset]
@@ -255,11 +252,8 @@ def filter_type(values, limit, offset, language):
 
     total_count = queryset.count()
 
-    if limit is not None:
-        end = offset + limit
-        queryset = queryset[offset:end]
-    elif offset > 0:
-        queryset = queryset[offset:]
+    end = offset + limit
+    queryset = queryset[offset:end]
 
     return {
         'label': 'Activities filtered by type',
@@ -301,11 +295,8 @@ def filter_keywords(values, limit, offset, language):
 
     total_count = queryset.count()
 
-    if limit is not None:
-        end = offset + limit
-        queryset = queryset[offset:end]
-    elif offset > 0:
-        queryset = queryset[offset:]
+    end = offset + limit
+    queryset = queryset[offset:end]
 
     return {
         'label': 'Activities filtered by keywords',

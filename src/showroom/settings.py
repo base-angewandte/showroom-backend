@@ -146,6 +146,9 @@ ACTIVE_SCHEMAS = env.list(
     ],
 )
 
+# The default limit for searches, when no limit parameter is provided
+SEARCH_LIMIT = env.int('SEARCH_LIMIT', 100)
+
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
 
