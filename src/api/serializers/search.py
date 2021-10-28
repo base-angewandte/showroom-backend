@@ -29,11 +29,6 @@ class SearchRequestSerializer(serializers.Serializer):
     offset = serializers.IntegerField(required=False)
 
 
-class SearchItemAlternativeTextSerializer(serializers.Serializer):
-    label = serializers.CharField()
-    value = serializers.CharField()
-
-
 class SearchItemSourceInstitutionSerializer(serializers.Serializer):
     label = serializers.CharField()
     url = serializers.URLField()
@@ -42,17 +37,18 @@ class SearchItemSourceInstitutionSerializer(serializers.Serializer):
 
 class SearchItemSerializer(serializers.Serializer):
     id = serializers.CharField()
-    alternative_text = SearchItemAlternativeTextSerializer(many=True)
-    media_url = serializers.URLField()
-    source = serializers.URLField()
+    type = serializers.CharField()
+    title = serializers.CharField()
+    subtitle = serializers.CharField()
+    description = serializers.CharField()
+    alternative_text = serializers.ListField(child=serializers.CharField())
+    image_url = serializers.URLField()
     source_institution = SearchItemSourceInstitutionSerializer()
     score = serializers.IntegerField()
-    title = serializers.CharField()
-    type = serializers.CharField()
 
 
 # TODO: add some examples to the schema
 class SearchResultSerializer(serializers.Serializer):
-    collection = serializers.CharField()
+    label = serializers.CharField()
     total = serializers.IntegerField()
     data = SearchItemSerializer(many=True)

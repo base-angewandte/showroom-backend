@@ -30,7 +30,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         responses={
             200: OpenApiResponse(
                 description='',
-                response=SearchResultSerializer(many=True),
+                response=SearchResultSerializer,
             ),
             400: view_spec.Responses.Error400,
         },
@@ -69,9 +69,8 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     filter_keywords(flt['filter_values'], limit, offset, lang)
                 )
 
-        return Response(results, status=200)
         # TODO: discuss if/how search result consolidation should happen
-        """
+        #       will probably mostly depend on scoring, so dicuss scoring as well
         if len(results) == 1:
             return Response(results[0], status=200)
         else:
@@ -80,25 +79,34 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
             consolidated_results = []
             ids = []
+            total = 0
             for idx, r in enumerate(results):
                 if idx == 0:
                     consolidated_results.extend(r['data'])
                     ids.extend([r['id'] for r in consolidated_results])
+                    total += r['total']
                 else:
+                    # filter out duplicates before processing the result set
+                    for i, item in enumerate(r['data']):
+                        if item['id'] in ids:
+                            r['data'].pop(i)
+                    # now add the total and as many items as needed to fill the limit
+                    # TODO: something still seems to be off with the total in cases
+                    #       where the limit is significantly lower than the total
+                    total += len(r['data'])
                     for item in r['data']:
-                        if item['id'] not in ids:
+                        ids.append(item['id'])
+                        if len(consolidated_results) < limit:
                             consolidated_results.append(item)
-                            ids.append(item['id'])
 
             return Response(
                 {
                     'label': consolidated_label,
-                    'total': len(consolidated_results),
+                    'total': total,
                     'data': consolidated_results,
                 },
                 status=200,
             )
-        """
 
 
 def filter_activities(values, limit, offset, language):
