@@ -30,9 +30,15 @@ class SearchRequestSerializer(serializers.Serializer):
 
 
 class SearchItemSourceInstitutionSerializer(serializers.Serializer):
-    label = serializers.CharField()
-    url = serializers.URLField()
-    icon = serializers.URLField()
+    label = serializers.CharField(
+        help_text='Name of institution',
+    )
+    url = serializers.URLField(
+        help_text='URL to institution or the institution\'s showroom page',
+    )
+    icon = serializers.URLField(
+        help_text='Path to the institution\'s icon file',
+    )
 
 
 class SearchItemSerializer(serializers.Serializer):

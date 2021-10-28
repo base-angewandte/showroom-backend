@@ -12,6 +12,7 @@ from .views.album import AlbumViewSet
 from .views.autocomplete import AutocompleteViewSet
 from .views.entity import EntityViewSet
 from .views.filter import FilterViewSet
+from .views.initial import InitialViewSet
 from .views.media import MediaViewSet
 from .views.search import SearchViewSet
 from .views.user import get_user_data
@@ -24,6 +25,7 @@ router.register(r'media', MediaViewSet)
 router.register(r'search', SearchViewSet, basename='search')
 router.register(r'filters', FilterViewSet, basename='filters')
 router.register(r'autocomplete', AutocompleteViewSet, basename='autocomplete')
+router.register(r'initial', InitialViewSet, basename='initial')
 
 urlpatterns = [
     path('', include(router.urls)),
