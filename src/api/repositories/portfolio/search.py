@@ -117,7 +117,7 @@ def get_architecture_contributors(item, lang):
 
 def get_activity_type_university(item, lang):
     ret = []
-    if type_label := item.type.get('label'):
+    if item.type and (type_label := item.type.get('label')):
         ret.append(type_label.get(lang))
     ret.append(item.source_repo.label_institution)
     return ret
