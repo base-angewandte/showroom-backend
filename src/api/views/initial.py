@@ -1,11 +1,18 @@
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+import logging
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
 from api import view_spec
 from api.serializers.initial import InitialDataSerializer
+from api.serializers.showcase import ShowcaseSerializer
 from api.views.search import filter_activities
-from core.models import Entity
+from core.models import Activity, Album, Entity
+from showroom import settings
+
+logger = logging.getLogger(__name__)
 
 
 class InitialViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -16,6 +23,14 @@ class InitialViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     @extend_schema(
         tags=['public'],
+        parameters=[
+            OpenApiParameter(
+                'id',
+                OpenApiTypes.STR,
+                OpenApiParameter.PATH,
+                description='ShortUUID of the entity for which initial data should be presented',
+            ),
+        ],
         responses={
             200: OpenApiResponse(
                 description='',
@@ -41,9 +56,38 @@ class InitialViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 'url': entity.source_repo.url_institution,
                 'icon': entity.source_repo.icon,
             },
-            'showcase': entity.showcase,
+            'showcase': [],
             'results': [],
         }
+
+        if entity.showcase is None or entity.showcase == []:
+            entity.showcase = settings.DEFAULT_SHOWCASE
+
+        showcase_warnings = []
+        for id, showcase_type in entity.showcase:
+            if showcase_type == 'activity':
+                try:
+                    item = Activity.objects.get(pk=id)
+                except Activity.DoesNotExist:
+                    showcase_warnings.append(f'Activity {id} does not exist.')
+            elif showcase_type == 'album':
+                try:
+                    item = Album.objects.get(pk=id)
+                except Album.DoesNotExist:
+                    showcase_warnings.append(f'Album {id} does not exist.')
+            else:
+                # in case something else was stored, we want to log an error, but
+                # continue assembling the showcase output
+                logger.error(f'Invalid showcase object: {id}, {showcase_type}')
+                continue
+
+            serializer = ShowcaseSerializer(item)
+            response['showcase'].append(serializer.data)
+
+        # if anything went wrong with serializing single showcase items, we still want
+        # to produce the rest of the showcase, but add warnings too
+        if showcase_warnings:
+            response['showcase_warnings'] = showcase_warnings
 
         filter = {
             'id': 'activities',
