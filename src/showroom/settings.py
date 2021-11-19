@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 import environ
 
+from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
@@ -148,6 +149,19 @@ ACTIVE_SCHEMAS = env.list(
 
 # The default limit for searches, when no limit parameter is provided
 SEARCH_LIMIT = env.int('SEARCH_LIMIT', 100)
+
+# The default showcase to be used for the initial endpoint, if the requested entity's
+# showcase is empty. Also check for syntactical validity.
+DEFAULT_SHOWCASE = [x.split(':') for x in env.list('DEFAULT_SHOWCASE', [])]
+for x in DEFAULT_SHOWCASE:
+    if type(x) != list or len(x) != 2:
+        raise ImproperlyConfigured(
+            'Syntax error in DEFAULT_SHOWCASE environment variable'
+        )
+    if not x[0] or not x[1]:
+        raise ImproperlyConfigured(
+            'Syntax error in DEFAULT_SHOWCASE environment variable'
+        )
 
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
