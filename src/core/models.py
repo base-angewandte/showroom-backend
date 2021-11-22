@@ -4,6 +4,7 @@ from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
+from core.validators import validate_showcase
 from general.models import AbstractBaseModel, ShortUUIDField
 
 
@@ -50,7 +51,7 @@ class Entity(AbstractShowroomObject):
     ]
     type = models.CharField(max_length=1, choices=ENTITY_TYPE_CHOICES)
     expertise = JSONField(blank=True, null=True)
-    showcase = JSONField(blank=True, null=True)
+    showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
     parent_choice_limit = Q(type='I') | Q(type='D')
     parent = models.ForeignKey(
