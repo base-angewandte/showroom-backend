@@ -1505,9 +1505,18 @@ def get_publisher_place_date(data):
     if date := inner_data.get('date'):
         line = f'{line}, {date}'
 
+    if not line:
+        return None
+
     transformed = {}
     for lang in LANGUAGES:
-        if len(publishers) > 1:
+        if not publishers:
+            label = (
+                get_preflabel('date', lang=lang)
+                + '/'
+                + get_preflabel('location', lang=lang)
+            )
+        elif len(publishers) > 1:
             label = get_altlabel('publisher', lang=lang)
         else:
             label = get_preflabel('publisher', lang=lang)
