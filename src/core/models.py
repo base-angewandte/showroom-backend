@@ -91,6 +91,9 @@ class Activity(AbstractShowroomObject):
     def __str__(self):
         return f'{self.title} (ID: {self.id})'
 
+    def get_showcase_date_info(self):
+        return 'TODO: get date/time info for showcase'
+
 
 class ActivitySearch(models.Model):
     id = models.AutoField(primary_key=True)
@@ -101,6 +104,19 @@ class ActivitySearch(models.Model):
 
     class Meta:
         indexes = (GinIndex(fields=['text_vector']),)
+
+
+class ActivitySearchDates(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    date = models.DateField()
+
+
+class ActivitySearchDateRanges(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    date_from = models.DateField()
+    date_to = models.DateField()
 
 
 class Album(models.Model):

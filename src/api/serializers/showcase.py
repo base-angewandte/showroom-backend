@@ -69,7 +69,7 @@ class ShowcaseSerializer(serializers.Serializer):
         }
         if type(instance) == Activity:
             ret['subtext'] = '. '.join(instance.subtext)
-            ret['additional'] = ''  # TODO: discuss what should actually go here
+            ret['additional'] = instance.get_showcase_date_info()
             ret['type'] = instance.type
             media = instance.media_set.all()
             for m in media:
