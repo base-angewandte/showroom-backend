@@ -1,8 +1,9 @@
 import logging
+import re
 
 from django.conf import settings
 
-from core.models import ActivitySearch
+from core.models import ActivitySearch, ActivitySearchDateRanges, ActivitySearchDates
 
 from . import get_schema
 from .mapping import map_indexer
@@ -54,6 +55,80 @@ def index_activity(activity):
         else:
             search_index.text = '; '.join(values)
             search_index.save()
+
+    # now do the date related indexing
+    if inner_data and type(inner_data) == dict:
+        dates = []
+        date_ranges = []
+        # collect all possible dates and date locations
+        if date := inner_data.get('date'):
+            append_date(date, dates, date_ranges)
+        if d := inner_data.get('date_location'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date(date, dates, date_ranges)
+        if d := inner_data.get('date_location_description'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date(date, dates, date_ranges)
+        if d := inner_data.get('date_opening_location'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date_range(date, dates, date_ranges)
+                if opening := dl.get('opening'):
+                    if date := opening.get('date'):
+                        append_date(date, dates, date_ranges)
+        if date := inner_data.get('date_range'):
+            append_date_range(date, dates, date_ranges)
+        if d := inner_data.get('date_range_location'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date_range(date, dates, date_ranges)
+        if d := inner_data.get('date_range_time_range_location'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date_range(date, dates, date_ranges)
+        if d := inner_data.get('date_time_range_location'):
+            for dl in d:
+                if date := dl.get('date'):
+                    append_date(date.get('date'), dates, date_ranges)
+        # clear all old search index values for this activity
+        ActivitySearchDates.objects.filter(activity=activity).delete()
+        ActivitySearchDateRanges.objects.filter(activity=activity).delete()
+        # store the collected dates and date ranges as new search index values
+        ActivitySearchDates.objects.bulk_create(
+            [ActivitySearchDates(activity=activity, date=date) for date in dates]
+        )
+        ActivitySearchDateRanges.objects.bulk_create(
+            [
+                ActivitySearchDateRanges(
+                    activity=activity, date_from=dr[0], date_to=dr[1]
+                )
+                for dr in date_ranges
+            ]
+        )
+
+
+def append_date(date, dates, date_ranges):
+    if re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', date):
+        dates.append(date)
+    elif re.match(r'^[0-9]{4}$', date):
+        date_ranges.append((f'{date}-01-01', f'{date}-12-31'))
+
+
+def append_date_range(date_range, dates, date_ranges):
+    date_from = date_range.get('date_from')
+    date_to = date_range.get('date_to')
+    if date_from and date_to:
+        if re.match(r'^[0-9]{4}$', date_from):
+            date_from = f'{date_from}-01-01'
+        if re.match(r'^[0-9]{4}$', date_to):
+            date_to = f'{date_to}-12-31'
+        date_ranges.append((date_from, date_to))
+    elif date_from:
+        append_date(date_from, dates, date_ranges)
+    else:
+        append_date(date_to, dates, date_ranges)
 
 
 def get_index(indexer, data):
