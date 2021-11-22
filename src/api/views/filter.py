@@ -17,51 +17,51 @@ static_filters = [
         },
         'hidden': False,
     },
-    {
-        'id': 'persons',
-        'type': 'text',
-        'label': {
-            'en': 'Persons',
-            'de': 'Personen',
-        },
-        'hidden': False,
-    },
-    {
-        'id': 'locations',
-        'type': 'text',
-        'label': {
-            'en': 'Locations',
-            'de': 'Orte',
-        },
-        'hidden': False,
-    },
-    {
-        'id': 'date_range',
-        'type': 'daterange',
-        'label': {
-            'en': 'Date Range',
-            'de': 'Datumsbereich',
-        },
-        'hidden': False,
-    },
-    {
-        'id': 'date',
-        'type': 'date',
-        'label': {
-            'en': 'Date',
-            'de': 'Datum',
-        },
-        'hidden': False,
-    },
-    {
-        'id': 'albums',
-        'type': 'text',
-        'label': {
-            'en': 'Albums',
-            'de': 'Alben',
-        },
-        'hidden': False,
-    },
+    # {
+    #     'id': 'persons',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Persons',
+    #         'de': 'Personen',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'locations',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Locations',
+    #         'de': 'Orte',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'date_range',
+    #     'type': 'daterange',
+    #     'label': {
+    #         'en': 'Date Range',
+    #         'de': 'Datumsbereich',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'date',
+    #     'type': 'date',
+    #     'label': {
+    #         'en': 'Date',
+    #         'de': 'Datum',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'albums',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Albums',
+    #         'de': 'Alben',
+    #     },
+    #     'hidden': False,
+    # },
     {
         'id': 'current_activities',
         'type': 'text',
