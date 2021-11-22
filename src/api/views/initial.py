@@ -7,9 +7,9 @@ from rest_framework.response import Response
 
 from api import view_spec
 from api.serializers.initial import InitialDataSerializer
-from api.serializers.showcase import ShowcaseSerializer
+from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import filter_activities
-from core.models import Activity, Album, Entity
+from core.models import Entity
 from showroom import settings
 
 logger = logging.getLogger(__name__)
@@ -63,26 +63,9 @@ class InitialViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         if entity.showcase is None or entity.showcase == []:
             entity.showcase = settings.DEFAULT_SHOWCASE
 
-        showcase_warnings = []
-        for id, showcase_type in entity.showcase:
-            if showcase_type == 'activity':
-                try:
-                    item = Activity.objects.get(pk=id)
-                except Activity.DoesNotExist:
-                    showcase_warnings.append(f'Activity {id} does not exist.')
-            elif showcase_type == 'album':
-                try:
-                    item = Album.objects.get(pk=id)
-                except Album.DoesNotExist:
-                    showcase_warnings.append(f'Album {id} does not exist.')
-            else:
-                # in case something else was stored, we want to log an error, but
-                # continue assembling the showcase output
-                logger.error(f'Invalid showcase object: {id}, {showcase_type}')
-                continue
-
-            serializer = ShowcaseSerializer(item)
-            response['showcase'].append(serializer.data)
+        response['showcase'], showcase_warnings = get_serialized_showcase_and_warnings(
+            entity.showcase
+        )
 
         # if anything went wrong with serializing single showcase items, we still want
         # to produce the rest of the showcase, but add warnings too

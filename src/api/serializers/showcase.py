@@ -1,6 +1,35 @@
+import logging
+
 from rest_framework import serializers
 
 from core.models import Activity, Album
+
+logger = logging.getLogger(__name__)
+
+
+def get_serialized_showcase_and_warnings(showcase):
+    serialized = []
+    warnings = []
+    for id, showcase_type in showcase:
+        if showcase_type == 'activity':
+            try:
+                item = Activity.objects.get(pk=id)
+            except Activity.DoesNotExist:
+                warnings.append(f'Activity {id} does not exist.')
+        elif showcase_type == 'album':
+            try:
+                item = Album.objects.get(pk=id)
+            except Album.DoesNotExist:
+                warnings.append(f'Album {id} does not exist.')
+        else:
+            # in case something else was stored, we want to log an error, but
+            # continue assembling the showcase output
+            logger.error(f'Invalid showcase object: {id}, {showcase_type}')
+            continue
+
+        serializer = ShowcaseSerializer(item)
+        serialized.append(serializer.data)
+    return serialized, warnings
 
 
 class ShowcaseSerializer(serializers.Serializer):
