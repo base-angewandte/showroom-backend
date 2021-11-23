@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from api import view_spec
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
-from api.views.search import filter_activities
+from api.views.search import filter_current_activities
 from core.models import Entity
 from showroom import settings
 
@@ -73,13 +73,13 @@ class InitialViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             response['showcase_warnings'] = showcase_warnings
 
         filter = {
-            'id': 'activities',
-            'filter_values': ['a'],
+            'id': 'current_activities',
+            'filter_values': [],
         }
-        found = filter_activities(filter['filter_values'], 30, 0, lang)
+        found = filter_current_activities(filter['filter_values'], 30, 0, lang)
         response['results'].append(
             {
-                'label': 'Current activities',
+                'label': found['label'],
                 'total': found['total'],
                 'data': found['data'],
                 'filters': [filter],
