@@ -85,6 +85,10 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 )
             if flt['id'] == 'date':
                 results.append(filter_date(flt['filter_values'], limit, offset, lang))
+            if flt['id'] == 'daterange':
+                results.append(
+                    filter_daterange(flt['filter_values'], limit, offset, lang)
+                )
 
         # TODO: discuss if/how search result consolidation should happen
         #       will probably mostly depend on scoring, so dicuss scoring as well
@@ -343,7 +347,6 @@ def filter_date(values, limit, offset, language):
     if not values:
         raise ParseError('Date filter needs at least one value', 400)
 
-    print(values)
     flt = None
     for value in values:
         if type(value) is not str:
@@ -359,6 +362,49 @@ def filter_date(values, limit, offset, language):
         add_flt = Q(activitysearchdates__date=value) | (
             Q(activitysearchdateranges__date_from__lte=value)
             & Q(activitysearchdateranges__date_to__gte=value)
+        )
+        if not flt:
+            flt = add_flt
+        else:
+            flt = flt | add_flt
+
+    activities_queryset = Activity.objects.filter(flt).distinct()
+    total = activities_queryset.count()
+    results = [
+        get_search_item(activity, language)
+        for activity in activities_queryset[offset : offset + limit]
+    ]
+
+    return {
+        'label': label_results_generic.get(language),
+        'total': total,
+        'data': results,
+    }
+
+
+def filter_daterange(values, limit, offset, language):
+    if not values:
+        raise ParseError('Date range filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict or not value.get('from') or not value.get('to'):
+            raise ParseError(
+                'Date range filter values have to be objects containing from and to properties',
+                400,
+            )
+        d_pattern = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+        d_from = value['from']
+        d_to = value['to']
+        if not re.match(d_pattern, d_from) or not re.match(d_pattern, d_to):
+            raise ParseError(
+                'Only dates of format YYYY-MM-DD can be used as date range filter from and to values',
+                400,
+            )
+        add_flt = (
+            Q(activitysearchdates__date__range=[d_from, d_to])
+            | Q(activitysearchdateranges__date_from__range=[d_from, d_to])
+            | Q(activitysearchdateranges__date_to__range=[d_from, d_to])
         )
         if not flt:
             flt = add_flt

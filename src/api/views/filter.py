@@ -35,15 +35,15 @@ static_filters = [
     #     },
     #     'hidden': False,
     # },
-    # {
-    #     'id': 'date_range',
-    #     'type': 'daterange',
-    #     'label': {
-    #         'en': 'Date Range',
-    #         'de': 'Datumsbereich',
-    #     },
-    #     'hidden': False,
-    # },
+    {
+        'id': 'daterange',
+        'type': 'daterange',
+        'label': {
+            'en': 'Date Range',
+            'de': 'Datumsbereich',
+        },
+        'hidden': False,
+    },
     {
         'id': 'date',
         'type': 'date',
