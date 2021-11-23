@@ -44,15 +44,15 @@ static_filters = [
     #     },
     #     'hidden': False,
     # },
-    # {
-    #     'id': 'date',
-    #     'type': 'date',
-    #     'label': {
-    #         'en': 'Date',
-    #         'de': 'Datum',
-    #     },
-    #     'hidden': False,
-    # },
+    {
+        'id': 'date',
+        'type': 'date',
+        'label': {
+            'en': 'Date',
+            'de': 'Datum',
+        },
+        'hidden': False,
+    },
     # {
     #     'id': 'albums',
     #     'type': 'text',

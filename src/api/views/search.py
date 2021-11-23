@@ -83,6 +83,8 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 results.append(
                     filter_current_activities(flt['filter_values'], limit, offset, lang)
                 )
+            if flt['id'] == 'date':
+                results.append(filter_date(flt['filter_values'], limit, offset, lang))
 
         # TODO: discuss if/how search result consolidation should happen
         #       will probably mostly depend on scoring, so dicuss scoring as well
@@ -334,6 +336,46 @@ def filter_current_activities(values, limit, offset, language):
         'label': label_current_activities.get(language),
         'total': today_count + future_count + past_count,
         'data': final,
+    }
+
+
+def filter_date(values, limit, offset, language):
+    if not values:
+        raise ParseError('Date filter needs at least one value', 400)
+
+    print(values)
+    flt = None
+    for value in values:
+        if type(value) is not str:
+            raise ParseError(
+                'Only strings are allowed as date filter values',
+                400,
+            )
+        if not re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', value):
+            raise ParseError(
+                'Only dates of format YYYY-MM-DD can be used as date filter values',
+                400,
+            )
+        add_flt = Q(activitysearchdates__date=value) | (
+            Q(activitysearchdateranges__date_from__lte=value)
+            & Q(activitysearchdateranges__date_to__gte=value)
+        )
+        if not flt:
+            flt = add_flt
+        else:
+            flt = flt | add_flt
+
+    activities_queryset = Activity.objects.filter(flt).distinct()
+    total = activities_queryset.count()
+    results = [
+        get_search_item(activity, language)
+        for activity in activities_queryset[offset : offset + limit]
+    ]
+
+    return {
+        'label': label_results_generic.get(language),
+        'total': total,
+        'data': results,
     }
 
 
