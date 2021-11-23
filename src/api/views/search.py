@@ -1,4 +1,5 @@
 import re
+from datetime import date, timedelta
 
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, viewsets
@@ -17,6 +18,10 @@ from core.models import Activity, Entity
 label_results_generic = {
     'en': 'Search results',
     'de': 'Suchergebnisse',
+}
+label_current_activities = {
+    'en': 'Current activities',
+    'de': 'Aktuelle Aktivitäten',
 }
 
 
@@ -67,6 +72,16 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if flt['id'] == 'keywords':
                 results.append(
                     filter_keywords(flt['filter_values'], limit, offset, lang)
+                )
+            if flt['id'] == 'current_activities':
+                results.append(
+                    filter_current_activities(flt['filter_values'], limit, offset, lang)
+                )
+            if flt['id'] == 'start_page':
+                # as we have no user specific start page filters yet in v1.0, we can
+                # just return the current activities result set
+                results.append(
+                    filter_current_activities(flt['filter_values'], limit, offset, lang)
                 )
 
         # TODO: discuss if/how search result consolidation should happen
@@ -224,6 +239,101 @@ def filter_activities(values, limit, offset, language):
         'label': label_results_generic.get(language),
         'total': found_activities_count + found_entities_count,
         'data': results,
+    }
+
+
+def filter_current_activities(values, limit, offset, language):
+    # TODO: discuss: should values and offset for this filter just be ignored?
+    # TODO: the whole query might still be combined into a sinqle query with
+    #       Case, When and annotations, to generate a more useful ranking.
+    #       See: https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
+
+    activities_queryset = Activity.objects.all()
+    today = date.today()
+    future_limit = today + timedelta(days=180)
+    past_limit = today - timedelta(days=365)
+
+    today_activities = activities_queryset.filter(activitysearchdates__date=today)
+    today_count = today_activities.count()
+    future_activities = (
+        activities_queryset.filter(
+            (
+                Q(activitysearchdates__date__gt=today)
+                & Q(activitysearchdates__date__lte=future_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_from__lte=today)
+                & Q(activitysearchdateranges__date_to__gt=today)
+            )
+        )
+        .exclude(activitysearchdates__date=today)
+        .distinct()
+    )
+    future_count = future_activities.count()
+    past_activities = (
+        activities_queryset.filter(
+            (
+                Q(activitysearchdates__date__lt=today)
+                & Q(activitysearchdates__date__gte=past_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_from__lt=today)
+                & Q(activitysearchdateranges__date_to__gte=today)
+            )
+        )
+        .exclude(activitysearchdates__date=today)
+        .exclude(
+            (
+                Q(activitysearchdates__date__gt=today)
+                & Q(activitysearchdates__date__lte=future_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_from__lte=today)
+                & Q(activitysearchdateranges__date_to__gt=today)
+            )
+        )
+    )
+    past_count = past_activities.count()
+
+    if today_count >= limit:
+        final = [
+            get_search_item(activity, language)
+            for activity in today_activities[0:limit]
+        ]
+    else:
+        final = [get_search_item(activity, language) for activity in today_activities]
+        if today_count + future_count >= limit:
+            final.extend(
+                [
+                    get_search_item(activity, language)
+                    for activity in future_activities[0 : limit - today_count]
+                ]
+            )
+        else:
+            final.extend(
+                [get_search_item(activity, language) for activity in future_activities]
+            )
+            if today_count + future_count + past_count >= limit:
+                final.extend(
+                    [
+                        get_search_item(activity, language)
+                        for activity in past_activities[
+                            0 : limit - today_count - future_count
+                        ]
+                    ]
+                )
+            else:
+                final.extend(
+                    [
+                        get_search_item(activity, language)
+                        for activity in past_activities
+                    ]
+                )
+
+    return {
+        'label': label_current_activities.get(language),
+        'total': today_count + future_count + past_count,
+        'data': final,
     }
 
 
