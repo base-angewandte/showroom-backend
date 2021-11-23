@@ -250,8 +250,8 @@ def filter_current_activities(values, limit, offset, language):
 
     activities_queryset = Activity.objects.all()
     today = date.today()
-    future_limit = today + timedelta(days=180)
-    past_limit = today - timedelta(days=365)
+    future_limit = today + timedelta(days=settings.CURRENT_ACTIVITIES_FUTURE)
+    past_limit = today - timedelta(days=settings.CURRENT_ACTIVITIES_PAST)
 
     today_activities = activities_queryset.filter(activitysearchdates__date=today)
     today_count = today_activities.count()
