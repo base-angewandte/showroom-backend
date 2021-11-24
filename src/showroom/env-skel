@@ -79,3 +79,6 @@ POSTGRES_PASSWORD=password
 ## A default showcase to be used in the initial endpoint, if the requested entity's showcase is empty
 ## Value should be a comma-separated list of ID:TYPE pairs, where TYPE can either be 'activity' or 'album'
 # DEFAULT_SHOWCASE=
+
+## A default entity id to be used in the /initial endpoint without any ID
+# DEFAULT_ENTITY=

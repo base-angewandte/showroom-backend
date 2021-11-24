@@ -167,6 +167,9 @@ for x in DEFAULT_SHOWCASE:
             'Syntax error in DEFAULT_SHOWCASE environment variable'
         )
 
+DEFAULT_ENTITY = env.str('DEFAULT_ENTITY', default=None)
+
+
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
 
