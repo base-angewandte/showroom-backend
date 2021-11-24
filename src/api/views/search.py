@@ -146,6 +146,9 @@ def filter_activities(values, limit, offset, language):
     # TODO: discuss what the ordering criteria are
     activities_queryset = activities_queryset.order_by('-date_created')
 
+    if not values:
+        raise ParseError('Activities filter needs at least one value', 400)
+
     q_filter = None
     for _idx, value in enumerate(values):
         if type(value) is not str:
@@ -440,17 +443,21 @@ def filter_type(values, limit, offset, language):
     :param offset: The 0-indexed offset of the first activity in the result set
     :return: A SearchResult dictionary, as defined in the API spec.
     """
+    if not values:
+        raise ParseError('Type filter needs at least one value', 400)
+
     queryset = Activity.objects.all()
     # TODO: discuss what the ordering criteria are
     queryset = queryset.order_by('-date_created')
-    for idx, value in enumerate(values):
+    q_filter = None
+    for value in values:
         if type(value) is not dict:
             raise ParseError('Malformed type filter', 400)
         if not (typ := value.get('id')):
             raise ParseError('Malformed type filter', 400)
         if type(typ) is not str:
             raise ParseError('Malformed type filter', 400)
-        if idx == 0:
+        if not q_filter:
             q_filter = Q(type__label__contains={'en': typ})
         else:
             q_filter = q_filter | Q(type__label__contains={'en': typ})
@@ -483,6 +490,9 @@ def filter_keywords(values, limit, offset, language):
     :param offset: The 0-indexed offset of the first activity in the result set
     :return: A SearchResult dictionary, as defined in the API spec.
     """
+    if not values:
+        raise ParseError('Keywords filter needs at least one value', 400)
+
     queryset = Activity.objects.all()
     # TODO: discuss what the ordering criteria are
     queryset = queryset.order_by('-date_created')
