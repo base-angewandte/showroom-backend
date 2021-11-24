@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.utils.text import slugify
 
 from core.models import Activity, Album
 
@@ -38,6 +39,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     elif type(item) == Album:
         search_item['type'] = 'album'
     else:
+        search_item['id'] = slugify(item.title) + '-' + item.id
         # TODO: discuss what frontend really needs here and then create config
         #       setting for this and core.model.Entity type choices
         if item.type == 'P':

@@ -5,6 +5,7 @@ from traceback import print_tb
 from rest_framework import serializers
 
 from django.conf import settings
+from django.utils.text import slugify
 
 from api.repositories import portfolio
 from api.repositories.portfolio import (
@@ -150,7 +151,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             ret['publisher'].append(
                 {
                     'name': instance.belongs_to.title,
-                    'source': instance.belongs_to.id,
+                    'source': f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}',
                 }
             )
         # include the source institutions details

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from django.utils.text import slugify
+
 from core.models import Entity
 
 from . import abstract_showroom_object_fields
@@ -20,7 +22,11 @@ class EntitySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
 
-        # make sure to only provide an empty list if no showcase is None or {}
+        # transform the id and parent id to include name
+        ret['id'] = slugify(instance.title) + '-' + instance.id
+        ret['parent'] = slugify(instance.parent.title) + '-' + instance.parent.id
+
+        # make sure to only provide an empty list if showcase is None or {}
         if not instance.showcase:
             instance.showcase = []
         sc, sc_warnings = get_serialized_showcase_and_warnings(instance.showcase)

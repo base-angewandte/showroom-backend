@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
@@ -40,8 +41,6 @@ from core.models import Entity
 class EntityViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     queryset = Entity.objects.all()
@@ -59,6 +58,19 @@ class EntityViewSet(
         # schema (through the list parameter in the extend_schema_view decorator
         # above)
         raise MethodNotAllowed(method='GET')
+
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: EntitySerializer(),
+            404: view_spec.Responses.Error404,
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @extend_schema(
         tags=['public'],
