@@ -40,8 +40,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         search_item['type'] = 'album'
     else:
         search_item['id'] = slugify(item.title) + '-' + item.id
-        # TODO: discuss what frontend really needs here and then create config
-        #       setting for this and core.model.Entity type choices
+        # TODO: refactor this (also in entity serializer, to be configurable)
         if item.type == 'P':
             search_item['type'] = 'person'
         elif item.type == 'I':

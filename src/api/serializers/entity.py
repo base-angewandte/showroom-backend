@@ -33,6 +33,14 @@ class EntitySerializer(serializers.ModelSerializer):
             else:
                 ret['parent'] = f'{slugify(instance.parent.title)}-{instance.parent.id}'
 
+        # TODO: refactor this (also in get_serach_item(), to be configurable)
+        if instance.type == 'P':
+            ret['type'] = 'person'
+        elif instance.type == 'I':
+            ret['type'] = 'institution'
+        elif instance.type == 'D':
+            ret['type'] = 'department'
+
         # make sure to only provide an empty list if showcase is None or {}
         if not instance.showcase:
             instance.showcase = []
