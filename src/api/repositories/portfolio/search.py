@@ -54,7 +54,10 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         # image we can find
         for medium in item.media_set.all():
             if medium.type == 'i':
-                search_item['image_url'] = medium.file
+                thumbnail = medium.specifics.get('thumbnail')
+                if not thumbnail:
+                    continue
+                search_item['image_url'] = thumbnail
                 break
     else:
         search_item['image_url'] = item.photo if item.photo else None
