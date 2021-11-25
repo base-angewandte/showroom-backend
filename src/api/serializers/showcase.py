@@ -16,11 +16,13 @@ def get_serialized_showcase_and_warnings(showcase):
                 item = Activity.objects.get(pk=id)
             except Activity.DoesNotExist:
                 warnings.append(f'Activity {id} does not exist.')
+                continue
         elif showcase_type == 'album':
             try:
                 item = Album.objects.get(pk=id)
             except Album.DoesNotExist:
                 warnings.append(f'Album {id} does not exist.')
+                continue
         else:
             # in case something else was stored, we want to log an error, but
             # continue assembling the showcase output
