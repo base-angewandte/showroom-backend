@@ -81,7 +81,9 @@ class EntityViewSet(
     )
     @action(detail=True, methods=['get'], url_path='list')
     def activities_list(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=400)
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
         tags=['public'],
@@ -96,6 +98,10 @@ class EntityViewSet(
         s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         return Response(
-            {'detail': 'Not yet implemented', 'filters_used': s.validated_data},
-            status=400,
+            {
+                'label': 'Entity search is not yet implemented',
+                'total': 0,
+                'data': [],
+            },
+            status=200,
         )
