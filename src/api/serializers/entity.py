@@ -23,8 +23,15 @@ class EntitySerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
 
         # transform the id and parent id to include name
-        ret['id'] = slugify(instance.title) + '-' + instance.id
-        ret['parent'] = slugify(instance.parent.title) + '-' + instance.parent.id
+        if not instance.title:
+            ret['id'] = f'entity-{instance.id}'
+        else:
+            ret['id'] = f'{slugify(instance.title)}-{instance.id}'
+        if instance.parent:
+            if not instance.parent.title:
+                ret['parent'] = f'entity-{instance.parent.id}'
+            else:
+                ret['parent'] = f'{slugify(instance.parent.title)}-{instance.parent.id}'
 
         # make sure to only provide an empty list if showcase is None or {}
         if not instance.showcase:
