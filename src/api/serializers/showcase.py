@@ -67,7 +67,7 @@ class ShowcaseSerializer(serializers.Serializer):
             'id': instance.id,
             'showcase_type': 'activity' if type(instance) == Activity else 'album',
             'title': instance.title,
-            'media': [],
+            'previews': [],
         }
         if type(instance) == Activity:
             ret['subtext'] = '. '.join(instance.subtext)
@@ -76,7 +76,7 @@ class ShowcaseSerializer(serializers.Serializer):
             media = instance.media_set.all()
             for m in media:
                 if previews := m.specifics.get('previews'):
-                    ret['media'].extend(previews)
+                    ret['previews'].extend(previews)
                     break
         elif type(instance) == Album:
             ret['subtext'] = instance.subtitle
