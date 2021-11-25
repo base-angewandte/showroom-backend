@@ -92,14 +92,14 @@ class Activity(AbstractShowroomObject):
         return f'{self.title} (ID: {self.id})'
 
     def get_showcase_date_info(self):
-        dates = [d.date for d in self.activitysearchdates_set.order_by('date')]
-        ranges = [
-            (d.date_from, d.date_to)
-            for d in self.activitysearchdateranges_set.order_by('date_from')
-        ]
-        ret = ''
-        ret += ', '.join(dates)
-        ret += ', '.join([f'{r[0]} - {r[1]}' for r in ranges])
+        dates = [f'{d.date}' for d in self.activitysearchdates_set.order_by('date')]
+        dates.extend(
+            [
+                f'{d.date_from} - {d.date_to}'
+                for d in self.activitysearchdateranges_set.order_by('date_from')
+            ]
+        )
+        ret = ', '.join(dates)
         return ret
 
 
