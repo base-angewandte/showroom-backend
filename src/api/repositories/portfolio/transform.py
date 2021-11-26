@@ -1650,7 +1650,6 @@ def get_url(data):
             'label': 'URL',
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
