@@ -64,9 +64,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
             elif not alternative_preview:
                 if medium.type == 'v':
                     if cover := medium.specifics.get('cover'):
-                        if cover_gif := cover.get('gif'):
-                            alternative_preview = cover_gif
-                        elif cover_jpg := cover.get('jpg'):
+                        if cover_jpg := cover.get('jpg'):
                             alternative_preview = cover_jpg
                 else:
                     alternative_preview = medium.specifics.get('thumbnail')
