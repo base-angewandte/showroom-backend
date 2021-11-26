@@ -93,7 +93,8 @@ class MediaSerializer(serializers.ModelSerializer):
                     # if it is not even available in the default language, we just
                     # take the first label we find
                     keys = list(instance.license['label'])
-                    instance.license.get(keys[0])
+                    label = instance.license['label'].get(keys[0])
+                    ret['license']['label'] = label
 
         ret.update(specifics)
         return ret
