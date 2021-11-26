@@ -51,7 +51,9 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     if type(item) == Activity:
         # featured_media currently cannot be set explicitly in portfolio
         # therefore we just go through all available media and take the first
-        # image we can find
+        # image we can find. if there is no image, we'll look for the first other
+        # available option
+        alternative_preview = None
         for medium in item.media_set.all():
             if medium.type == 'i':
                 thumbnail = medium.specifics.get('thumbnail')
@@ -59,6 +61,17 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                     continue
                 search_item['image_url'] = thumbnail
                 break
+            elif not alternative_preview:
+                if medium.type == 'v':
+                    if cover := medium.specifics.get('cover'):
+                        if cover_gif := cover.get('gif'):
+                            alternative_preview = cover_gif
+                        elif cover_jpg := cover.get('jpg'):
+                            alternative_preview = cover_jpg
+                else:
+                    alternative_preview = medium.specifics.get('thumbnail')
+        if not search_item['image_url'] and alternative_preview:
+            search_item['image_url'] = alternative_preview
     else:
         search_item['image_url'] = item.photo if item.photo else None
 
