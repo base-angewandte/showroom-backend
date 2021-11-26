@@ -792,18 +792,18 @@ def get_documentation_url(data):
     if not url:
         return None
 
-    transformed = {
-        'default': {
-            'label': 'URL',
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('documentation_url', lang=lang),
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
             ],
-        },
-    }
+        }
+
     return transformed
 
 
@@ -952,18 +952,17 @@ def get_git_url(data):
     if not url:
         return None
 
-    transformed = {
-        'default': {
-            'label': 'URL',
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('git_url', lang=lang),
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
             ],
-        },
-    }
+        }
     return transformed
 
 
