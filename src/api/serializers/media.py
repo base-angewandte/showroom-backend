@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from django.conf import settings
+
 from core.models import Activity, Media
 
 
@@ -75,5 +77,23 @@ class MediaSerializer(serializers.ModelSerializer):
         ret['original'] = ret.pop('file')
         # flatten the specifics into the media dict
         specifics = ret.pop('specifics')
+        # provide a localised license label
+        lang = self.context['request'].LANGUAGE_CODE
+        if type(instance.license['label']) == dict:
+            label = instance.license['label'].get(lang)
+            if label:
+                ret['license']['label'] = label
+            else:
+                # if the license label is not available in the requested language
+                # we want to provide in the configured default language
+                label = instance.license['label'].get(settings.LANGUAGES[0][0])
+                if label:
+                    ret['license']['label'] = label
+                else:
+                    # if it is not even available in the default language, we just
+                    # take the first label we find
+                    keys = list(instance.license['label'])
+                    instance.license.get(keys[0])
+
         ret.update(specifics)
         return ret

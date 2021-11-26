@@ -129,7 +129,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         media = instance.media_set.all()
         media_entries = []
         if media:
-            context = {'repo_base': instance.source_repo.url_repository}
+            context = {
+                'repo_base': instance.source_repo.url_repository,
+                'request': self.context.get('request'),
+            }
             media_entries = MediaSerializer(media, many=True, context=context).data
         relations = self.serialize_related()
         ret['entries'] = {
