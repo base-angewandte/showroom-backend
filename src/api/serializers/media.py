@@ -59,11 +59,10 @@ class MediaSerializer(serializers.ModelSerializer):
                 data['specifics']['mp3'] = repo_base + data['specifics']['mp3']
             if cover := data['specifics'].get('cover'):
                 for key in cover.keys():
-                    cover[key] = repo_base + cover[key]
-            if 'playlist' in data['specifics']:
-                data['specifics']['playlist'] = (
-                    repo_base + data['specifics']['playlist']
-                )
+                    if type(cover[key]) == str:
+                        cover[key] = repo_base + cover[key]
+            if playlist := data['specifics'].get('playlist'):
+                data['specifics']['playlist'] = repo_base + playlist
         return super().to_internal_value(data)
 
     def to_representation(self, instance):
