@@ -74,10 +74,24 @@ class ShowcaseSerializer(serializers.Serializer):
             ret['additional'] = instance.get_showcase_date_info()
             ret['type'] = instance.type
             media = instance.media_set.all()
+            # Similar to search results we take the previews from the first image
+            # we find in the activity. If there is no image, we'll use thumbnails of
+            # a document or the cover of a video, if there are any.
+            alternative_preview = None
             for m in media:
                 if previews := m.specifics.get('previews'):
                     ret['previews'].extend(previews)
                     break
+                elif not alternative_preview:
+                    if m.type == 'v':
+                        if cover := m.specifics.get('cover'):
+                            if cover_jpg := cover.get('jpg'):
+                                alternative_preview = cover_jpg
+                    else:
+                        alternative_preview = m.specifics.get('thumbnail')
+            if not ret['previews'] and alternative_preview:
+                widths = ['640w', '768w', '1024w', '1366w', '1600w', '1632w']
+                ret['previews'] = [{w: alternative_preview} for w in widths]
         elif type(instance) == Album:
             ret['subtext'] = instance.subtitle
             ret['total'] = instance.activities.count()
