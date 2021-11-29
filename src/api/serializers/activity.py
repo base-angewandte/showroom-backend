@@ -15,6 +15,7 @@ from api.repositories.portfolio import (
 )
 from core.models import Activity, Entity
 
+from ..repositories.portfolio.search import get_search_item
 from . import abstract_showroom_object_fields, logger
 from .media import MediaSerializer
 
@@ -200,28 +201,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         return ret
 
     def serialize_related(self):
+        lang = self.context['request'].LANGUAGE_CODE
         data = {
             'to': [],
             'from': [],
         }
         for relation in self.instance.relations_to.all():
-            data['to'].append(self.serialize_related_activity(relation))
+            data['to'].append(get_search_item(relation, lang))
         for relation in self.instance.relations_from.all():
-            data['from'].append(self.serialize_related_activity(relation))
+            data['from'].append(get_search_item(relation, lang))
 
-        return data
-
-    @staticmethod
-    def serialize_related_activity(activity):
-        # This should conform to the SearchItem schema
-        data = {
-            'id': activity.id,
-            'alternative_text': [],  # TODO: what should go in here?
-            'media_url': '',  # TODO: fill with featured media and rename in api spec (currently: mediaUrl)
-            'source': '',  # TODO: ? same as id ?
-            'source_institution': activity.source_repo.label_institution,
-            'score': None,  # No scoring for related activities
-            'title': activity.title,
-            'type': activity.type,
-        }
         return data
