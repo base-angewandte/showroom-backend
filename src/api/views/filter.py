@@ -62,15 +62,15 @@ static_filters = [
     #     },
     #     'hidden': False,
     # },
-    {
-        'id': 'current_activities',
-        'type': 'text',
-        'label': {
-            'en': 'Current activities',
-            'de': 'Aktuelle Aktivitäten',
-        },
-        'hidden': False,
-    },
+    # {
+    #     'id': 'current_activities',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Current activities',
+    #         'de': 'Aktuelle Aktivitäten',
+    #     },
+    #     'hidden': False,
+    # },
     {
         'id': 'start_page',
         'type': 'text',

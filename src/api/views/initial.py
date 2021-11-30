@@ -99,7 +99,7 @@ def get_initial_response(request, pk):
 
     filter = {
         'id': 'current_activities',
-        'filter_values': [],
+        'filter_values': ['42!'],  # TODO: placeholder value until further discussion
     }
     found = filter_current_activities(filter['filter_values'], 30, 0, lang)
     response['results'].append(
