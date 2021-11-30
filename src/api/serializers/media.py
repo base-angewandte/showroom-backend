@@ -77,6 +77,7 @@ class MediaSerializer(serializers.ModelSerializer):
         ret['original'] = ret.pop('file')
         # flatten the specifics into the media dict
         specifics = ret.pop('specifics')
+        ret.update(specifics)
         # provide a localised license label
         lang = self.context['request'].LANGUAGE_CODE
         if type(instance.license['label']) == dict:
@@ -95,6 +96,4 @@ class MediaSerializer(serializers.ModelSerializer):
                     keys = list(instance.license['label'])
                     label = instance.license['label'].get(keys[0])
                     ret['license']['label'] = label
-
-        ret.update(specifics)
         return ret
