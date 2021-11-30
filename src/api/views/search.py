@@ -391,14 +391,18 @@ def filter_daterange(values, limit, offset, language):
 
     flt = None
     for value in values:
-        if type(value) is not dict or not value.get('from') or not value.get('to'):
+        if (
+            type(value) is not dict
+            or not value.get('date_from')
+            or not value.get('date_to')
+        ):
             raise ParseError(
                 'Date range filter values have to be objects containing from and to properties',
                 400,
             )
         d_pattern = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-        d_from = value['from']
-        d_to = value['to']
+        d_from = value['date_from']
+        d_to = value['date_to']
         if not re.match(d_pattern, d_from) or not re.match(d_pattern, d_to):
             raise ParseError(
                 'Only dates of format YYYY-MM-DD can be used as date range filter from and to values',
