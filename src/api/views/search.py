@@ -271,11 +271,17 @@ def filter_current_activities(values, limit, offset, language):
                 & Q(activitysearchdates__date__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_from__lte=today)
-                & Q(activitysearchdateranges__date_to__gt=today)
+                Q(activitysearchdateranges__date_to__gt=today)
+                & Q(activitysearchdateranges__date_to__lte=future_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_from__gt=today)
+                & Q(activitysearchdateranges__date_from__lte=future_limit)
             )
         )
+        # exclude entries that are already in today_activities
         .exclude(activitysearchdates__date=today)
+        # filter out duplicates
         .distinct()
     )
     future_count = future_activities.count()
@@ -287,20 +293,32 @@ def filter_current_activities(values, limit, offset, language):
             )
             | (
                 Q(activitysearchdateranges__date_from__lt=today)
-                & Q(activitysearchdateranges__date_to__gte=today)
+                & Q(activitysearchdateranges__date_from__gte=past_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_to__lt=today)
+                & Q(activitysearchdateranges__date_to__gte=past_limit)
             )
         )
+        # exclude entries that are already in today_activities
         .exclude(activitysearchdates__date=today)
+        # exclude entries that are already in future_activities
         .exclude(
             (
                 Q(activitysearchdates__date__gt=today)
                 & Q(activitysearchdates__date__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_from__lte=today)
-                & Q(activitysearchdateranges__date_to__gt=today)
+                Q(activitysearchdateranges__date_to__gt=today)
+                & Q(activitysearchdateranges__date_to__lte=future_limit)
+            )
+            | (
+                Q(activitysearchdateranges__date_from__gt=today)
+                & Q(activitysearchdateranges__date_from__lte=future_limit)
             )
         )
+        # filter out duplicates
+        .distinct()
     )
     past_count = past_activities.count()
 
