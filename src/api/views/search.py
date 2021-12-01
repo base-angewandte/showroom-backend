@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, viewsets
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
@@ -25,10 +26,16 @@ label_current_activities = {
 }
 
 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
+
+
 class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Submit a search to Showroom."""
 
     serializer_class = SearchRequestSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     @extend_schema(
         tags=['public'],
