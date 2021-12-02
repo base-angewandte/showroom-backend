@@ -329,45 +329,25 @@ def filter_current_activities(values, limit, offset, language):
     )
     past_count = past_activities.count()
 
-    if today_count >= limit:
-        final = [
-            get_search_item(activity, language)
-            for activity in today_activities[0:limit]
-        ]
+    # TODO: for now we have three unranked querysets, so we'll just evaluate them
+    #       in full, if the requested offset + limit demand it.
+    #       this could be made more efficient, but in the end we might want to have
+    #       only one queryset with an annotated rank. this should be discussed first.
+    if offset + limit <= today_count:
+        final = today_activities
     else:
-        final = [get_search_item(activity, language) for activity in today_activities]
-        if today_count + future_count >= limit:
-            final.extend(
-                [
-                    get_search_item(activity, language)
-                    for activity in future_activities[0 : limit - today_count]
-                ]
-            )
-        else:
-            final.extend(
-                [get_search_item(activity, language) for activity in future_activities]
-            )
-            if today_count + future_count + past_count >= limit:
-                final.extend(
-                    [
-                        get_search_item(activity, language)
-                        for activity in past_activities[
-                            0 : limit - today_count - future_count
-                        ]
-                    ]
-                )
-            else:
-                final.extend(
-                    [
-                        get_search_item(activity, language)
-                        for activity in past_activities
-                    ]
-                )
+        final = [activity for activity in today_activities]
+        final.extend([a for a in future_activities])
+        if offset + limit > today_count + future_count:
+            final.extend([a for a in past_activities])
 
     return {
         'label': label_current_activities.get(language),
         'total': today_count + future_count + past_count,
-        'data': final,
+        'data': [
+            get_search_item(activity, language)
+            for activity in final[offset : offset + limit]
+        ],
     }
 
 
