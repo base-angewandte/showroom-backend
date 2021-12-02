@@ -2,12 +2,13 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api import view_spec
 from api.serializers.entity import EntitySerializer
-from api.serializers.search import SearchCollectionSerializer, SearchRequestSerializer
+from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Entity
 
 
@@ -40,8 +41,6 @@ from core.models import Entity
 class EntityViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     queryset = Entity.objects.all()
@@ -63,18 +62,33 @@ class EntityViewSet(
     @extend_schema(
         tags=['public'],
         responses={
+            200: EntitySerializer(),
+            404: view_spec.Responses.Error404,
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @extend_schema(
+        tags=['public'],
+        responses={
             200: view_spec.Responses.CommonList,
             404: view_spec.Responses.Error404,
         },
     )
     @action(detail=True, methods=['get'], url_path='list')
     def activities_list(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=400)
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
         tags=['public'],
         responses={
-            200: SearchCollectionSerializer,
+            200: SearchResultSerializer(many=True),
             404: view_spec.Responses.Error404,
         },
         # TODO: change parameters
@@ -84,6 +98,10 @@ class EntityViewSet(
         s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         return Response(
-            {'detail': 'Not yet implemented', 'filters_used': s.validated_data},
-            status=400,
+            {
+                'label': 'Entity search is not yet implemented',
+                'total': 0,
+                'data': [],
+            },
+            status=200,
         )

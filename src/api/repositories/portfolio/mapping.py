@@ -1,3 +1,10 @@
+import logging
+
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+
 mapping = {
     '__none__': {
         'primary_details': [
@@ -299,3 +306,72 @@ mapping = {
 
 def map(schema):
     return mapping.get(schema)
+
+
+search_mapping = {
+    'default': {
+        'title': 'title_subtitle',
+        'subtitle': None,
+        'description': 'activity_type_university',
+        'alternative_text': 'text_keywords',
+    },
+    'person': {
+        'title': 'name',
+        'description': 'university',
+        'alternative_text': 'skills',
+    },
+    'activity': {
+        'architecture': {'subtitle': 'architecture_contributors'},
+        'audio': {'subtitle': 'authors_artists_contributors'},
+        'awards_and_grants': {'subtitle': 'winners_jury_contributors'},
+        'concert': {'subtitle': 'music_conductors_composition_contributors'},
+        'conference': {'subtitle': 'organisers_lecturers_contributors'},
+        'conference_contribution': {'subtitle': 'lecturers_contributors'},
+        'design': {'subtitle': 'design_contributors'},
+        'document_publication': {'subtitle': 'authors_editors'},
+        'event': {'subtitle': 'contributors'},
+        'exhibition': {'subtitle': 'artists_curators_contributors'},
+        'fellowship_visiting_affiliation': {'subtitle': 'fellow_scholar_funding'},
+        'festival': {'subtitle': 'organisers_artists_curators'},
+        'film_video': {'subtitle': 'directors_contributors'},
+        'image': {'subtitle': 'artists_contributors'},
+        'performance': {'subtitle': 'artists_contributors'},
+        'research_project': {'subtitle': 'project_lead_partners_funding'},
+        'sculpture': {'subtitle': 'artists_contributors'},
+        'software': {'subtitle': 'developers_contributors'},
+    },
+}
+
+
+def map_search(schema, activity_schema=None):
+    mapping = dict(search_mapping['default'])
+    if schema == 'activity' and activity_schema:
+        if m := search_mapping['activity'].get(activity_schema):
+            mapping.update(m)
+        else:
+            if settings.DEBUG:
+                # TODO: discuss: do we want this also in prod, or an admin notification?
+                logger.error(
+                    f'Missing search mapping for activity_schema: {activity_schema}'
+                )
+
+    elif schema != 'activity':
+        if m := search_mapping.get(schema):
+            mapping.update(m)
+    return mapping
+
+
+indexer_mapping = {
+    'default': ['contributors'],
+    'software': [
+        'contributors',
+        'license',
+        'documentation_url',
+        'software_developers',
+        'programming_language',
+    ],
+}
+
+
+def map_indexer(schema):
+    return indexer_mapping.get(schema) or indexer_mapping['default']

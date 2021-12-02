@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from django.conf import settings
+
 from core.models import Activity, Media
 
 
@@ -59,11 +61,10 @@ class MediaSerializer(serializers.ModelSerializer):
                 data['specifics']['mp3'] = repo_base + data['specifics']['mp3']
             if cover := data['specifics'].get('cover'):
                 for key in cover.keys():
-                    cover[key] = repo_base + cover[key]
-            if 'playlist' in data['specifics']:
-                data['specifics']['playlist'] = (
-                    repo_base + data['specifics']['playlist']
-                )
+                    if type(cover[key]) == str:
+                        cover[key] = repo_base + cover[key]
+            if playlist := data['specifics'].get('playlist'):
+                data['specifics']['playlist'] = repo_base + playlist
         return super().to_internal_value(data)
 
     def to_representation(self, instance):
@@ -77,4 +78,22 @@ class MediaSerializer(serializers.ModelSerializer):
         # flatten the specifics into the media dict
         specifics = ret.pop('specifics')
         ret.update(specifics)
+        # provide a localised license label
+        lang = self.context['request'].LANGUAGE_CODE
+        if type(instance.license['label']) == dict:
+            label = instance.license['label'].get(lang)
+            if label:
+                ret['license']['label'] = label
+            else:
+                # if the license label is not available in the requested language
+                # we want to provide in the configured default language
+                label = instance.license['label'].get(settings.LANGUAGES[0][0])
+                if label:
+                    ret['license']['label'] = label
+                else:
+                    # if it is not even available in the default language, we just
+                    # take the first label we find
+                    keys = list(instance.license['label'])
+                    label = instance.license['label'].get(keys[0])
+                    ret['license']['label'] = label
         return ret

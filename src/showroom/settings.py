@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 import environ
 
+from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
@@ -145,6 +146,29 @@ ACTIVE_SCHEMAS = env.list(
         'film_video',
     ],
 )
+
+# The default limit for searches, when no limit parameter is provided
+SEARCH_LIMIT = env.int('SEARCH_LIMIT', default=100)
+
+# Time span (in days) into the future and past for the current_activities filter
+CURRENT_ACTIVITIES_FUTURE = env.int('CURRENT_ACTIVITIES_FUTURE', default=90)
+CURRENT_ACTIVITIES_PAST = env.int('CURRENT_ACTIVITIES_PAST', default=365)
+
+# The default showcase to be used for the initial endpoint, if the requested entity's
+# showcase is empty. Also check for syntactical validity.
+DEFAULT_SHOWCASE = [x.split(':') for x in env.list('DEFAULT_SHOWCASE', default=[])]
+for x in DEFAULT_SHOWCASE:
+    if type(x) != list or len(x) != 2:
+        raise ImproperlyConfigured(
+            'Syntax error in DEFAULT_SHOWCASE environment variable'
+        )
+    if not x[0] or not x[1]:
+        raise ImproperlyConfigured(
+            'Syntax error in DEFAULT_SHOWCASE environment variable'
+        )
+
+DEFAULT_ENTITY = env.str('DEFAULT_ENTITY', default=None)
+
 
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
@@ -423,7 +447,12 @@ SPECTACULAR_SETTINGS = {
     """,
     'TAGS': ['public', 'auth', 'repo', 'api'],
     'SERVERS': [
-        {'url': 'http://127.0.0.1:8500', 'description': 'Local Dev Server'},
+        {
+            'url': env.str('OPENAPI_SERVER_URL', default='http://127.0.0.1:8500'),
+            'description': env.str(
+                'OPENAPI_SERVER_DESCRIPTION', default='Local Dev Server'
+            ),
+        },
     ],
     # available SwaggerUI configuration parameters
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/

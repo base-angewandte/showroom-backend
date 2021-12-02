@@ -19,6 +19,11 @@ from core.models import Entity
 @permission_classes([IsAuthenticated])
 def get_user_data(request, *args, **kwargs):
     attributes = request.session.get('attributes')
+    if not attributes:
+        return Response(
+            {'detail': 'Authentication credentials were not provided.'}, status=403
+        )
+
     try:
         entity = Entity.objects.get(source_repo_entry_id=request.user.username)
         entity_id = entity.id

@@ -8,6 +8,12 @@
 ## The base URL of the Django site, for local development http://127.0.0.1:8500/
 SITE_URL=https://url/
 
+## The generated OpenAPI 3.0 spec contains the URL and a description to the
+## server hosting the API. This is by default the local dev server on 127.0.0.1:8500
+## For any online or prod setting set the proper values here
+# OPENAPI_SERVER_URL=
+# OPENAPI_SERVER_DESCRIPTION=
+
 ## In a production deployment with other base components, this base path should
 ## be set for showroom. Can stay empty in local standalone development.
 # FORCE_SCRIPT_NAME=/showroom
@@ -66,3 +72,17 @@ POSTGRES_PASSWORD=password
 # CASE_API_BASE=
 # USER_PREFERENCES_API_KEY
 #
+## The default limit for a search, if now explicit limit parameter is set
+# SEARCH_LIMIT=100
+
+## The time span (in days) into the future and past, which should be used
+## for the current_activities search filter
+# CURRENT_ACTIVITIES_FUTURE=90
+# CURRENT_ACTIVITIES_PAST=365
+
+## A default showcase to be used in the initial endpoint, if the requested entity's showcase is empty
+## Value should be a comma-separated list of ID:TYPE pairs, where TYPE can either be 'activity' or 'album'
+# DEFAULT_SHOWCASE=
+
+## A default entity id to be used in the /initial endpoint without any ID
+# DEFAULT_ENTITY=

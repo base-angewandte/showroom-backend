@@ -15,30 +15,34 @@ static_filters = [
             'en': 'Activities',
             'de': 'Aktivitäten',
         },
+        'hidden': False,
     },
+    # {
+    #     'id': 'persons',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Persons',
+    #         'de': 'Personen',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'locations',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Locations',
+    #         'de': 'Orte',
+    #     },
+    #     'hidden': False,
+    # },
     {
-        'id': 'persons',
-        'type': 'text',
-        'label': {
-            'en': 'Persons',
-            'de': 'Personen',
-        },
-    },
-    {
-        'id': 'locations',
-        'type': 'text',
-        'label': {
-            'en': 'Locations',
-            'de': 'Orte',
-        },
-    },
-    {
-        'id': 'date_range',
+        'id': 'daterange',
         'type': 'daterange',
         'label': {
             'en': 'Date Range',
             'de': 'Datumsbereich',
         },
+        'hidden': False,
     },
     {
         'id': 'date',
@@ -47,14 +51,43 @@ static_filters = [
             'en': 'Date',
             'de': 'Datum',
         },
+        'hidden': False,
     },
+    # {
+    #     'id': 'albums',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Albums',
+    #         'de': 'Alben',
+    #     },
+    #     'hidden': False,
+    # },
+    # {
+    #     'id': 'current_activities',
+    #     'type': 'text',
+    #     'label': {
+    #         'en': 'Current activities',
+    #         'de': 'Aktuelle Aktivitäten',
+    #     },
+    #     'hidden': False,
+    # },
     {
-        'id': 'albums',
+        'id': 'start_page',
         'type': 'text',
         'label': {
-            'en': 'Albums',
-            'de': 'Alben',
+            'en': 'Start page',
+            'de': 'Startseite',
         },
+        'hidden': True,
+    },
+    {
+        'id': 'default',
+        'type': 'text',
+        'label': {
+            'en': 'Default filter for generic text search',
+            'de': 'Standardfilter für generische Textsuche',
+        },
+        'hidden': True,
     },
 ]
 
@@ -90,6 +123,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'id': 'keywords',
         'type': 'chips',
         'label': label_keywords[lang],
+        'hidden': False,
         'freetext_allowed': False,
         'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
     }
@@ -102,6 +136,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'id': 'type',
         'type': 'chips',
         'label': label_activity_types[lang],
+        'hidden': False,
         'freetext_allowed': False,
         'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
     }

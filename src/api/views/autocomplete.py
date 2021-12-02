@@ -36,6 +36,10 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         lang = request.LANGUAGE_CODE
 
         items = []
+        # for now the default filter is the same as activities
+        # TODO: change, as soon as we have entities and albums in our test data
+        if filter_id == 'default':
+            filter_id = 'activities'
         if filter_id == 'activities':
             activities = Activity.objects.filter(title__icontains=q)
             if limit:
@@ -45,7 +49,7 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     {
                         'id': activity.id,
                         'title': activity.title,
-                        'subtitle': activity.subtext,
+                        'subtext': activity.subtext,
                     }
                 )
 
@@ -59,9 +63,11 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 status=200,
             )
 
-        ret = {
-            'source': filter_id,
-            'label': get_static_filter_label(filter_id, lang),
-            'data': items,
-        }
-        return Response(ret, status=400)
+        ret = [
+            {
+                'source': filter_id,
+                'label': get_static_filter_label(filter_id, lang),
+                'data': items,
+            }
+        ]
+        return Response(ret, status=200)

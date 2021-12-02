@@ -1,7 +1,10 @@
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
+from core.validators import validate_showcase
 from general.models import AbstractBaseModel, ShortUUIDField
 
 
@@ -48,7 +51,7 @@ class Entity(AbstractShowroomObject):
     ]
     type = models.CharField(max_length=1, choices=ENTITY_TYPE_CHOICES)
     expertise = JSONField(blank=True, null=True)
-    showcase = JSONField(blank=True, null=True)
+    showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
     parent_choice_limit = Q(type='I') | Q(type='D')
     parent = models.ForeignKey(
@@ -87,6 +90,41 @@ class Activity(AbstractShowroomObject):
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'
+
+    def get_showcase_date_info(self):
+        dates = [f'{d.date}' for d in self.activitysearchdates_set.order_by('date')]
+        dates.extend(
+            [
+                f'{d.date_from} - {d.date_to}'
+                for d in self.activitysearchdateranges_set.order_by('date_from')
+            ]
+        )
+        ret = ', '.join(dates)
+        return ret
+
+
+class ActivitySearch(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    language = models.CharField(max_length=255)
+    text = models.TextField(default='')
+    text_vector = SearchVectorField(null=True)
+
+    class Meta:
+        indexes = (GinIndex(fields=['text_vector']),)
+
+
+class ActivitySearchDates(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    date = models.DateField()
+
+
+class ActivitySearchDateRanges(models.Model):
+    id = models.AutoField(primary_key=True)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    date_from = models.DateField()
+    date_to = models.DateField()
 
 
 class Album(models.Model):

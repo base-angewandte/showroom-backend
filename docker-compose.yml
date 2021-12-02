@@ -37,6 +37,7 @@ services:
     volumes:
       - ./src:/django
       - ./logs:/logs
+      - $SHOWROOM_ASSETS:/django/assets
     networks:
       - showroomnet
     restart: always

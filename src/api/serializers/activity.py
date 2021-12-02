@@ -5,6 +5,7 @@ from traceback import print_tb
 from rest_framework import serializers
 
 from django.conf import settings
+from django.utils.text import slugify
 
 from api.repositories import portfolio
 from api.repositories.portfolio import (
@@ -14,6 +15,7 @@ from api.repositories.portfolio import (
 )
 from core.models import Activity, Entity
 
+from ..repositories.portfolio.search import get_search_item
 from . import abstract_showroom_object_fields, logger
 from .media import MediaSerializer
 
@@ -52,10 +54,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         subtext = repo_data.get('subtitle')
         new_data['subtext'] = [subtext] if subtext else []
         new_data['type'] = repo_data.get('type')
-        new_data['keywords'] = {
-            kw['label'][settings.LANGUAGE_CODE]: True
-            for kw in repo_data.get('keywords')
-        }
+        new_data['keywords'] = (
+            {
+                kw['label'][settings.LANGUAGE_CODE]: True
+                for kw in repo_data.get('keywords')
+            }
+            if repo_data.get('keywords')
+            else {}
+        )
         new_data['source_repo_data_text'] = json.dumps(repo_data)
 
         try:
@@ -113,6 +119,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         # remove plain repo data
         ret.pop('source_repo')
         ret.pop('source_repo_data')
+        ret.pop('source_repo_data_text')
         ret.pop('source_repo_entry_id')
         ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
@@ -123,7 +130,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         media = instance.media_set.all()
         media_entries = []
         if media:
-            context = {'repo_base': instance.source_repo.url_repository}
+            context = {
+                'repo_base': instance.source_repo.url_repository,
+                'request': self.context.get('request'),
+            }
             media_entries = MediaSerializer(media, many=True, context=context).data
         relations = self.serialize_related()
         ret['entries'] = {
@@ -145,7 +155,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             ret['publisher'].append(
                 {
                     'name': instance.belongs_to.title,
-                    'source': instance.belongs_to.id,
+                    'source': f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}',
                 }
             )
         # include the source institutions details
@@ -191,28 +201,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         return ret
 
     def serialize_related(self):
+        lang = self.context['request'].LANGUAGE_CODE
         data = {
             'to': [],
             'from': [],
         }
         for relation in self.instance.relations_to.all():
-            data['to'].append(self.serialize_related_activity(relation))
+            data['to'].append(get_search_item(relation, lang))
         for relation in self.instance.relations_from.all():
-            data['from'].append(self.serialize_related_activity(relation))
+            data['from'].append(get_search_item(relation, lang))
 
-        return data
-
-    @staticmethod
-    def serialize_related_activity(activity):
-        # This should conform to the SearchItem schema
-        data = {
-            'id': activity.id,
-            'alternative_text': [],  # TODO: what should go in here?
-            'media_url': '',  # TODO: fill with featured media and rename in api spec (currently: mediaUrl)
-            'source': '',  # TODO: ? same as id ?
-            'source_institution': activity.source_repo.label_institution,
-            'score': None,  # No scoring for related activities
-            'title': activity.title,
-            'type': activity.type,
-        }
         return data

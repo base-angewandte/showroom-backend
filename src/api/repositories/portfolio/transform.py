@@ -1,6 +1,9 @@
 import logging
 
 from django.conf import settings
+from django.utils.text import slugify
+
+from core.models import Entity
 
 from . import (
     LANGUAGES,
@@ -140,7 +143,7 @@ def get_architecture(data):
     if not architectures:
         return None
 
-    lines = [a['label'] for a in architectures]
+    lines = [transform_entity(a) for a in architectures]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -164,7 +167,7 @@ def get_artists(data):
     if not artists:
         return None
 
-    lines = [a['label'] for a in artists]
+    lines = [transform_entity(a) for a in artists]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -188,7 +191,7 @@ def get_authors(data):
     if not authors:
         return None
 
-    lines = [a['label'] for a in authors]
+    lines = [transform_entity(a) for a in authors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -333,7 +336,7 @@ def get_commissions(data):
     if not commissions:
         return None
 
-    lines = [c['label'] for c in commissions]
+    lines = [transform_entity(c) for c in commissions]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -357,7 +360,7 @@ def get_composition(data):
     if not composition:
         return None
 
-    lines = [c['label'] for c in composition]
+    lines = [transform_entity(c) for c in composition]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -381,7 +384,7 @@ def get_conductors(data):
     if not conductors:
         return None
 
-    lines = [c['label'] for c in conductors]
+    lines = [transform_entity(c) for c in conductors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -406,7 +409,7 @@ def get_contributors(data, with_roles=True):
         return None
 
     if not with_roles:
-        lines = [c['label'] for c in contributors]
+        lines = [transform_entity(c) for c in contributors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -440,7 +443,7 @@ def get_curators(data):
     if not curators:
         return None
 
-    lines = [c['label'] for c in curators]
+    lines = [transform_entity(c) for c in curators]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -725,7 +728,7 @@ def get_design(data):
     if not designers:
         return None
 
-    lines = [d['label'] for d in designers]
+    lines = [transform_entity(d) for d in designers]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -768,7 +771,7 @@ def get_directors(data):
     if not directors:
         return None
 
-    lines = [d['label'] for d in directors]
+    lines = [transform_entity(d) for d in directors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -792,18 +795,18 @@ def get_documentation_url(data):
     if not url:
         return None
 
-    transformed = {
-        'default': {
-            'label': 'URL',
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('documentation_url', lang=lang),
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
             ],
-        },
-    }
+        }
+
     return transformed
 
 
@@ -834,7 +837,7 @@ def get_editors(data):
     if not editors:
         return None
 
-    lines = [e['label'] for e in editors]
+    lines = [transform_entity(e) for e in editors]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -858,7 +861,7 @@ def get_fellow(data):
     if not fellows:
         return None
 
-    lines = [f['label'] for f in fellows]
+    lines = [transform_entity(f) for f in fellows]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -910,7 +913,7 @@ def get_funding(data):
     if not funding:
         return None
 
-    lines = [f['label'] for f in funding]
+    lines = [transform_entity(f) for f in funding]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -952,18 +955,17 @@ def get_git_url(data):
     if not url:
         return None
 
-    transformed = {
-        'default': {
-            'label': 'URL',
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('git_url', lang=lang),
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
             ],
-        },
-    }
+        }
     return transformed
 
 
@@ -975,7 +977,7 @@ def get_granted_by(data):
     if not granted_by:
         return None
 
-    lines = [g['label'] for g in granted_by]
+    lines = [transform_entity(g) for g in granted_by]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1071,7 +1073,7 @@ def get_jury(data):
     if not jury:
         return None
 
-    lines = [j['label'] for j in jury]
+    lines = [transform_entity(j) for j in jury]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1174,7 +1176,7 @@ def get_lecturers(data):
     if not lecturers:
         return None
 
-    lines = [c['label'] for c in lecturers]
+    lines = [transform_entity(lec) for lec in lecturers]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1267,7 +1269,7 @@ def get_music(data):
     if not musics:
         return None
 
-    lines = [m['label'] for m in musics]
+    lines = [transform_entity(m) for m in musics]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1337,7 +1339,7 @@ def get_organisations(data):
     if not organisations:
         return None
 
-    lines = [o['label'] for o in organisations]
+    lines = [transform_entity(o) for o in organisations]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1361,7 +1363,7 @@ def get_organisers(data):
     if not organisers:
         return None
 
-    lines = [c['label'] for c in organisers]
+    lines = [transform_entity(o) for o in organisers]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1402,7 +1404,7 @@ def get_project_lead(data):
     if not project_leads:
         return None
 
-    lines = [p['label'] for p in project_leads]
+    lines = [transform_entity(p) for p in project_leads]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1426,7 +1428,7 @@ def get_project_partners(data):
     if not project_partners:
         return None
 
-    lines = [p['label'] for p in project_partners]
+    lines = [transform_entity(p) for p in project_partners]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1505,9 +1507,18 @@ def get_publisher_place_date(data):
     if date := inner_data.get('date'):
         line = f'{line}, {date}'
 
+    if not line:
+        return None
+
     transformed = {}
     for lang in LANGUAGES:
-        if len(publishers) > 1:
+        if not publishers:
+            label = (
+                get_preflabel('date', lang=lang)
+                + '/'
+                + get_preflabel('location', lang=lang)
+            )
+        elif len(publishers) > 1:
             label = get_altlabel('publisher', lang=lang)
         else:
             label = get_preflabel('publisher', lang=lang)
@@ -1527,7 +1538,7 @@ def get_software_developers(data):
     if not developers:
         return None
 
-    lines = [dev['label'] for dev in developers]
+    lines = [transform_entity(d) for d in developers]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1641,7 +1652,6 @@ def get_url(data):
             'label': 'URL',
             'data': [
                 {
-                    'label': 'www',
                     'value': url,
                     'url': url,
                 },
@@ -1687,7 +1697,7 @@ def get_winners(data):
     if not winners:
         return None
 
-    lines = [w['label'] for w in winners]
+    lines = [transform_entity(w) for w in winners]
 
     transformed = {}
     for lang in LANGUAGES:
@@ -1744,11 +1754,9 @@ def list_contributors(data):
 
         lines = []
         for contributor in contributors:
-            roles = contributor.get('roles') or []
-            line = {
-                'value': contributor.get('label'),
-                'attributes': [role.get('label').get(lang) for role in roles],
-            }
+            line = transform_entity(contributor)
+            if roles := contributor.get('roles'):
+                line['attributes'] = [role.get('label').get(lang) for role in roles]
             lines.append(line)
 
         transformed[lang] = {
@@ -1800,3 +1808,18 @@ def list_published_in(data):
             transformed[lang] = {'label': label, 'data': lines}
 
     return transformed
+
+
+def transform_entity(entity):
+    if source_repo_entity_id := entity.get('source'):
+        try:
+            e = Entity.objects.get(source_repo_entry_id=source_repo_entity_id)
+            return {
+                'value': e.title,
+                'source': f'{slugify(e.title)}-{e.id}',
+            }
+        except Entity.DoesNotExist:
+            pass
+    return {
+        'value': entity['label'],
+    }
