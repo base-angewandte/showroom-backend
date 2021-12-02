@@ -31,8 +31,10 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
             'url': item.source_repo.url_institution,
             'icon': item.source_repo.icon,
         },
-        'score': 1,  # TODO
+        'score': 0,
     }
+    if hasattr(item, 'rank'):
+        search_item['score'] = item.rank
 
     if type(item) == Activity:
         search_item['type'] = 'activity'

@@ -8,8 +8,8 @@ from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
 from django.conf import settings
-from django.contrib.postgres.search import SearchQuery
-from django.db.models import Q
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.db.models import Q, Sum, Value
 
 from api import view_spec
 from api.repositories.portfolio.search import get_search_item
@@ -149,78 +149,42 @@ def filter_activities(values, limit, offset, language):
     :param offset: The 0-indexed offset of the first activity in the result set
     :return: A SearchResult dictionary, as defined in the API spec.
     """
-    activities_queryset = Activity.objects.all()
-    # TODO: discuss what the ordering criteria are
-    activities_queryset = activities_queryset.order_by('-date_created')
-
     if not values:
         raise ParseError('Activities filter needs at least one value', 400)
 
-    q_filter = None
+    vector = SearchVector('activitysearch__text_vector')
+    query = None
     for _idx, value in enumerate(values):
         if type(value) is not str:
             raise ParseError(
                 'Only strings are allowed for activities/persons/locations/default filters',
                 400,
             )
-        # TODO: quick fix for multi word FTS, as long as concrete search algo is not discussed
-        words = re.findall(r'[\w]+', value)
-        if not words:
-            raise ParseError(
-                f'The value "{value}" does not contain any valid search words',
-                400,
-            )
-
-        for word in words:
-            if q_filter is None:
-                q_filter = Q(
-                    activitysearch__language=language,
-                    activitysearch__text_vector=SearchQuery(
-                        word + ':*', config='simple', search_type='raw'
-                    ),
-                )
-            else:
-                q_filter = q_filter | Q(
-                    activitysearch__language=language,
-                    activitysearch__text_vector=SearchQuery(
-                        word + ':*', config='simple', search_type='raw'
-                    ),
-                )
-    if len(values) > 0:
-        activities_queryset = activities_queryset.filter(q_filter)
-
+        if query is None:
+            query = SearchQuery(value)
+        else:
+            query = query | SearchQuery(value)
+    rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
+    activities_queryset = (
+        Activity.objects.filter(activitysearch__language=language)
+        .annotate(rank=rank)
+        .exclude(rank=0)
+        .distinct()
+        .order_by('-rank')
+    )
     found_activities_count = activities_queryset.count()
 
     # Before we apply any pagination, we also search through all related entities, to
     # get their total count as well.
-
-    entities_queryset = Entity.objects.all()
-    # TODO: discuss what the ordering criteria are
-    entities_queryset = entities_queryset.order_by('-date_created')
-    if len(values) > 0:
-        # TODO: this might be more efficient by just querying for all entities
-        #   with their ids taken from the activities result set above. especially
-        #   when the query becomes more complex.
-        q_filter = None
-        for _idx, value in enumerate(values):
-            words = re.findall(r'[\w]+', value)
-            if q_filter is None:
-                q_filter = Q(
-                    activity__activitysearch__language=language,
-                    activity__activitysearch__text_vector=SearchQuery(
-                        word + ':*', config='simple', search_type='raw'
-                    ),
-                )
-            else:
-                q_filter = q_filter | Q(
-                    activity__activitysearch__language=language,
-                    activity__activitysearch__text_vector=SearchQuery(
-                        word + ':*', config='simple', search_type='raw'
-                    ),
-                )
-
-        entities_queryset = entities_queryset.filter(q_filter).distinct()
-
+    vector = SearchVector('activity__activitysearch__text_vector')
+    rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
+    entities_queryset = (
+        Entity.objects.filter(activity__activitysearch__language=language)
+        .annotate(rank=Sum(rank))
+        .exclude(rank=0)
+        .distinct()
+        .order_by('-rank')
+    )
     found_entities_count = entities_queryset.count()
 
     end = offset + limit
