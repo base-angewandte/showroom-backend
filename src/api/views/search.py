@@ -137,6 +137,22 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
 
 
+def text_search_query(text):
+    words = re.findall(r'[\w]+', text)
+    if not words:
+        raise ParseError(
+            f'The value "{text}" does not contain any valid search words',
+            400,
+        )
+    query = None
+    for word in words:
+        if query is None:
+            query = SearchQuery(word + ':*', config='simple', search_type='raw')
+        else:
+            query = query | SearchQuery(word + ':*', config='simple', search_type='raw')
+    return query
+
+
 def filter_activities(values, limit, offset, language):
     """Filters all showroom activities for certain text values.
 
@@ -161,9 +177,9 @@ def filter_activities(values, limit, offset, language):
                 400,
             )
         if query is None:
-            query = SearchQuery(value)
+            query = text_search_query(value)
         else:
-            query = query | SearchQuery(value)
+            query = query | text_search_query(value)
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     activities_queryset = (
         Activity.objects.filter(activitysearch__language=language)
