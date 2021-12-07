@@ -64,6 +64,10 @@ DOCKER = env.bool('DOCKER', default=True)
 
 SITE_URL = env.str('SITE_URL')
 
+CAS_API_BASE = env.str('CAS_API_BASE')
+
+USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY')
+
 FORCE_SCRIPT_NAME = env.str('FORCE_SCRIPT_NAME', default='/showroom')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[urlparse(SITE_URL).hostname])
@@ -98,6 +102,7 @@ INSTALLED_APPS = [
     'core',
     'general',
     'api',
+    'user_preferences',
 ]
 
 AUTHENTICATION_BACKENDS = [
