@@ -378,26 +378,50 @@ def filter_daterange(values, limit, offset, language):
     for value in values:
         if (
             type(value) is not dict
-            or not value.get('date_from')
-            or not value.get('date_to')
+            or value.get('date_from') is None
+            or value.get('date_to') is None
         ):
             raise ParseError(
-                'Date range filter values have to be objects containing from and to properties',
+                'Date range filter values have to be objects containing date_from and date_to properties',
                 400,
             )
+
         d_pattern = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
         d_from = value['date_from']
         d_to = value['date_to']
-        if not re.match(d_pattern, d_from) or not re.match(d_pattern, d_to):
+        if (d_from and not re.match(d_pattern, d_from)) or (
+            d_to and not re.match(d_pattern, d_to)
+        ):
             raise ParseError(
                 'Only dates of format YYYY-MM-DD can be used as date range filter from and to values',
                 400,
             )
-        add_flt = (
-            Q(activitysearchdates__date__range=[d_from, d_to])
-            | Q(activitysearchdateranges__date_from__range=[d_from, d_to])
-            | Q(activitysearchdateranges__date_to__range=[d_from, d_to])
-        )
+        if not d_from and not d_to:
+            raise ParseError(
+                'At least one of the two date range parameters have to be valid dates',
+                400,
+            )
+        # in case only date_from is provided, all dates in its future should be found
+        if not d_to:
+            add_flt = (
+                Q(activitysearchdates__date__gte=d_from)
+                | Q(activitysearchdateranges__date_from__gte=d_from)
+                | Q(activitysearchdateranges__date_to__gte=d_from)
+            )
+        # in case only date_to is provided, all dates past this date should be found
+        elif not d_from:
+            add_flt = (
+                Q(activitysearchdates__date__lte=d_to)
+                | Q(activitysearchdateranges__date_from__lte=d_to)
+                | Q(activitysearchdateranges__date_to__lte=d_to)
+            )
+        # if both parameters are provided, we search within the given date range
+        else:
+            add_flt = (
+                Q(activitysearchdates__date__range=[d_from, d_to])
+                | Q(activitysearchdateranges__date_from__range=[d_from, d_to])
+                | Q(activitysearchdateranges__date_to__range=[d_from, d_to])
+            )
         if not flt:
             flt = add_flt
         else:
