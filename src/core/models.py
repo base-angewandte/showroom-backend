@@ -61,7 +61,7 @@ class Entity(AbstractShowroomObject):
         blank=True,
         limit_choices_to=parent_choice_limit,
     )
-    source_user_preferences_data = JSONField(blank=True, null=True)
+    source_repo_data = JSONField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'

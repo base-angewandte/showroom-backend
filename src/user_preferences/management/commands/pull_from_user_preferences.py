@@ -2,6 +2,7 @@ import requests
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.utils.translation import ugettext_lazy as _
 
 from core.models import Entity
 
@@ -10,29 +11,35 @@ class Command(BaseCommand):
     help = 'Pull user info from User Preferences'
 
     def add_arguments(self, parser):
-        parser.add_argument('usernames', nargs='+', type=str)
+        parser.add_argument(
+            'username',
+            nargs='+',
+            type=str,
+            help=_('One or more user IDs/names from the User Preferences service'),
+        )
 
     def handle(self, *args, **options):
         entities = Entity.objects.all()
-        BASE_URL = settings.SITE_URL + settings.CAS_API_BASE
 
-        if None in [BASE_URL, settings.USER_PREFERENCES_API_KEY]:
+        if None in [settings.CAS_API_BASE, settings.USER_PREFERENCES_API_KEY]:
             raise CommandError(
                 'A User Preferences config parameter is missing in .env! Cannot push anything.'
             )
 
         # Pull from User Preferences
-        if 'usernames' not in options:
+        if 'username' not in options:
             raise CommandError('Please specify at least one username.')
 
         pulled_user_preferences = []
         user_preferences_not_pulled = []
 
-        for username in options['usernames']:
+        for username in options['username']:
             headers = {
                 'X-Api-Key': settings.USER_PREFERENCES_API_KEY,
             }
-            r = requests.get(BASE_URL + f'user-data-agent/{username}/', headers=headers)
+            r = requests.get(
+                settings.CAS_API_BASE + f'user-data-agent/{username}/', headers=headers
+            )
 
             if r.status_code == 403:
                 raise CommandError(f'Authentication failed: {r.text}')
@@ -50,7 +57,7 @@ class Command(BaseCommand):
 
                 for entity in entities:
                     if entity.source_repo_entry_id == username:
-                        entity.source_user_preferences_data = result
+                        entity.source_repo_data = result
                         pulled_user_preferences.append(result.get('name', username))
                         entity.save()
                     else:
