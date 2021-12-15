@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext_lazy as _
 
-from core.models import Entity
+from core.models import Entity, SourceRepository
 
 
 class Command(BaseCommand):
@@ -19,7 +19,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        entities = Entity.objects.all()
 
         if None in [settings.CAS_API_BASE, settings.USER_PREFERENCES_API_KEY]:
             raise CommandError(
@@ -32,6 +31,7 @@ class Command(BaseCommand):
 
         pulled_user_preferences = []
         user_preferences_not_pulled = []
+        created_entities = []
 
         for username in options['username']:
             headers = {
@@ -55,13 +55,41 @@ class Command(BaseCommand):
             elif r.status_code in [200, 201]:
                 result = r.json()
 
-                for entity in entities:
-                    if entity.source_repo_entry_id == username:
-                        entity.source_repo_data = result
-                        pulled_user_preferences.append(result.get('name', username))
-                        entity.save()
-                    else:
-                        user_preferences_not_pulled.append(result.get('name', username))
+                try:
+                    default_user_repo = SourceRepository.objects.filter(
+                        url_repository=settings.DEFAULT_USER_REPO
+                    )
+                except SourceRepository.DoesNotExist:
+                    raise CommandError(
+                        'You need to set a source repository in order to continue.'
+                    )
+
+                # WIP
+
+                try:
+                    print('exists')
+                    entities = Entity.objects.filter(
+                        source_repo_entry_id=username
+                    ).filter(
+                        source_repo=default_user_repo
+                    )  # .update(source_repo_data=result)
+                    if entities:
+                        for entity in entities:
+                            entity.save()
+                except SourceRepository.DoesNotExist:
+                    print('is created')
+                    Entity.objects.create(
+                        source_repo_entry_id=username,
+                        source_repo=default_user_repo,
+                        source_repo_data=result,
+                    )
+                    created_entities.append(result.get('name', username))
+
+                pulled_user_preferences.append(result.get('name', username))
+
+                # TODO what if cascade blockage?
+                # TODO what if multiple identical repos?
+                # MultipleObjectsReturned: get() returned more than one SourceRepository -- it returned 2!
 
             else:
                 raise CommandError(
@@ -78,3 +106,8 @@ class Command(BaseCommand):
                 )
             )
             self.stdout.write(str(user_preferences_not_pulled))
+        if len(created_entities) > 0:
+            self.stdout.write(
+                self.style.WARNING(f'Created {len(created_entities)} new entity/ies.')
+            )
+            self.stdout.write(str(created_entities))
