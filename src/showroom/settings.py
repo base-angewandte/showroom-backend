@@ -64,11 +64,11 @@ DOCKER = env.bool('DOCKER', default=True)
 
 SITE_URL = env.str('SITE_URL')
 
-CAS_API_BASE = env.str('CAS_API_BASE')
+CAS_API_BASE = env.str('CAS_API_BASE', default=None)
 
-DEFAULT_USER_REPO = env.str('DEFAULT_USER_REPO')
+DEFAULT_USER_REPO = env.str('DEFAULT_USER_REPO', default=None)
 
-USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY')
+USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY', default=None)
 
 FORCE_SCRIPT_NAME = env.str('FORCE_SCRIPT_NAME', default='/showroom')
 
