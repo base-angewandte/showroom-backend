@@ -37,6 +37,7 @@ class Command(BaseCommand):
             headers = {
                 'X-Api-Key': settings.USER_PREFERENCES_API_KEY,
             }
+
             r = requests.get(
                 settings.CAS_API_BASE + f'user-data-agent/{username}/', headers=headers
             )
@@ -56,40 +57,34 @@ class Command(BaseCommand):
                 result = r.json()
 
                 try:
-                    default_user_repo = SourceRepository.objects.filter(
-                        url_repository=settings.DEFAULT_USER_REPO
+                    default_user_repo = SourceRepository.objects.get(
+                        id=settings.DEFAULT_USER_REPO
                     )
-                except SourceRepository.DoesNotExist:
+                except SourceRepository.DoesNotExist or not default_user_repo:
                     raise CommandError(
                         'You need to set a source repository in order to continue.'
                     )
+                else:
 
-                # WIP
+                    # WIP
 
-                try:
-                    print('exists')
-                    entities = Entity.objects.filter(
-                        source_repo_entry_id=username
-                    ).filter(
-                        source_repo=default_user_repo
-                    )  # .update(source_repo_data=result)
+                    # try:
+                    entities = Entity.objects.filter(source_repo_entry_id=username)
+
                     if entities:
                         for entity in entities:
-                            entity.save()
-                except SourceRepository.DoesNotExist:
-                    print('is created')
-                    Entity.objects.create(
-                        source_repo_entry_id=username,
-                        source_repo=default_user_repo,
-                        source_repo_data=result,
-                    )
-                    created_entities.append(result.get('name', username))
+                            if entity.source_repo == default_user_repo:
+                                entity.source_repo_data = result
+                                entity.save()
+                    else:
+                        Entity.objects.create(
+                            source_repo_entry_id=username,
+                            source_repo=default_user_repo,
+                            source_repo_data=result,
+                        )
+                        created_entities.append(result.get('name', username))
 
                 pulled_user_preferences.append(result.get('name', username))
-
-                # TODO what if cascade blockage?
-                # TODO what if multiple identical repos?
-                # MultipleObjectsReturned: get() returned more than one SourceRepository -- it returned 2!
 
             else:
                 raise CommandError(
