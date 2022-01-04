@@ -71,10 +71,6 @@ class CommonListSerializer(serializers.Serializer):
     data = serializers.ListField(child=CommonListDataField())
 
 
-class ActivityRelationSerializer(serializers.Serializer):
-    activity_id = serializers.CharField()
-
-
 class Responses:
     Error400 = error(
         status_code=400,

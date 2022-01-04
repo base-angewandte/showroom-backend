@@ -6,8 +6,8 @@ from rest_framework.response import Response
 
 from api.permissions import ActivityPermission
 from api.repositories.portfolio.search_indexer import index_activity
-from api.serializers.activity import ActivitySerializer
-from api.serializers.generic import ActivityRelationSerializer, Responses
+from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
+from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
 from core.models import Activity
 

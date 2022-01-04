@@ -20,6 +20,10 @@ from . import abstract_showroom_object_fields, logger
 from .media import MediaSerializer
 
 
+class ActivityRelationSerializer(serializers.Serializer):
+    activity_id = serializers.CharField()
+
+
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
