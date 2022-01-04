@@ -50,3 +50,7 @@ class EntitySerializer(serializers.ModelSerializer):
             ret['showcase_warnings'] = sc_warnings
 
         return ret
+
+
+class EntityEditItemSerializer(serializers.Serializer):
+    id = serializers.CharField()

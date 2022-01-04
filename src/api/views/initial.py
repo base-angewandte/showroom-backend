@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from django.utils.text import slugify
 
-from api import view_spec
+from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import filter_current_activities
@@ -30,7 +30,7 @@ class InitialViewSet(viewsets.GenericViewSet):
                 description='',
                 response=InitialDataSerializer,
             ),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     )
     def list(self, request, *args, **kwargs):
@@ -56,7 +56,7 @@ class InitialViewSet(viewsets.GenericViewSet):
                 description='',
                 response=InitialDataSerializer,
             ),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     )
     def retrieve(self, request, *args, **kwargs):

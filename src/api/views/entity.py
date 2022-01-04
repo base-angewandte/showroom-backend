@@ -6,8 +6,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from api import view_spec
 from api.serializers.entity import EntitySerializer
+from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Entity
 
@@ -17,24 +17,24 @@ from core.models import Entity
         tags=['repo'],
         responses={
             201: EntitySerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
+            400: Responses.Error400,
+            403: Responses.Error403,
         },
     ),
     retrieve=extend_schema(
         tags=['public'],
         responses={
             200: EntitySerializer,
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     ),
     partial_update=extend_schema(
         tags=['auth'],
         responses={
             204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     ),
 )
@@ -48,7 +48,7 @@ class EntityViewSet(
     permission_classes = [IsAuthenticatedOrReadOnly]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
-    http_method_names = ['get', 'head', 'options', 'patch', 'post']
+    http_method_names = ['get', 'head', 'options', 'patch', 'post', 'put']
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
@@ -63,7 +63,7 @@ class EntityViewSet(
         tags=['public'],
         responses={
             200: EntitySerializer(),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     )
     def retrieve(self, request, *args, **kwargs):
@@ -75,8 +75,8 @@ class EntityViewSet(
     @extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.CommonList,
-            404: view_spec.Responses.Error404,
+            200: Responses.CommonList,
+            404: Responses.Error404,
         },
     )
     @action(detail=True, methods=['get'], url_path='list')
@@ -89,7 +89,7 @@ class EntityViewSet(
         tags=['public'],
         responses={
             200: SearchResultSerializer(many=True),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
         # TODO: change parameters
     )

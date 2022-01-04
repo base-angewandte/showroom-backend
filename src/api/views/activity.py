@@ -4,10 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 
-from api import view_spec
 from api.permissions import ActivityPermission
 from api.repositories.portfolio.search_indexer import index_activity
 from api.serializers.activity import ActivitySerializer
+from api.serializers.generic import ActivityRelationSerializer, Responses
 from api.serializers.media import MediaSerializer
 from core.models import Activity
 
@@ -17,7 +17,7 @@ from core.models import Activity
         tags=['public'],
         responses={
             200: ActivitySerializer,
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     ),
 )
@@ -41,8 +41,8 @@ class ActivityViewSet(
         tags=['repo'],
         responses={
             201: ActivitySerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
+            400: Responses.Error400,
+            403: Responses.Error403,
         },
     )
     def create(self, request, *args, **kwargs):
@@ -103,9 +103,9 @@ class ActivityViewSet(
         ],
         responses={
             204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     )
     def destroy(self, request, *args, **kwargs):
@@ -123,7 +123,7 @@ class ActivityViewSet(
         tags=['public'],
         responses={
             200: MediaSerializer(many=True),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     )
     @action(detail=True, methods=['get'])
@@ -132,11 +132,11 @@ class ActivityViewSet(
 
     @extend_schema(
         tags=['repo'],
-        request=view_spec.ActivityRelationSerializer,
+        request=ActivityRelationSerializer,
         responses={
-            201: view_spec.Responses.RelationAdded,
-            400: view_spec.Responses.Error400,
-            404: view_spec.Responses.Error404,
+            201: Responses.RelationAdded,
+            400: Responses.Error400,
+            404: Responses.Error404,
         },
         parameters=[
             OpenApiParameter(

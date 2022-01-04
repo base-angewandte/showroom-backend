@@ -11,8 +11,8 @@ from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db.models import Q, Sum, Value
 
-from api import view_spec
 from api.repositories.portfolio.search import get_search_item
+from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Activity, Entity
 
@@ -44,7 +44,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 description='',
                 response=SearchResultSerializer,
             ),
-            400: view_spec.Responses.Error400,
+            400: Responses.Error400,
         },
     )
     def create(self, request, *args, **kwargs):

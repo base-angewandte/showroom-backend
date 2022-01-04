@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api import view_spec
+from api.serializers.generic import Responses
 from api.serializers.user import UserDataSerializer
 from core.models import Entity
 
@@ -12,7 +12,7 @@ from core.models import Entity
     tags=['auth'],
     responses={
         200: UserDataSerializer,
-        403: view_spec.Responses.Error403,
+        403: Responses.Error403,
     },
 )
 @api_view(['GET'])
