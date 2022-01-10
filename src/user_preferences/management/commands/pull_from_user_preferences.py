@@ -60,22 +60,20 @@ class Command(BaseCommand):
                     default_user_repo = SourceRepository.objects.get(
                         id=settings.DEFAULT_USER_REPO
                     )
-                except SourceRepository.DoesNotExist or not default_user_repo:
+                except SourceRepository.DoesNotExist:
                     raise CommandError(
                         'You need to set a source repository in order to continue.'
                     )
                 else:
 
-                    # WIP
+                    entity = Entity.objects.get(
+                        source_repo_entry_id=username,
+                        source_repo_id=settings.DEFAULT_USER_REPO,
+                    )
 
-                    # try:
-                    entities = Entity.objects.filter(source_repo_entry_id=username)
-
-                    if entities:
-                        for entity in entities:
-                            if entity.source_repo == default_user_repo:
-                                entity.source_repo_data = result
-                                entity.save()
+                    if entity:
+                        entity.source_repo_data = result
+                        entity.save()
                     else:
                         Entity.objects.create(
                             source_repo_entry_id=username,
