@@ -68,6 +68,14 @@ POSTGRES_PASSWORD=password
 ## the standard port is already in use by another container.
 # REDIS_PORT=6379
 
+# User Preferences data config parameters, e.g. http://127.0.0.1:8000/api/v1/
+# CAS_API_BASE=
+# USER_PREFERENCES_API_KEY=
+
+# Default user repository url, e.g. https://basedev.uni-ak.ac.at/
+# DEFAULT_USER_REPO=
+
+#
 ## The default limit for a search, if now explicit limit parameter is set
 # SEARCH_LIMIT=100
 
