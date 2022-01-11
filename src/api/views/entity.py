@@ -1,12 +1,16 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
-from api.serializers.entity import EntitySerializer
+from api.serializers.entity import EntityEditSerializer, EntitySerializer
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import Entity
@@ -48,7 +52,7 @@ class EntityViewSet(
     permission_classes = [IsAuthenticatedOrReadOnly]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
-    http_method_names = ['get', 'head', 'options', 'patch', 'post', 'put']
+    http_method_names = ['get', 'head', 'options', 'patch', 'post']
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
@@ -84,6 +88,57 @@ class EntityViewSet(
         pk = kwargs['pk'].split('-')[-1]
         instance = get_object_or_404(self.queryset, pk=pk)
         return Response(instance.list if instance.list else [], status=200)
+
+    @extend_schema(
+        tags=['auth'],
+        parameters=[
+            OpenApiParameter(
+                name='secondary_details',
+                type=bool,
+                default=False,
+                location=OpenApiParameter.QUERY,
+                description='Whether to include secondary_details in the response',
+            ),
+            OpenApiParameter(
+                name='showcase',
+                type=bool,
+                default=False,
+                location=OpenApiParameter.QUERY,
+                description='Whether to include showcase in the response',
+            ),
+        ],
+        responses={
+            200: EntityEditSerializer,
+            403: Responses.Error403,
+            404: Responses.Error404,
+        },
+    )
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='edit',
+        permission_classes=[IsAuthenticated],
+    )
+    def edit_retrieve(self, request, *args, **kwargs):
+        return Response({'detail': 'not yet implemented'}, status=200)
+
+    @extend_schema(
+        tags=['auth'],
+        request=EntityEditSerializer,
+        responses={
+            200: EntityEditSerializer,
+            403: Responses.Error403,
+            404: Responses.Error404,
+        },
+    )
+    @action(
+        detail=True,
+        methods=['patch'],
+        url_path='edit',
+        permission_classes=[IsAuthenticated],
+    )
+    def edit_partial_update(self, request, *args, **kwargs):
+        return Response({'detail': 'not yet implemented'}, status=200)
 
     @extend_schema(
         tags=['public'],
