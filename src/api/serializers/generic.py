@@ -71,6 +71,92 @@ class CommonListSerializer(serializers.Serializer):
     data = serializers.ListField(child=CommonListDataField())
 
 
+class LanguageLabelSerializer(serializers.Serializer):
+    en = serializers.CharField()
+    de = serializers.CharField()
+    xx = serializers.CharField()
+
+
+class LanguageSerializer(serializers.Serializer):
+    iso = serializers.CharField(
+        help_text='The ISO 2 letter code for the language this content was returned in'
+    )
+    label = LanguageLabelSerializer(
+        help_text='Contains all available translations of the label that should be used if the language of the content is to be rendered.'
+    )
+
+
+@extend_schema_field(
+    field={
+        'oneOf': [
+            {'type': 'string', 'example': 'A generic standalone label'},
+            {
+                'type': 'array',
+                'items': {'type': 'string'},
+                'example': ['Item 1', 'Item 2', 'Item 3'],
+            },
+            {
+                'type': 'object',
+                'properties': {
+                    'label': {
+                        'type': 'string',
+                        'example': 'www',
+                        'description': 'A label prefix',
+                    },
+                    'value': {
+                        'type': 'string',
+                        'example': 'example.org',
+                        'description': 'The actual label content',
+                    },
+                    'url': {
+                        'type': 'string',
+                        'example': 'https://example.org',
+                        'description': 'An optional link for this item',
+                    },
+                    'source': {
+                        'type': 'string',
+                        'example': 'jane-doe-d2JnH6L5WAdj7sQzZTRhUC',
+                        'description': 'An optional internal object (e.g. entity) id',
+                    },
+                    'additional': {
+                        'type': 'array',
+                        'description': 'Optional list of labels for a tooltip',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'label': {
+                                    'type': 'string',
+                                    'example': 'Weblink',
+                                },
+                                'value': {
+                                    'type': 'string',
+                                    'example': 'example.org',
+                                },
+                                'url': {
+                                    'type': 'string',
+                                    'example': 'https://example.com',
+                                },
+                            },
+                        },
+                    },
+                },
+                'required': ['label', 'value'],
+            },
+        ],
+    },
+)
+class CommonTextDataItemSerializer(serializers.JSONField):
+    pass
+
+
+class CommonTextSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    data = serializers.ListSerializer(child=CommonTextDataItemSerializer())
+    language = LanguageSerializer(
+        help_text='This property will only be set, if the requested language could not be found'
+    )
+
+
 class Responses:
     Error400 = error(
         status_code=400,
