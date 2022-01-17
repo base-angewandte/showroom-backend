@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from api.serializers.entity import EntityEditSerializer, EntitySerializer
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
+from api.views.search import CsrfExemptSessionAuthentication
 from core.models import Entity
 
 
@@ -97,33 +98,16 @@ class EntityViewSet(
                 type=bool,
                 default=False,
                 location=OpenApiParameter.QUERY,
-                description='Whether to include secondary_details in the response',
+                description='[GET only:] Whether to include secondary_details in the response',
             ),
             OpenApiParameter(
                 name='showcase',
                 type=bool,
                 default=False,
                 location=OpenApiParameter.QUERY,
-                description='Whether to include showcase in the response',
+                description='[GET only:] Whether to include showcase in the response',
             ),
         ],
-        responses={
-            200: EntityEditSerializer,
-            403: Responses.Error403,
-            404: Responses.Error404,
-        },
-    )
-    @action(
-        detail=True,
-        methods=['get'],
-        url_path='edit',
-        permission_classes=[IsAuthenticated],
-    )
-    def edit_retrieve(self, request, *args, **kwargs):
-        return Response({'detail': 'not yet implemented'}, status=200)
-
-    @extend_schema(
-        tags=['auth'],
         request=EntityEditSerializer,
         responses={
             200: EntityEditSerializer,
@@ -133,11 +117,12 @@ class EntityViewSet(
     )
     @action(
         detail=True,
-        methods=['patch'],
+        methods=['get', 'patch'],
         url_path='edit',
         permission_classes=[IsAuthenticated],
+        authentication_classes=[CsrfExemptSessionAuthentication],
     )
-    def edit_partial_update(self, request, *args, **kwargs):
+    def edit(self, request, *args, **kwargs):
         return Response({'detail': 'not yet implemented'}, status=200)
 
     @extend_schema(
