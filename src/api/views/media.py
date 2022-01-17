@@ -2,8 +2,8 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
-from api import view_spec
 from api.permissions import ActivityPermission
+from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
 from core.models import Activity, Media
 
@@ -22,9 +22,9 @@ class MediaViewSet(
         # TODO: create own MediaCreateSerializer for the request body
         responses={
             201: MediaSerializer,  # TODO: create own MediaCreateResponse
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     )
     def create(self, request, *args, **kwargs):
@@ -102,9 +102,9 @@ class MediaViewSet(
         ],
         responses={
             204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     )
     def destroy(self, request, *args, **kwargs):

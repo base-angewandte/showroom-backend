@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from core.models import Entity
 
 from . import abstract_showroom_object_fields
+from .generic import CommonTextSerializer
 from .showcase import get_serialized_showcase_and_warnings
 
 
@@ -50,3 +51,22 @@ class EntitySerializer(serializers.ModelSerializer):
             ret['showcase_warnings'] = sc_warnings
 
         return ret
+
+
+class EntityShowcaseEditSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    type = serializers.CharField(
+        help_text='The type of showcase object (activity, album, entity). Defaults to activity, if not specified',
+        required=False,
+    )
+
+
+class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
+    en = CommonTextSerializer(many=True, required=False)
+    de = CommonTextSerializer(many=True, required=False)
+    xx = CommonTextSerializer(many=True, required=False)
+
+
+class EntityEditSerializer(serializers.Serializer):
+    secondary_details = EntitySecondaryDetailsEditSerializer(many=True, required=False)
+    showcase = EntityShowcaseEditSerializer(many=True, required=False)

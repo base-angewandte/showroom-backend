@@ -3,8 +3,8 @@ from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from api import view_spec
 from api.serializers.album import AlbumSerializer
+from api.serializers.generic import Responses
 from core.models import Album
 
 
@@ -13,33 +13,33 @@ from core.models import Album
         tags=['auth'],
         responses={
             201: AlbumSerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
+            400: Responses.Error400,
+            403: Responses.Error403,
         },
     ),
     partial_update=extend_schema(
         tags=['auth'],
         responses={
             200: AlbumSerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     ),
     destroy=extend_schema(
         tags=['auth'],
         responses={
             204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     ),
     retrieve=extend_schema(
         tags=['public'],
         responses={
             200: AlbumSerializer,
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     ),
     update=extend_schema(exclude=True),

@@ -1,14 +1,19 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
-from api import view_spec
-from api.serializers.entity import EntitySerializer
+from api.serializers.entity import EntityEditSerializer, EntitySerializer
+from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
+from api.views.search import CsrfExemptSessionAuthentication
 from core.models import Entity
 
 
@@ -17,24 +22,24 @@ from core.models import Entity
         tags=['repo'],
         responses={
             201: EntitySerializer,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
+            400: Responses.Error400,
+            403: Responses.Error403,
         },
     ),
     retrieve=extend_schema(
         tags=['public'],
         responses={
             200: EntitySerializer,
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     ),
     partial_update=extend_schema(
         tags=['auth'],
         responses={
             204: None,
-            400: view_spec.Responses.Error400,
-            403: view_spec.Responses.Error403,
-            404: view_spec.Responses.Error404,
+            400: Responses.Error400,
+            403: Responses.Error403,
+            404: Responses.Error404,
         },
     ),
 )
@@ -63,7 +68,7 @@ class EntityViewSet(
         tags=['public'],
         responses={
             200: EntitySerializer(),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
     )
     def retrieve(self, request, *args, **kwargs):
@@ -75,8 +80,8 @@ class EntityViewSet(
     @extend_schema(
         tags=['public'],
         responses={
-            200: view_spec.Responses.CommonList,
-            404: view_spec.Responses.Error404,
+            200: Responses.CommonList,
+            404: Responses.Error404,
         },
     )
     @action(detail=True, methods=['get'], url_path='list')
@@ -86,10 +91,45 @@ class EntityViewSet(
         return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
+        tags=['auth'],
+        parameters=[
+            OpenApiParameter(
+                name='secondary_details',
+                type=bool,
+                default=False,
+                location=OpenApiParameter.QUERY,
+                description='[GET only:] Whether to include secondary_details in the response',
+            ),
+            OpenApiParameter(
+                name='showcase',
+                type=bool,
+                default=False,
+                location=OpenApiParameter.QUERY,
+                description='[GET only:] Whether to include showcase in the response',
+            ),
+        ],
+        request=EntityEditSerializer,
+        responses={
+            200: EntityEditSerializer,
+            403: Responses.Error403,
+            404: Responses.Error404,
+        },
+    )
+    @action(
+        detail=True,
+        methods=['get', 'patch'],
+        url_path='edit',
+        permission_classes=[IsAuthenticated],
+        authentication_classes=[CsrfExemptSessionAuthentication],
+    )
+    def edit(self, request, *args, **kwargs):
+        return Response({'detail': 'not yet implemented'}, status=200)
+
+    @extend_schema(
         tags=['public'],
         responses={
             200: SearchResultSerializer(many=True),
-            404: view_spec.Responses.Error404,
+            404: Responses.Error404,
         },
         # TODO: change parameters
     )
