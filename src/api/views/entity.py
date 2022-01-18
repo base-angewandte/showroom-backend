@@ -111,6 +111,13 @@ class EntityViewSet(
                 location=OpenApiParameter.QUERY,
                 description='Whether to include showcase in the response',
             ),
+            OpenApiParameter(
+                name='showcase_details',
+                type=bool,
+                default=False,
+                location=OpenApiParameter.QUERY,
+                description='Whether to include the pre-rendered showcase item details',
+            ),
         ],
     )
     @extend_schema(
@@ -152,13 +159,13 @@ class EntityViewSet(
                 )
             # now assemble the return dict
             ret = {}
+            if include_secondary_details:
+                ret['secondary_details'] = instance.secondary_details
             if include_showcase:
                 ret['showcase'] = get_rendered_edit_showcase(
                     instance.showcase,
                     include_details=include_showcase_details,
                 )
-            if include_secondary_details:
-                ret['secondary_details'] = instance.secondary_details
 
         # PATCH /entities/{id}/edit
         else:
@@ -184,10 +191,10 @@ class EntityViewSet(
 
             # assemble the updated data for return
             ret = {}
-            if showcase:
-                ret['showcase'] = get_rendered_edit_showcase(instance.showcase)
             if secondary_details:
                 ret['secondary_details'] = instance.secondary_details
+            if showcase:
+                ret['showcase'] = get_rendered_edit_showcase(instance.showcase)
 
         return Response(ret, status=200)
 
