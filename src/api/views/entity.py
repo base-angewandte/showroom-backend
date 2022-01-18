@@ -1,5 +1,5 @@
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
@@ -13,8 +13,9 @@ from rest_framework.response import Response
 from api.serializers.entity import EntityEditSerializer, EntitySerializer
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
+from api.serializers.showcase import ShowcaseSerializer
 from api.views.search import CsrfExemptSessionAuthentication
-from core.models import Entity
+from core.models import Activity, Album, Entity
 
 
 @extend_schema_view(
@@ -123,7 +124,57 @@ class EntityViewSet(
         authentication_classes=[CsrfExemptSessionAuthentication],
     )
     def edit(self, request, *args, **kwargs):
-        return Response({'detail': 'not yet implemented'}, status=200)
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        # GET /entities/{id}/edit
+        if request.method.lower() == 'get':
+            # validate query parameters
+            include_showcase = False
+            include_showcase_details = False
+            include_secondary_details = False
+            if 'showcase' in request.query_params:
+                include_showcase = parse_boolean_query_param(
+                    'showcase', request.query_params['showcase']
+                )
+            if 'showcase_details' in request.query_params:
+                include_showcase_details = parse_boolean_query_param(
+                    'showcase_details', request.query_params['showcase_details']
+                )
+            if 'secondary_details' in request.query_params:
+                include_secondary_details = parse_boolean_query_param(
+                    'secondary_details', request.query_params['secondary_details']
+                )
+            # now assemble the return dict
+            ret = {}
+            if include_showcase:
+                ret['showcase'] = []
+                if instance.showcase:
+                    for sc_id, sc_type in instance.showcase:
+                        sc_item = {'id': sc_id, 'type': sc_type}
+                        if include_showcase_details:
+                            sc_item['details'] = {}
+                            item = None
+                            if sc_type == 'activity':
+                                try:
+                                    item = Activity.objects.get(pk=sc_id)
+                                except Activity.DoesNotExist:
+                                    pass
+                            elif sc_type == 'album':
+                                try:
+                                    item = Album.objects.get(pk=sc_id)
+                                except Album.DoesNotExist:
+                                    pass
+                            if item:
+                                sc_item['details'] = ShowcaseSerializer(item).data
+                        ret['showcase'].append(sc_item)
+            if include_secondary_details:
+                ret['secondary_details'] = instance.secondary_details
+
+        # PATCH /entities/{id}/edit
+        else:
+            return Response({'detail': 'PATCH not yet implemented'}, status=200)
+
+        return Response(ret, status=200)
 
     @extend_schema(
         tags=['public'],
@@ -144,4 +195,15 @@ class EntityViewSet(
                 'data': [],
             },
             status=200,
+        )
+
+
+def parse_boolean_query_param(key, value):
+    if value == 'true':
+        return True
+    elif value == 'false':
+        return False
+    else:
+        raise serializers.ValidationError(
+            {key: 'If used, has to be either true or false.'}
         )
