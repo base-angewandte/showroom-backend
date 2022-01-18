@@ -55,8 +55,9 @@ class EntitySerializer(serializers.ModelSerializer):
 
 class EntityShowcaseEditSerializer(serializers.Serializer):
     id = serializers.CharField()
-    type = serializers.CharField(
-        help_text='The type of showcase object (activity, album, entity). Defaults to activity, if not specified',
+    type = serializers.ChoiceField(
+        choices=['activity', 'album', 'entity'],
+        help_text='The type of showcase object. Defaults to activity, if not specified',
         required=False,
     )
 
@@ -65,6 +66,7 @@ class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
     en = CommonTextSerializer(many=True, required=False)
     de = CommonTextSerializer(many=True, required=False)
     xx = CommonTextSerializer(many=True, required=False)
+    # TODO: add custom validation function that checks if all items are actually CommonText objects
 
 
 class EntityEditSerializer(serializers.Serializer):

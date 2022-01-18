@@ -146,6 +146,7 @@ class LanguageSerializer(serializers.Serializer):
     },
 )
 class CommonTextDataItemSerializer(serializers.JSONField):
+    # TODO: add a custom validation function
     pass
 
 
@@ -153,7 +154,8 @@ class CommonTextSerializer(serializers.Serializer):
     label = serializers.CharField()
     data = serializers.ListSerializer(child=CommonTextDataItemSerializer())
     language = LanguageSerializer(
-        help_text='This property will only be set, if the requested language could not be found'
+        required=False,
+        help_text='This property will only be set, if the requested language could not be found',
     )
 
 
