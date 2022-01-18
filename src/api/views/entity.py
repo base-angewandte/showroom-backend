@@ -10,12 +10,15 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
+from django.core.exceptions import ValidationError
+
 from api.serializers.entity import EntityEditSerializer, EntitySerializer
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
 from api.views.search import CsrfExemptSessionAuthentication
 from core.models import Activity, Album, Entity
+from core.validators import validate_showcase
 
 
 @extend_schema_view(
@@ -150,32 +153,41 @@ class EntityViewSet(
             # now assemble the return dict
             ret = {}
             if include_showcase:
-                ret['showcase'] = []
-                if instance.showcase:
-                    for sc_id, sc_type in instance.showcase:
-                        sc_item = {'id': sc_id, 'type': sc_type}
-                        if include_showcase_details:
-                            sc_item['details'] = {}
-                            item = None
-                            if sc_type == 'activity':
-                                try:
-                                    item = Activity.objects.get(pk=sc_id)
-                                except Activity.DoesNotExist:
-                                    pass
-                            elif sc_type == 'album':
-                                try:
-                                    item = Album.objects.get(pk=sc_id)
-                                except Album.DoesNotExist:
-                                    pass
-                            if item:
-                                sc_item['details'] = ShowcaseSerializer(item).data
-                        ret['showcase'].append(sc_item)
+                ret['showcase'] = get_rendered_edit_showcase(
+                    instance.showcase,
+                    include_details=include_showcase_details,
+                )
             if include_secondary_details:
                 ret['secondary_details'] = instance.secondary_details
 
         # PATCH /entities/{id}/edit
         else:
-            return Response({'detail': 'PATCH not yet implemented'}, status=200)
+            # validate data
+            serializer = EntityEditSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+
+            # update entity
+            if showcase := data.get('showcase'):
+                instance.showcase = []
+                for sc_item in showcase:
+                    if 'type' not in sc_item:
+                        sc_item['type'] = 'activity'
+                    instance.showcase.append([sc_item['id'], sc_item['type']])
+                try:
+                    validate_showcase(instance.showcase)
+                except ValidationError as err:
+                    raise serializers.ValidationError({'showcase': err})
+            if secondary_details := data.get('secondary_details'):
+                instance.secondary_details = secondary_details
+            instance.save()
+
+            # assemble the updated data for return
+            ret = {}
+            if showcase:
+                ret['showcase'] = get_rendered_edit_showcase(instance.showcase)
+            if secondary_details:
+                ret['secondary_details'] = instance.secondary_details
 
         return Response(ret, status=200)
 
@@ -199,6 +211,30 @@ class EntityViewSet(
             },
             status=200,
         )
+
+
+def get_rendered_edit_showcase(showcase, include_details=False):
+    ret = []
+    if showcase:
+        for sc_id, sc_type in showcase:
+            sc_item = {'id': sc_id, 'type': sc_type}
+            if include_details:
+                sc_item['details'] = {}
+                item = None
+                if sc_type == 'activity':
+                    try:
+                        item = Activity.objects.get(pk=sc_id)
+                    except Activity.DoesNotExist:
+                        pass
+                elif sc_type == 'album':
+                    try:
+                        item = Album.objects.get(pk=sc_id)
+                    except Album.DoesNotExist:
+                        pass
+                if item:
+                    sc_item['details'] = ShowcaseSerializer(item).data
+            ret.append(sc_item)
+    return ret
 
 
 def parse_boolean_query_param(key, value):
