@@ -3,15 +3,12 @@ from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from django.core.exceptions import ValidationError
 
+from api.permissions import EntityEditPermission
 from api.serializers.entity import EntityEditSerializer, EntitySerializer
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
@@ -133,7 +130,7 @@ class EntityViewSet(
         detail=True,
         methods=['get', 'patch'],
         url_path='edit',
-        permission_classes=[IsAuthenticated],
+        permission_classes=[EntityEditPermission],
         authentication_classes=[CsrfExemptSessionAuthentication],
     )
     def edit(self, request, *args, **kwargs):
