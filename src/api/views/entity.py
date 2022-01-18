@@ -92,23 +92,26 @@ class EntityViewSet(
         return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
-        tags=['auth'],
+        methods=['GET'],
         parameters=[
             OpenApiParameter(
                 name='secondary_details',
                 type=bool,
                 default=False,
                 location=OpenApiParameter.QUERY,
-                description='[GET only:] Whether to include secondary_details in the response',
+                description='Whether to include secondary_details in the response',
             ),
             OpenApiParameter(
                 name='showcase',
                 type=bool,
                 default=False,
                 location=OpenApiParameter.QUERY,
-                description='[GET only:] Whether to include showcase in the response',
+                description='Whether to include showcase in the response',
             ),
         ],
+    )
+    @extend_schema(
+        tags=['auth'],
         request=EntityEditSerializer,
         responses={
             200: EntityEditSerializer,
