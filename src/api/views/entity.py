@@ -189,7 +189,9 @@ class EntityViewSet(
             if secondary_details:
                 ret['secondary_details'] = instance.secondary_details
             if showcase:
-                ret['showcase'] = get_rendered_edit_showcase(instance.showcase)
+                ret['showcase'] = get_rendered_edit_showcase(
+                    instance.showcase, include_details=True
+                )
 
         return Response(ret, status=200)
 
