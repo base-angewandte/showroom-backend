@@ -170,7 +170,7 @@ class EntityViewSet(
             data = serializer.validated_data
 
             # update entity
-            if showcase := data.get('showcase'):
+            if (showcase := data.get('showcase')) is not None:
                 instance.showcase = []
                 for sc_item in showcase:
                     if 'type' not in sc_item:
@@ -180,15 +180,15 @@ class EntityViewSet(
                     validate_showcase(instance.showcase)
                 except ValidationError as err:
                     raise serializers.ValidationError({'showcase': err})
-            if secondary_details := data.get('secondary_details'):
+            if (secondary_details := data.get('secondary_details')) is not None:
                 instance.secondary_details = secondary_details
             instance.save()
 
             # assemble the updated data for return
             ret = {}
-            if secondary_details:
+            if secondary_details is not None:
                 ret['secondary_details'] = instance.secondary_details
-            if showcase:
+            if showcase is not None:
                 ret['showcase'] = get_rendered_edit_showcase(
                     instance.showcase, include_details=True
                 )
