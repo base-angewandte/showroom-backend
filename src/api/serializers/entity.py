@@ -66,7 +66,18 @@ class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
     en = CommonTextSerializer(many=True, required=False)
     de = CommonTextSerializer(many=True, required=False)
     xx = CommonTextSerializer(many=True, required=False)
-    # TODO: add custom validation function that checks if all items are actually CommonText objects
+
+    def to_internal_value(self, data):
+        # check that every property in data has a 2 letter key
+        # and conforms to the CommonText schema
+        for key in data:
+            if len(key) != 2:
+                raise serializers.ValidationError(
+                    'Object keys have to be 2-letter language codes'
+                )
+            s = CommonTextSerializer(many=True, data=data[key])
+            s.is_valid(raise_exception=True)
+        return data
 
 
 class EntityEditSerializer(serializers.Serializer):
