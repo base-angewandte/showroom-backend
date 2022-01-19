@@ -90,3 +90,11 @@ POSTGRES_PASSWORD=password
 
 ## A default entity id to be used in the /initial endpoint without any ID
 # DEFAULT_ENTITY=
+
+## Temporary feature for showcase editing
+## A comma-separated list of usernames (e.g. CAS UUIDs) who are allowed
+## to edit more than just their own entity
+# SHOWCASE_DEMO_USERS=
+## A comma-separated list of entity IDs that can be edited by every user
+## listed in the above SHOWCASE_DEMO_USERS
+# SHOWCASE_DEMO_ENTITY_EDITING=

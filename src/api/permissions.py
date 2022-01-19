@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from django.conf import settings
+
 from core.models import Entity, SourceRepository
 
 
@@ -49,6 +51,8 @@ class EntityEditPermission(permissions.BasePermission):
         if not entities:
             return False
         allowed = [entity.id for entity in entities]
+        if request.user.username in settings.SHOWCASE_DEMO_USERS:
+            allowed.extend(settings.SHOWCASE_DEMO_ENTITY_EDITING)
         if pk in allowed:
             return True
         return False

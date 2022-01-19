@@ -176,6 +176,8 @@ for x in DEFAULT_SHOWCASE:
 
 DEFAULT_ENTITY = env.str('DEFAULT_ENTITY', default=None)
 
+SHOWCASE_DEMO_USERS = env.list('SHOWCASE_DEMO_USERS', default=[])
+SHOWCASE_DEMO_ENTITY_EDITING = env.list('SHOWCASE_DEMO_ENTITY_EDITING', default=[])
 
 """ Email settings """
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
