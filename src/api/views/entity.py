@@ -1,12 +1,13 @@
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.exceptions import MethodNotAllowed, NotFound
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 from api.permissions import EntityEditPermission
 from api.serializers.entity import EntityEditSerializer, EntitySerializer
@@ -73,8 +74,7 @@ class EntityViewSet(
         },
     )
     def retrieve(self, request, *args, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        instance = get_object_or_404(self.queryset, pk=pk)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -87,8 +87,7 @@ class EntityViewSet(
     )
     @action(detail=True, methods=['get'], url_path='list')
     def activities_list(self, request, *args, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        instance = get_object_or_404(self.queryset, pk=pk)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
         return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
@@ -134,8 +133,7 @@ class EntityViewSet(
         authentication_classes=[CsrfExemptSessionAuthentication],
     )
     def edit(self, request, *args, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        instance = get_object_or_404(self.queryset, pk=pk)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
         # GET /entities/{id}/edit
         if request.method.lower() == 'get':
             # validate query parameters
@@ -215,6 +213,16 @@ class EntityViewSet(
             },
             status=200,
         )
+
+    def get_object_or_404(self, **kwargs):
+        pk = kwargs['pk'].split('-')[-1]
+        instance = get_object_or_404(self.queryset, pk=pk)
+        slug = f'entity-{instance.id}'
+        if instance.title:
+            slug = f'{slugify(instance.title)}-{instance.id}'
+        if kwargs['pk'] != slug:
+            raise NotFound
+        return instance
 
 
 def get_rendered_edit_showcase(showcase, include_details=False):
