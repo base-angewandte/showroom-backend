@@ -43,7 +43,7 @@ def get_user_data(request, *args, **kwargs):
         'name': attributes.get('display_name'),
         'email': attributes.get('email'),
         'entity_id': entity_id,
-        'entity_editing': [entity_id],
+        'entity_editing': [entity_id] if entity_id else [],
         'groups': attributes.get('groups'),
         'permissions': attributes.get('permissions'),
     }
