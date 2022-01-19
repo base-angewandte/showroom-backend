@@ -145,14 +145,82 @@ class LanguageSerializer(serializers.Serializer):
         ],
     },
 )
-class CommonTextDataItemSerializer(serializers.JSONField):
-    # TODO: add a custom validation function
-    pass
+class CommonTextDataSerializer(serializers.JSONField):
+    def to_internal_value(self, data):
+        # validate the data to conform to the CommonText.data schema
+        if not type(data) in [str, list]:
+            raise serializers.ValidationError(
+                f'Incorrect type for data. Expected str or list, but got {type(data).__name__}'
+            )
+        if type(data) is list:
+            for item in data:
+                if not type(item) in [str, dict]:
+                    raise serializers.ValidationError(
+                        f'Incorrect type for data. Expected list[str] or list[dict], but got list[{type(item).__name__}]'
+                    )
+                if type(item) is dict:
+                    if 'label' not in item:
+                        raise serializers.ValidationError(
+                            'label is a required property of CommonTextObject'
+                        )
+                    if 'value' not in item:
+                        raise serializers.ValidationError(
+                            'value is a required property of CommonTextObject'
+                        )
+                    if type(item['label']) is not str:
+                        raise serializers.ValidationError(
+                            f'Incorrect type for CommonTextObject label. Expected str, but got {type(item["label"]).__name__}'
+                        )
+                    if type(item['value']) is not str:
+                        raise serializers.ValidationError(
+                            f'Incorrect type for CommonTextObject value. Expected str, but got {type(item["value"]).__name__}'
+                        )
+                    if 'url' in item and type(item['url']) is not str:
+                        raise serializers.ValidationError(
+                            f'Incorrect type for CommonTextObject url. Expected str, but got {type(item["url"]).__name__}'
+                        )
+                    if 'source' in item and type(item['source']) is not str:
+                        raise serializers.ValidationError(
+                            f'Incorrect type for CommonTextObject source. Expected str, but got {type(item["source"]).__name__}'
+                        )
+                    if 'additional' in item:
+                        if type(item['additional']) is not list:
+                            raise serializers.ValidationError(
+                                f'Incorrect type for CommonTextObject additional. Expected list, but got {type(item["additional"]).__name__}'
+                            )
+                        for additional_item in item['additional']:
+                            if type(additional_item) is not dict:
+                                raise serializers.ValidationError(
+                                    f'Incorrect type for CommonTextObject additional item. Expected dict, but got {type(additional_item).__name__}'
+                                )
+                            if (
+                                'label' in additional_item
+                                and type(additional_item['label']) is not str
+                            ):
+                                raise serializers.ValidationError(
+                                    f'Incorrect type for CommonTextObject additional item label. Expected str, but got {type(additional_item["label"]).__name__}'
+                                )
+                            if (
+                                'value' in additional_item
+                                and type(additional_item['value']) is not str
+                            ):
+                                raise serializers.ValidationError(
+                                    f'Incorrect type for CommonTextObject additional item value. Expected str, but got {type(additional_item["value"]).__name__}'
+                                )
+                            if (
+                                'url' in additional_item
+                                and type(additional_item['url']) is not str
+                            ):
+                                raise serializers.ValidationError(
+                                    f'Incorrect type for CommonTextObject additional item url. Expected str, but got {type(additional_item["url"]).__name__}'
+                                )
+
+        return data
 
 
 class CommonTextSerializer(serializers.Serializer):
     label = serializers.CharField()
-    data = serializers.ListSerializer(child=CommonTextDataItemSerializer())
+    data = CommonTextDataSerializer()
     language = LanguageSerializer(
         required=False,
         help_text='This property will only be set, if the requested language could not be found',
