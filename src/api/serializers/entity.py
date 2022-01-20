@@ -5,7 +5,7 @@ from django.utils.text import slugify
 from core.models import Entity
 
 from . import abstract_showroom_object_fields
-from .generic import CommonTextSerializer
+from .generic import CommonTextSerializer, localise_detail_fields
 from .showcase import get_serialized_showcase_and_warnings
 
 
@@ -50,6 +50,9 @@ class EntitySerializer(serializers.ModelSerializer):
         if sc_warnings:
             ret['showcase_warnings'] = sc_warnings
 
+        # now filter out the requested languages for the detail fields and lists
+        localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
+
         return ret
 
 
@@ -63,9 +66,9 @@ class EntityShowcaseEditSerializer(serializers.Serializer):
 
 
 class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
-    en = CommonTextSerializer(many=True, required=False)
-    de = CommonTextSerializer(many=True, required=False)
-    xx = CommonTextSerializer(many=True, required=False)
+    en = CommonTextSerializer(required=False)
+    de = CommonTextSerializer(required=False)
+    xx = CommonTextSerializer(required=False)
 
     def to_internal_value(self, data):
         # check that every property in data has a 2 letter key
@@ -75,7 +78,7 @@ class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     'Object keys have to be 2-letter language codes'
                 )
-            s = CommonTextSerializer(many=True, data=data[key])
+            s = CommonTextSerializer(data=data[key])
             s.is_valid(raise_exception=True)
         return data
 
