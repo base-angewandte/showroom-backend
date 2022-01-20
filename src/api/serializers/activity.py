@@ -17,6 +17,7 @@ from core.models import Activity, Entity
 
 from ..repositories.portfolio.search import get_search_item
 from . import abstract_showroom_object_fields, logger
+from .generic import localise_detail_fields
 from .media import MediaSerializer
 
 
@@ -170,37 +171,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         }
 
         # now filter out the requested languages for the detail fields and lists
-        new_data = {}
-        lang = self.context['request'].LANGUAGE_CODE
-        detail_fields = ['primary_details', 'secondary_details', 'list']
-        for field in detail_fields:
-            new_data[field] = []
-            for data in ret[field]:
-                if data_localised := data.get(lang):
-                    new_data[field].append(data_localised)
-                else:
-                    # If no localised data could be found, we try to find
-                    # another one in the order of the languages defined
-                    # in the settings
-                    for alt_lang in settings.LANGUAGES:
-                        if data_localised := data.get(alt_lang[0]):
-                            data_localised['language'] = {
-                                'iso': alt_lang[0],
-                                'label': {
-                                    alt_lang[0]: alt_lang[1],
-                                },
-                            }
-                            new_data[field].append(data_localised)
-                            break
-                    # Theoretically there could be other localised content in
-                    # languages that are not configured in the settings. We
-                    # will ignore those.
-                    # But if we did internally story a 'default' localisation,
-                    # because the data is language independent, we'll use this
-                    if data_default := data.get('default'):
-                        new_data[field].append(data_default)
-            ret.pop(field)
-        ret.update(new_data)
+        localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
 
         return ret
 

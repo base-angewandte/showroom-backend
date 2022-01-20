@@ -6,6 +6,8 @@ from drf_spectacular.utils import (
 )
 from rest_framework import serializers
 
+from django.conf import settings
+
 error_schema = inline_serializer(
     name='Error',
     fields={
@@ -36,6 +38,42 @@ def error(
             ),
         ],
     )
+
+
+def localise_detail_fields(data, lang):
+    """Goes through Entity/Activity data and replaces detail fields with their
+    localised version."""
+
+    new_data = {}
+    detail_fields = ['primary_details', 'secondary_details', 'list']
+    for field in detail_fields:
+        new_data[field] = []
+        for data_item in data[field]:
+            if data_localised := data_item.get(lang):
+                new_data[field].append(data_localised)
+            else:
+                # If no localised data could be found, we try to find
+                # another one in the order of the languages defined
+                # in the settings
+                for alt_lang in settings.LANGUAGES:
+                    if data_localised := data_item.get(alt_lang[0]):
+                        data_localised['language'] = {
+                            'iso': alt_lang[0],
+                            'label': {
+                                alt_lang[0]: alt_lang[1],
+                            },
+                        }
+                        new_data[field].append(data_localised)
+                        break
+                # Theoretically there could be other localised content in
+                # languages that are not configured in the settings. We
+                # will ignore those.
+                # But if we did internally story a 'default' localisation,
+                # because the data is language independent, we'll use this
+                if data_default := data_item.get('default'):
+                    new_data[field].append(data_default)
+        data.pop(field)
+    data.update(new_data)
 
 
 @extend_schema_field(
