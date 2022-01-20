@@ -116,6 +116,9 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 )
             continue
         transformed = transform_func(item, lang)
+        # TODO: discuss: should we actually just filter out None values or should
+        #       we try to get a default value instead, if the localised is not available?
+        transformed = [item for item in transformed if item]
 
         if field == 'alternative_text':
             search_item[field] = transformed
@@ -259,7 +262,11 @@ def get_text_keywords(item, lang):
                     ret.append(section['text'])
     if keywords := item.source_repo_data.get('keywords'):
         line = 'Keywords: '  # TODO: replace with localised preflabel
-        line += ', '.join([keyword['label'].get(lang) for keyword in keywords])
+        kw_labels = [keyword['label'].get(lang) for keyword in keywords]
+        # TODO: discuss: should we actually just filter out None values or should
+        #       we try to get a default value instead, if the localised is not available?
+        kw_labels = [item for item in kw_labels if item]
+        line += ', '.join(kw_labels)
         ret.append(line)
     return ret
 
