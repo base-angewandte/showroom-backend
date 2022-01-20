@@ -47,6 +47,8 @@ def localise_detail_fields(data, lang):
     new_data = {}
     detail_fields = ['primary_details', 'secondary_details', 'list']
     for field in detail_fields:
+        if not data[field]:
+            continue
         new_data[field] = []
         for data_item in data[field]:
             if data_localised := data_item.get(lang):
