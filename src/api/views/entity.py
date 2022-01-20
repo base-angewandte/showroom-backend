@@ -6,6 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
@@ -187,7 +188,13 @@ class EntityViewSet(
             # assemble the updated data for return
             ret = {}
             if secondary_details is not None:
-                ret['secondary_details'] = instance.secondary_details
+                if not instance.secondary_details:
+                    ret['secondary_details'] = [
+                        {lang: [] for lang, _label in settings.LANGUAGES}
+                    ]
+                else:
+                    ret['secondary_details'] = instance.secondary_details
+
             if showcase is not None:
                 ret['showcase'] = get_rendered_edit_showcase(
                     instance.showcase, include_details=True
