@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
@@ -6,6 +7,10 @@ from django.db.models import Q
 
 from core.validators import validate_showcase
 from general.models import AbstractBaseModel, ShortUUIDField
+
+
+def get_default_list_ordering():
+    return [{'id': schema, 'hidden': False} for schema in settings.ACTIVE_SCHEMAS]
 
 
 class SourceRepository(models.Model):
@@ -53,6 +58,7 @@ class Entity(AbstractShowroomObject):
     expertise = JSONField(blank=True, null=True)
     showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
+    list_ordering = JSONField(blank=False, default=get_default_list_ordering)
     parent_choice_limit = Q(type='I') | Q(type='D')
     parent = models.ForeignKey(
         'self',
@@ -87,7 +93,7 @@ class Activity(AbstractShowroomObject):
     )
     # the following fields are only needed to be more efficient in search
     keywords = JSONField(blank=True, null=True)
-    source_repo_data_text = models.TextField(default='')
+    collection_type = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f'{self.title} (ID: {self.id})'

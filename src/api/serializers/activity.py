@@ -1,4 +1,3 @@
-import json
 import sys
 from traceback import print_tb
 
@@ -36,7 +35,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             'relations_to',
             'type',
             'keywords',
-            'source_repo_data_text',
         ]
 
     def to_internal_value(self, data):
@@ -67,7 +65,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             if repo_data.get('keywords')
             else {}
         )
-        new_data['source_repo_data_text'] = json.dumps(repo_data)
 
         try:
             new_data['belongs_to'] = Entity.objects.get(
@@ -124,7 +121,6 @@ class ActivitySerializer(serializers.ModelSerializer):
         # remove plain repo data
         ret.pop('source_repo')
         ret.pop('source_repo_data')
-        ret.pop('source_repo_data_text')
         ret.pop('source_repo_entry_id')
         ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
