@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from django.conf import settings
 from django.utils.text import slugify
 
 from core.models import Entity
@@ -91,3 +92,19 @@ class EntityEditSerializer(serializers.Serializer):
 class EntityListEditSerializer(serializers.Serializer):
     id = serializers.CharField()
     hidden = serializers.BooleanField(default=False, required=False)
+
+    def to_internal_value(self, data):
+        if not (id := data.get('id')):
+            raise serializers.ValidationError(
+                'id has to be set and must be non-zero-len string'
+            )
+        if id not in settings.ACTIVE_SCHEMAS:
+            raise serializers.ValidationError(
+                'id has to be a valid schema configured in ACTIVE_SCHEMAS'
+            )
+        if (hidden := data.get('hidden')) is None:
+            data['hidden'] = False
+        else:
+            if type(hidden) is not bool:
+                raise serializers.ValidationError('hidden has to be boolean')
+        return data

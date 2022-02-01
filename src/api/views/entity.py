@@ -101,7 +101,31 @@ class EntityViewSet(
     )
     def activities_list(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        return Response(instance.list if instance.list else [], status=200)
+
+        # GET /entities/{id}/list
+        if request.method.lower() == 'get':
+            return Response(instance.list if instance.list else [], status=200)
+
+        # PATCH /entities/{id}/list
+        else:
+            # validate data
+            serializer = EntityListEditSerializer(data=request.data, many=True)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+
+            # now add all active schemas that are not explicitly set as hidden items
+            schemas = [item.get('id') for item in data]
+            for schema in settings.ACTIVE_SCHEMAS:
+                if schema not in schemas:
+                    data.append({'id': schema, 'hidden': True})
+
+            # update entity
+            instance.list_ordering = data
+            # TODO: reorder instance.list accordingly
+            instance.save()
+
+            # TODO: assemble output from list_ordering and list
+            return Response(instance.list if instance.list else [], status=200)
 
     @extend_schema(
         methods=['GET'],
