@@ -11,8 +11,12 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 from api.permissions import EntityEditPermission
-from api.serializers.entity import EntityEditSerializer, EntitySerializer
-from api.serializers.generic import Responses
+from api.serializers.entity import (
+    EntityEditSerializer,
+    EntityListEditSerializer,
+    EntitySerializer,
+)
+from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
 from api.views.search import CsrfExemptSessionAuthentication
@@ -80,13 +84,21 @@ class EntityViewSet(
         return Response(serializer.data)
 
     @extend_schema(
-        tags=['public'],
+        tags=['auth'],
+        request=EntityListEditSerializer(many=True),
         responses={
-            200: Responses.CommonList,
+            200: CommonListEditSerializer(many=True),
+            403: Responses.Error403,
             404: Responses.Error404,
         },
     )
-    @action(detail=True, methods=['get'], url_path='list')
+    @action(
+        detail=True,
+        methods=['get', 'patch'],
+        url_path='list',
+        permission_classes=[EntityEditPermission],
+        authentication_classes=[CsrfExemptSessionAuthentication],
+    )
     def activities_list(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
         return Response(instance.list if instance.list else [], status=200)

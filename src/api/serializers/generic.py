@@ -83,19 +83,51 @@ def localise_detail_fields(data, lang):
         'oneOf': [
             {
                 'type': 'object',
-                'description': 'a recursive CommonList entry',
+                'description': 'A recursive (non-editable) CommonList',
+                'properties': {
+                    'label': {'type': 'string'},
+                    'data': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'description': 'Again, either a recursive CommonList or a CommonListItem',
+                        },
+                    },
+                },
             },
             {
                 'type': 'object',
-                'description': 'a CommonListItem without any further recursion',
+                'description': 'A CommonListItem without any further recursion',
                 'properties': {
+                    'value': {'type': 'string'},
+                    'source': {
+                        'type': 'string',
+                        'description': 'An internal identifier (e.g. ShortUUID) to link to a showroom object',
+                    },
+                    'url': {
+                        'type': 'string',
+                        'format': 'uri',
+                        'description': 'An external link. Mutually exclusive with source',
+                    },
                     'attributes': {
                         'type': 'array',
                         'items': {'type': 'string'},
+                        'description': 'List of strings, added after the list items value, (e.g. author names if list item is a publication)',
                     },
-                    'value': {'type': 'string'},
-                    'id': {'type': 'string'},
+                    'additional': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'label': {'type': 'string'},
+                                'value': {'type': 'string'},
+                                'url': {'type': 'string', 'format': 'uri'},
+                            },
+                        },
+                        'description': 'List of additional (linkable) label/value pairs extending the list entry (e.g. by display in a tooltip)',
+                    },
                 },
+                'required': ['value'],
             },
         ]
     }
@@ -105,10 +137,13 @@ class CommonListDataField(serializers.JSONField):
 
 
 class CommonListSerializer(serializers.Serializer):
-    id = serializers.CharField()
-    labels = serializers.CharField()
-    hidden = serializers.BooleanField(required=False)
+    label = serializers.CharField()
     data = serializers.ListField(child=CommonListDataField())
+
+
+class CommonListEditSerializer(CommonListSerializer):
+    id = serializers.CharField()
+    hidden = serializers.BooleanField(required=False)
 
 
 class LanguageLabelSerializer(serializers.Serializer):

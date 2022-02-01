@@ -86,3 +86,8 @@ class EntitySecondaryDetailsEditSerializer(serializers.Serializer):
 class EntityEditSerializer(serializers.Serializer):
     secondary_details = EntitySecondaryDetailsEditSerializer(many=True, required=False)
     showcase = EntityShowcaseEditSerializer(many=True, required=False)
+
+
+class EntityListEditSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    hidden = serializers.BooleanField(default=False, required=False)
