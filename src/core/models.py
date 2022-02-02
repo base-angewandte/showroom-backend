@@ -5,7 +5,11 @@ from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
-from core.validators import validate_showcase
+from core.validators import (
+    validate_entity_list,
+    validate_list_ordering,
+    validate_showcase,
+)
 from general.models import AbstractBaseModel, ShortUUIDField
 
 
@@ -58,7 +62,14 @@ class Entity(AbstractShowroomObject):
     expertise = JSONField(blank=True, null=True)
     showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
-    list_ordering = JSONField(blank=False, default=get_default_list_ordering)
+    # we have to use a redefined list property here, because validation works
+    # different than for the more generic lists used in activities
+    list = JSONField(default=dict, validators=[validate_entity_list])
+    list_ordering = JSONField(
+        blank=False,
+        default=get_default_list_ordering,
+        validators=[validate_list_ordering],
+    )
     parent_choice_limit = Q(type='I') | Q(type='D')
     parent = models.ForeignKey(
         'self',
