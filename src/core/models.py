@@ -83,6 +83,16 @@ class Entity(AbstractShowroomObject):
     def __str__(self):
         return f'{self.title} (ID: {self.id})'
 
+    def get_editing_list(self, lang=settings.LANGUAGE_CODE):
+        ret = []
+        for order in self.list_ordering:
+            if (l_id := order.get('id')) in self.list:
+                # TODO: handle cases with no or different translation available
+                loc_list = dict(self.list[l_id].get(lang))
+                loc_list.update(order)
+                ret.append(loc_list)
+        return ret
+
 
 class Activity(AbstractShowroomObject):
     type = JSONField(blank=True, null=True)

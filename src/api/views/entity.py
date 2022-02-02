@@ -104,7 +104,9 @@ class EntityViewSet(
 
         # GET /entities/{id}/list
         if request.method.lower() == 'get':
-            return Response(instance.list if instance.list else [], status=200)
+            return Response(
+                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+            )
 
         # PATCH /entities/{id}/list
         else:
@@ -121,11 +123,11 @@ class EntityViewSet(
 
             # update entity
             instance.list_ordering = data
-            # TODO: reorder instance.list accordingly
             instance.save()
 
-            # TODO: assemble output from list_ordering and list
-            return Response(instance.list if instance.list else [], status=200)
+            return Response(
+                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+            )
 
     @extend_schema(
         methods=['GET'],
