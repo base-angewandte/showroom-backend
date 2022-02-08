@@ -128,6 +128,8 @@ CAS_REDIRECT_URL = env.str('CAS_REDIRECT_URL', default=FORCE_SCRIPT_NAME or '/')
 SKOSMOS_API = env.str(
     'SKOSMOS_API', default='https://voc.uni-ak.ac.at/skosmos/rest/v1/'
 )
+TAX_ID = 'potax'
+TAX_GRAPH = 'http://base.uni-ak.ac.at/portfolio/taxonomy/'
 VOC_ID = 'povoc'
 VOC_GRAPH = 'http://base.uni-ak.ac.at/portfolio/vocabulary/'
 ACTIVE_SCHEMAS = env.list(

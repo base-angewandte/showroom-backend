@@ -1,6 +1,7 @@
 from django.apps import apps
-from django.conf import settings
 from django.core.exceptions import ValidationError
+
+from api.repositories.portfolio import activity_lists
 
 
 def validate_common_list(value):
@@ -74,9 +75,9 @@ def validate_entity_list(value):
     if type(value) != dict:
         raise ValidationError('list has to be a dict', params={'value': value})
     for key in value:
-        if key not in settings.ACTIVE_SCHEMAS:
+        if key not in activity_lists.list_collections:
             raise ValidationError(
-                'list keys have to be valid schemas configured in ACTIVE_SCHEMAS',
+                'key is not a valid activity list collection',
                 params={'key': key},
             )
         if type(value[key]) is not dict:
@@ -111,9 +112,9 @@ def validate_list_ordering(value):
             raise ValidationError(
                 'item["hidden"] has to be bool', params={'item': item}
             )
-        if item['id'] not in settings.ACTIVE_SCHEMAS:
+        if item['id'] not in activity_lists.list_collections:
             raise ValidationError(
-                'item["id"] has to be a valid schema configured in ACTIVE_SCHEMAS',
+                'item["id"] is not a valid activity list collection',
                 params={'item': item},
             )
 

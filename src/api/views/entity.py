@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 from api.permissions import EntityEditPermission
+from api.repositories.portfolio import activity_lists
 from api.serializers.entity import (
     EntityEditSerializer,
     EntityListEditSerializer,
@@ -80,6 +81,8 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
+        # TODO: move to worker job after activities are updated
+        instance.render_list()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -117,7 +120,7 @@ class EntityViewSet(
 
             # now add all active schemas that are not explicitly set as hidden items
             schemas = [item.get('id') for item in data]
-            for schema in settings.ACTIVE_SCHEMAS:
+            for schema in activity_lists.list_collections:
                 if schema not in schemas:
                     data.append({'id': schema, 'hidden': True})
 

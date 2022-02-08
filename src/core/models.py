@@ -5,6 +5,7 @@ from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
+from api.repositories.portfolio import activity_lists
 from core.validators import (
     validate_entity_list,
     validate_list_ordering,
@@ -14,7 +15,7 @@ from general.models import AbstractBaseModel, ShortUUIDField
 
 
 def get_default_list_ordering():
-    return [{'id': schema, 'hidden': False} for schema in settings.ACTIVE_SCHEMAS]
+    return [{'id': c, 'hidden': False} for c in activity_lists.list_collections]
 
 
 class SourceRepository(models.Model):
@@ -92,6 +93,21 @@ class Entity(AbstractShowroomObject):
                 loc_list.update(order)
                 ret.append(loc_list)
         return ret
+
+    def render_list(self):
+        q_filter = None
+        for f in activity_lists.get_data_contains_filters(self.source_repo_entry_id):
+            if not q_filter:
+                q_filter = Q(source_repo_data__data__contains=f)
+            else:
+                q_filter = q_filter | Q(source_repo_data__data__contains=f)
+        activities = Activity.objects.filter(
+            belongs_to=self, type__isnull=False
+        ).filter(q_filter)
+        self.list = activity_lists.render_list_from_activities(
+            activities, self.list_ordering, self.source_repo_entry_id
+        )
+        self.save()
 
 
 class Activity(AbstractShowroomObject):

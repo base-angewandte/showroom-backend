@@ -52,6 +52,7 @@ def localise_detail_fields(data, lang, is_activity=True):
         new_data[field] = []
         iterable = data[field]
         if not is_activity and field == 'list':
+            # TODO: create ordered list based on list_ordering and hidden property
             iterable = data[field].values()
         for data_item in iterable:
             if data_localised := data_item.get(lang):

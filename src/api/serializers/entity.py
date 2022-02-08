@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-from django.conf import settings
 from django.utils.text import slugify
 
 from core.models import Entity
 
+from ..repositories.portfolio import activity_lists
 from . import abstract_showroom_object_fields
 from .generic import CommonTextSerializer, localise_detail_fields
 from .showcase import get_serialized_showcase_and_warnings
@@ -100,9 +100,9 @@ class EntityListEditSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'id has to be set and must be non-zero-len string'
             )
-        if id not in settings.ACTIVE_SCHEMAS:
+        if id not in activity_lists.list_collections:
             raise serializers.ValidationError(
-                'id has to be a valid schema configured in ACTIVE_SCHEMAS'
+                'id is not a valid activity list collection'
             )
         if (hidden := data.get('hidden')) is None:
             data['hidden'] = False
