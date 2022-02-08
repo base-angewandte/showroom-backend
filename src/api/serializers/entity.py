@@ -52,7 +52,9 @@ class EntitySerializer(serializers.ModelSerializer):
             ret['showcase_warnings'] = sc_warnings
 
         # now filter out the requested languages for the detail fields and lists
-        localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
+        localise_detail_fields(
+            ret, self.context['request'].LANGUAGE_CODE, is_activity=False
+        )
 
         return ret
 

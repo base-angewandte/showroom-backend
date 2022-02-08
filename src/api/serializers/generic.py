@@ -40,7 +40,7 @@ def error(
     )
 
 
-def localise_detail_fields(data, lang):
+def localise_detail_fields(data, lang, is_activity=True):
     """Goes through Entity/Activity data and replaces detail fields with their
     localised version."""
 
@@ -50,7 +50,10 @@ def localise_detail_fields(data, lang):
         if not data[field]:
             continue
         new_data[field] = []
-        for data_item in data[field]:
+        iterable = data[field]
+        if not is_activity and field == 'list':
+            iterable = data[field].values()
+        for data_item in iterable:
             if data_localised := data_item.get(lang):
                 new_data[field].append(data_localised)
             else:
@@ -70,7 +73,7 @@ def localise_detail_fields(data, lang):
                 # Theoretically there could be other localised content in
                 # languages that are not configured in the settings. We
                 # will ignore those.
-                # But if we did internally story a 'default' localisation,
+                # But if we did internally store a 'default' localisation,
                 # because the data is language independent, we'll use this
                 if data_default := data_item.get('default'):
                     new_data[field].append(data_default)
