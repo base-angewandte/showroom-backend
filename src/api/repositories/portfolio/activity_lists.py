@@ -106,25 +106,25 @@ def get_user_roles(activity, username):
 
 
 def render_list_from_activities(activities, ordering, username):
-    list_collection_types = {
+    types = {
         collection: get_collection_members(f'{base_url}{collection}')
         for collection in list_collections
     }
-    list_collection_labels = {
+    labels = {
         lang: {
             collection: get_altlabel_collection(f'collection_{collection}', lang=lang)
             for collection in list_collections
         }
         for (lang, _ll) in settings.LANGUAGES
     }
-    sub_collection_types = {
+    sub_types = {
         sub: {
             collection: get_collection_members(f'{base_url}{collection}')
             for collection in sub_collections[sub]
         }
         for sub in sub_collections
     }
-    sub_collection_labels = {
+    sub_labels = {
         lang: {
             sub: {
                 collection: get_altlabel_collection(
@@ -146,25 +146,21 @@ def render_list_from_activities(activities, ordering, username):
         for collection in list_collections
     }
     for activity in activities:
-        activity_type = activity.type.get('source')
-        user_roles = get_user_roles(activity, username)
+        typ = activity.type.get('source')
+        roles = get_user_roles(activity, username)
 
         if (
-            activity_type in list_collection_types['document_publication']
-            and activity_type not in list_collection_types['science_to_public']
-            and activity_type
-            not in sub_collection_types['functions_practice']['journalistic_activity']
+            typ in types['document_publication']
+            and typ not in types['science_to_public']
+            and typ not in sub_types['functions_practice']['journalistic_activity']
         ):
             if (
-                activity_type
-                in sub_collection_types['document_publication']['monograph']
-                and 'author' in user_roles
+                typ in sub_types['document_publication']['monograph']
+                and 'author' in roles
             ):
                 activity_list['document_publication']['monograph'].append(activity)
-            if activity_type in sub_collection_types['document_publication'][
-                'composite_volume'
-            ] and (
-                'editor' in user_roles or 'series_and_journal_editorship' in user_roles
+            if typ in sub_types['document_publication']['composite_volume'] and (
+                'editor' in roles or 'series_and_journal_editorship' in roles
             ):
                 activity_list['document_publication']['composite_volume'].append(
                     activity
@@ -173,7 +169,7 @@ def render_list_from_activities(activities, ordering, username):
     ret = {
         collection: {
             lang: {
-                'label': list_collection_labels[lang][collection],
+                'label': labels[lang][collection],
                 'data': [],
             }
             for (lang, _ll) in settings.LANGUAGES
@@ -198,9 +194,7 @@ def render_list_from_activities(activities, ordering, username):
                     if data:
                         ret[collection][lang]['data'].append(
                             {
-                                'label': sub_collection_labels[lang][collection][
-                                    sub_col
-                                ],
+                                'label': sub_labels[lang][collection][sub_col],
                                 'data': data,
                             }
                         )
