@@ -51,10 +51,26 @@ class EntitySerializer(serializers.ModelSerializer):
         if sc_warnings:
             ret['showcase_warnings'] = sc_warnings
 
+        # we have to bring list into a format similar to that in activities based
+        # on list_ordering
+        activity_list = ret.pop('list')
+        ret['list'] = []
+        for order in instance.list_ordering:
+            if order['hidden']:
+                continue
+            if (list_id := order['id']) in activity_list:
+                # we don't want to add empty lists, but we will add them, if at least
+                # one item is available in any translation (even if another
+                # translation is empty)
+                add_list = False
+                for lang in activity_list[list_id]:
+                    if activity_list[list_id][lang]['data']:
+                        add_list = True
+                if add_list:
+                    ret['list'].append(activity_list[list_id])
+
         # now filter out the requested languages for the detail fields and lists
-        localise_detail_fields(
-            ret, self.context['request'].LANGUAGE_CODE, is_activity=False
-        )
+        localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
 
         return ret
 

@@ -40,7 +40,7 @@ def error(
     )
 
 
-def localise_detail_fields(data, lang, is_activity=True):
+def localise_detail_fields(data, lang):
     """Goes through Entity/Activity data and replaces detail fields with their
     localised version."""
 
@@ -51,9 +51,6 @@ def localise_detail_fields(data, lang, is_activity=True):
             continue
         new_data[field] = []
         iterable = data[field]
-        if not is_activity and field == 'list':
-            # TODO: create ordered list based on list_ordering and hidden property
-            iterable = data[field].values()
         for data_item in iterable:
             if data_localised := data_item.get(lang):
                 new_data[field].append(data_localised)
