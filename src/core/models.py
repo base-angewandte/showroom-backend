@@ -105,7 +105,7 @@ class Entity(AbstractShowroomObject):
             belongs_to=self, type__isnull=False
         ).filter(q_filter)
         self.list = activity_lists.render_list_from_activities(
-            activities, self.list_ordering, self.source_repo_entry_id
+            activities, self.source_repo_entry_id
         )
         self.save()
 
