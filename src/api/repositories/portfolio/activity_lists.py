@@ -59,34 +59,50 @@ auxiliary_taxonomies = {
     'general_function_and_practice': 'http://base.uni-ak.ac.at/portfolio/taxonomy/general_function_and_practice',
 }
 
+role_fields = [
+    'architecture',
+    'authors',
+    'artists',
+    'winners',
+    'granted_by',
+    'jury',
+    'music',
+    'conductors',
+    'composition',
+    'organisers',
+    'lecturers',
+    'design',
+    'commissions',
+    'editors',
+    'publishers',
+    'curators',
+    'fellow_scholar',
+    'funding',
+    'organisations',
+    'project_lead',
+    'project_partnership',
+    'software_developers',
+    'directors',
+    'contributors',
+]
+
 
 def get_data_contains_filters(username):
-    return [
-        {'architecture': [{'source': username}]},
-        {'authors': [{'source': username}]},
-        {'artists': [{'source': username}]},
-        {'winners': [{'source': username}]},
-        {'granted_by': [{'source': username}]},
-        {'jury': [{'source': username}]},
-        {'music': [{'source': username}]},
-        {'conductors': [{'source': username}]},
-        {'composition': [{'source': username}]},
-        {'organisers': [{'source': username}]},
-        {'lecturers': [{'source': username}]},
-        {'design': [{'source': username}]},
-        {'commissions': [{'source': username}]},
-        {'editors': [{'source': username}]},
-        {'publishers': [{'source': username}]},
-        {'curators': [{'source': username}]},
-        {'fellow_scholar': [{'source': username}]},
-        {'funding': [{'source': username}]},
-        {'organisations': [{'source': username}]},
-        {'project_lead': [{'source': username}]},
-        {'project_partnership': [{'source': username}]},
-        {'software_developers': [{'source': username}]},
-        {'directors': [{'source': username}]},
-        {'contributors': [{'source': username}]},
-    ]
+    return [{field: [{'source': username}]} for field in role_fields]
+
+
+def get_user_roles(activity, username):
+    roles = []
+    data = activity.source_repo_data['data']
+    for role_field in role_fields:
+        if role_field in data:
+            for contributor in data[role_field]:
+                if contributor.get('source') == username and (
+                    contrib_roles := contributor.get('roles')
+                ):
+                    for role in contrib_roles:
+                        roles.append(role['source'].split('/')[-1])
+    return roles
 
 
 def render_list_from_activities(activities, ordering, username):
@@ -131,6 +147,7 @@ def render_list_from_activities(activities, ordering, username):
     }
     for activity in activities:
         activity_type = activity.type.get('source')
+        user_roles = get_user_roles(activity, username)
 
         if (
             activity_type in list_collection_types['document_publication']
@@ -141,13 +158,17 @@ def render_list_from_activities(activities, ordering, username):
             if (
                 activity_type
                 in sub_collection_types['document_publication']['monograph']
-                and 'authors' in activity.source_repo_data['data']
-                and any(
-                    'source' in i and i['source'] == username
-                    for i in activity.source_repo_data['data']['authors']
-                )
+                and 'author' in user_roles
             ):
                 activity_list['document_publication']['monograph'].append(activity)
+            if activity_type in sub_collection_types['document_publication'][
+                'composite_volume'
+            ] and (
+                'editor' in user_roles or 'series_and_journal_editorship' in user_roles
+            ):
+                activity_list['document_publication']['composite_volume'].append(
+                    activity
+                )
 
     ret = {
         collection: {
