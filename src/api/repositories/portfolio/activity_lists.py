@@ -442,10 +442,10 @@ def render_activity(activity, lang, username):
     role_location_year = [i for i in [roles, location, year] if i]
     # The output format: [title]. [subtitle] ([type]). ([role]), [location], [year]
     ret = {
-        'value': f'{activity.title}.',
+        'value': activity.title,
         'source': activity.id,
         'attributes': [
-            f'{subtitle} ({typ}).',
+            f'{subtitle} ({typ})',
             ', '.join(role_location_year),
         ],
     }
