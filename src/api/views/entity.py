@@ -87,6 +87,11 @@ class EntityViewSet(
         return Response(serializer.data)
 
     @extend_schema(
+        methods=['GET'],
+        # TODO: check why autogeneration is doing a list instead of retrieve here
+        operation_id='api_v1_entities_list_retrieve',
+    )
+    @extend_schema(
         tags=['auth'],
         request=EntityListEditSerializer(many=True),
         responses={
