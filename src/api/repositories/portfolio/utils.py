@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import List
+
 from api.repositories.portfolio import get_preflabel
 
 role_fields = [
@@ -29,7 +32,28 @@ role_fields = [
 
 
 def get_year_list_from_activity(activity):
+    data = activity.source_repo_data['data']
+    date_fields = [key for key in data if 'date' in key]
     years = []
+    for fld in date_fields:
+        if fld == 'date':
+            years.append(year_from_date_string(data[fld]))
+        elif fld in ['date_location', 'date_location_description']:
+            for d in data[fld]:
+                years.append(year_from_date_string(d['date']))
+        elif fld == 'date_time_range_location':
+            for d in data[fld]:
+                years.append(year_from_date_string(d['date']['date']))
+        elif fld == 'date_range':
+            years.extend(years_list_from_date_range(data[fld]))
+        elif fld in [
+            'date_opening_location',
+            'date_range_location',
+            'date_range_time_range_location',
+        ]:
+            for d in data[fld]:
+                years.extend(years_list_from_date_range(d['date']))
+    years = sorted(set(years), reverse=True)
     return years
 
 
@@ -77,3 +101,21 @@ def get_user_role_dicts(activity, username):
                     for role in contrib_roles:
                         roles.append(role)
     return roles
+
+
+def year_from_date_string(dt: str) -> str:
+    return str(datetime.strptime(dt[:4], '%Y').year)
+
+
+def years_list_from_date_range(dr) -> List[str]:
+    years = []
+    if dr.get('date_from') and dr.get('date_to'):
+        date_from = year_from_date_string(dr['date_from'])
+        date_to = year_from_date_string(dr['date_to'])
+        for y in range(int(date_from), int(date_to) + 1):
+            years.append(str(y))
+    elif dr.get('date_from'):
+        years.append(year_from_date_string(dr['date_from']))
+    elif dr.get('date_to'):
+        years.append(year_from_date_string(dr['date_to']))
+    return years
