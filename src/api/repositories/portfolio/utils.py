@@ -34,7 +34,23 @@ def get_year_list_from_activity(activity):
 
 
 def get_location_list_from_activity(activity):
+    data = activity.source_repo_data['data']
+    location_fields = [key for key in data if 'location' in key]
     locations = []
+    for fld in location_fields:
+        if data.get(fld):
+            if fld == 'location':
+                for loc in data[fld]:
+                    if loc.get('label'):
+                        locations.append(loc['label'])
+            else:
+                for o in data[fld]:
+                    if o.get('location'):
+                        for loc in o['location']:
+                            if loc.get('label'):
+                                locations.append(loc['label'])
+    if locations:
+        return sorted(set(locations))
     return locations
 
 
