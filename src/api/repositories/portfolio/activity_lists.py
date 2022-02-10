@@ -1,6 +1,13 @@
 from django.conf import settings
 
 from api.repositories.portfolio import get_altlabel_collection, get_collection_members
+from api.repositories.portfolio.utils import (
+    get_location_list_from_activity,
+    get_role_label,
+    get_user_roles,
+    get_year_list_from_activity,
+    role_fields,
+)
 
 base_url = f'{settings.TAX_GRAPH}collection_'
 
@@ -57,50 +64,9 @@ sub_collections = {
     ],
 }
 
-role_fields = [
-    'architecture',
-    'authors',
-    'artists',
-    'winners',
-    'granted_by',
-    'jury',
-    'music',
-    'conductors',
-    'composition',
-    'organisers',
-    'lecturers',
-    'design',
-    'commissions',
-    'editors',
-    'publishers',
-    'curators',
-    'fellow_scholar',
-    'funding',
-    'organisations',
-    'project_lead',
-    'project_partnership',
-    'software_developers',
-    'directors',
-    'contributors',
-]
-
 
 def get_data_contains_filters(username):
     return [{field: [{'source': username}]} for field in role_fields]
-
-
-def get_user_roles(activity, username):
-    roles = []
-    data = activity.source_repo_data['data']
-    for role_field in role_fields:
-        if role_field in data:
-            for contributor in data[role_field]:
-                if contributor.get('source') == username and (
-                    contrib_roles := contributor.get('roles')
-                ):
-                    for role in contrib_roles:
-                        roles.append(role['source'].split('/')[-1])
-    return roles
 
 
 def render_list_from_activities(activities, username):
@@ -441,14 +407,14 @@ def render_list_from_activities(activities, username):
         if type(activity_list[collection]) == list:
             for (lang, _ll) in settings.LANGUAGES:
                 ret[collection][lang]['data'] = [
-                    render_activity(activity, lang)
+                    render_activity(activity, lang, username)
                     for activity in activity_list[collection]
                 ]
         else:
             for (lang, _ll) in settings.LANGUAGES:
                 for sub_col in activity_list[collection]:
                     data = [
-                        render_activity(activity, lang)
+                        render_activity(activity, lang, username)
                         for activity in activity_list[collection][sub_col]
                     ]
                     if data:
@@ -462,18 +428,24 @@ def render_list_from_activities(activities, username):
     return ret
 
 
-def render_activity(activity, lang):
+def render_activity(activity, lang, username):
     """Render an Activity into a CommonList item."""
     subtitle = '. '.join(activity.subtext) if activity.subtext else ''
     typ = activity.type['label'].get(lang)
     # TODO: gather details from source_repo_data
-    role_location_year = []
+    roles = get_user_roles(activity, username)
+    roles = [get_role_label(role, lang) for role in roles]
+    roles = ', '.join(roles)
+    roles = f'({roles})'
+    location = ', '.join(get_location_list_from_activity(activity))
+    year = ', '.join(get_year_list_from_activity(activity))
+    role_location_year = [i for i in [roles, location, year] if i]
     # The output format: [title]. [subtitle] ([type]). ([role]), [location], [year]
     ret = {
         'value': f'{activity.title}.',
         'source': activity.id,
         'attributes': [
-            f'{subtitle}({typ}).',
+            f'{subtitle} ({typ}).',
             ', '.join(role_location_year),
         ],
     }
