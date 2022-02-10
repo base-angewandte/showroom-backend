@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List
 
+from django.conf import settings
+
 from api.repositories.portfolio import get_preflabel
 
 role_fields = [
@@ -95,11 +97,14 @@ def get_user_role_dicts(activity, username):
     for role_field in role_fields:
         if role_field in data:
             for contributor in data[role_field]:
-                if contributor.get('source') == username and (
-                    contrib_roles := contributor.get('roles')
-                ):
-                    for role in contrib_roles:
-                        roles.append(role)
+                if contributor.get('source') == username:
+                    if contrib_roles := contributor.get('roles'):
+                        for role in contrib_roles:
+                            roles.append(role)
+                    else:
+                        # if the user has added themself as contributor without
+                        # explicitly assigning a role, we'll use the contributor role
+                        roles.append({'source': f'{settings.VOC_GRAPH}contributor'})
     return roles
 
 
