@@ -42,6 +42,34 @@ services:
       - showroomnet
     restart: always
 
+  showroom-rq-worker-1:
+    build: ./src
+    container_name: showroom-rq-worker-1
+    environment:
+      - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
+      - POSTGRES_USER=$SHOWROOM_DB_USER
+      - POSTGRES_DB=$SHOWROOM_DB_NAME
+    volumes_from:
+      - showroom-django
+    networks:
+      - showroomnet
+    restart: always
+    command: python manage.py rqworker --with-scheduler default
+
+  showroom-rq-worker-2:
+    build: ./src
+    container_name: showroom-rq-worker-2
+    environment:
+      - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
+      - POSTGRES_USER=$SHOWROOM_DB_USER
+      - POSTGRES_DB=$SHOWROOM_DB_NAME
+    volumes_from:
+      - showroom-django
+    networks:
+      - showroomnet
+    restart: always
+    command: python manage.py rqworker --with-scheduler high default
+
   showroom-cron:
     image: paradoxon/alpine-cron
     container_name: showroom-cron

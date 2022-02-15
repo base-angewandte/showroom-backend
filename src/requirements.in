@@ -10,11 +10,13 @@ django-debug-toolbar==3.1.1
 django-environ==0.4.5
 django-extensions==3.0.9
 django-redis==4.12.1
+django-rq==2.5.1
 django-filter==2.4.0
 djangorestframework==3.12.2
 drf-spectacular==0.15.1
 pip-tools==5.3.1
 psycopg2-binary==2.8.6
+rdflib==5.0.0  # TODO: needed by skosmos, but 6.1.1 would break concept retrieval
 shortuuid==1.0.1
 skosmos-client==0.3.0
 werkzeug==1.0.1  # for django-extensions

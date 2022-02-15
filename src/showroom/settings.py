@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
     'drf_spectacular',
+    'django_rq',
     'corsheaders',
     # Project apps
     'core',
@@ -413,6 +414,21 @@ CACHES = {
         },
     }
 }
+
+
+""" RQ worker settings """
+RQ_QUEUES = {
+    'default': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 500},
+    'high': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 14400},
+}
+
+if DEBUG or TESTING:
+    for queueConfig in iter(RQ_QUEUES.values()):
+        queueConfig['ASYNC'] = False
+
+RQ_EXCEPTION_HANDLERS = ['general.rq.handlers.exception_handler']
+
+RQ_FAILURE_TTL = 2628288  # approx. 3 month
 
 
 """ Session settings """
