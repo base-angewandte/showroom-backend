@@ -81,8 +81,6 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        # TODO: move to worker job after activities are updated
-        instance.render_list()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

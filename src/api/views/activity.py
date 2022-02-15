@@ -69,6 +69,12 @@ class ActivityViewSet(
         # built. TODO: refactor this to an async worker
         index_activity(serializer.instance)
 
+        if instance.belongs_to:
+            instance.belongs_to.enqueue_list_render_job()
+        else:
+            # TODO: start a job to fetch the entity from CAS/UserPreferences
+            pass
+
         response = {
             'created': [],
             'updated': [],

@@ -1,3 +1,8 @@
+from datetime import timedelta
+
+from django_rq.queues import get_queue
+from rq.registry import ScheduledJobRegistry
+
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.indexes import GinIndex
@@ -108,6 +113,23 @@ class Entity(AbstractShowroomObject):
             activities, self.source_repo_entry_id
         )
         self.save()
+
+    def enqueue_list_render_job(self):
+        job_id = f'entity_list_render_{self.id}'
+        queue = get_queue('default')
+        registry = ScheduledJobRegistry(queue=queue)
+        # in case this job gets scheduled several times before it is being executed
+        # (e.g. when several activities are pushed for one entity), we only want
+        # one single job scheduled after the last call to this function. so we'll
+        # delete an older job if there was already one scheduled, before we schedule
+        # a new job
+        if job_id in registry:
+            registry.remove(job_id)
+        queue.enqueue_in(
+            timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+            self.render_list,
+            job_id=job_id,
+        )
 
 
 class Activity(AbstractShowroomObject):
