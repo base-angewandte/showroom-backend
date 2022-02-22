@@ -69,8 +69,8 @@ class ActivityViewSet(
         # built. TODO: refactor this to an async worker
         index_activity(serializer.instance)
 
-        if instance and instance.belongs_to:
-            instance.belongs_to.enqueue_list_render_job()
+        if serializer.instance.belongs_to:
+            serializer.instance.belongs_to.enqueue_list_render_job()
         else:
             # TODO: start a job to fetch the entity from CAS/UserPreferences
             pass
@@ -122,7 +122,11 @@ class ActivityViewSet(
             )
         except Activity.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        rerender_list = True if activity.belongs_to else False
         self.perform_destroy(activity)
+        if rerender_list:
+            print('activity deleted. scheduling list endering')
+            activity.belongs_to.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
