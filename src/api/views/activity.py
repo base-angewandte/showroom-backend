@@ -125,7 +125,6 @@ class ActivityViewSet(
         rerender_list = True if activity.belongs_to else False
         self.perform_destroy(activity)
         if rerender_list:
-            print('activity deleted. scheduling list endering')
             activity.belongs_to.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
