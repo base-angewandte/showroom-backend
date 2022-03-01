@@ -108,7 +108,6 @@ class MediaViewSet(
         },
     )
     def destroy(self, request, *args, **kwargs):
-        print(kwargs)
         try:
             instance = Media.objects.get(
                 source_repo_media_id=kwargs['pk'],
