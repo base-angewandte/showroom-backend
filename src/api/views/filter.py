@@ -10,7 +10,8 @@ from core.models import Activity
 static_filters = [
     {
         'id': 'activities',
-        'type': 'text',
+        'type': 'chips',
+        'freetext_allowed': True,
         'label': {
             'en': 'Activities',
             'de': 'Aktivitäten',
@@ -19,7 +20,8 @@ static_filters = [
     },
     # {
     #     'id': 'persons',
-    #     'type': 'text',
+    #     'type': 'chips',
+    #     'freetext_allowed': True,
     #     'label': {
     #         'en': 'Persons',
     #         'de': 'Personen',
@@ -28,7 +30,8 @@ static_filters = [
     # },
     # {
     #     'id': 'locations',
-    #     'type': 'text',
+    #     'type': 'chips',
+    #     'freetext_allowed': True,
     #     'label': {
     #         'en': 'Locations',
     #         'de': 'Orte',
@@ -55,7 +58,8 @@ static_filters = [
     },
     # {
     #     'id': 'albums',
-    #     'type': 'text',
+    #     'type': 'chips',
+    #     'freetext_allowed': True,
     #     'label': {
     #         'en': 'Albums',
     #         'de': 'Alben',
@@ -64,7 +68,8 @@ static_filters = [
     # },
     # {
     #     'id': 'current_activities',
-    #     'type': 'text',
+    #     'type': 'chips',
+    #     'freetext_allowed': True,
     #     'label': {
     #         'en': 'Current activities',
     #         'de': 'Aktuelle Aktivitäten',
