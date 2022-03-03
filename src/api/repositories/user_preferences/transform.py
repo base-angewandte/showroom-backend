@@ -29,3 +29,25 @@ def transform_data(data, schema):
         }
     }
     return transformed
+
+
+def update_entity_from_source_repo_data(entity):
+    data = entity.source_repo_data
+    entity.title = data.get('name')
+    subtext = []
+    # TODO: add position, title
+    subtext.append(entity.source_repo.label_institution)
+    # TODO: add department
+    entity.subtext = subtext
+
+    # now assemble und update the primary_field data
+    # TODO: contact details (address from LDAP)
+    # TODO: skills and expertise
+    # TODO: GND, VIAF, ORCID, Recherche (user profile incl. link)
+    # TODO: e-mail
+    # TODO: URL / website
+
+    # the secondary_field only contains the bio
+    # TODO: bio
+
+    entity.save()

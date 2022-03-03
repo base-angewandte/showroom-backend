@@ -11,6 +11,9 @@ from django.db import models
 from django.db.models import Q
 
 from api.repositories.portfolio import activity_lists
+from api.repositories.user_preferences.transform import (
+    update_entity_from_source_repo_data,
+)
 from core.validators import (
     validate_entity_list,
     validate_list_ordering,
@@ -130,6 +133,11 @@ class Entity(AbstractShowroomObject):
             self.render_list,
             job_id=job_id,
         )
+
+    def update_from_repo_data(self):
+        # this functionality is located in the api.repositories.user_preferences module so we could
+        # later allow for different backends providing their own transformation function
+        update_entity_from_source_repo_data(self)
 
 
 class Activity(AbstractShowroomObject):
