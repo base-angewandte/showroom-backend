@@ -53,6 +53,7 @@ class AbstractShowroomObject(AbstractBaseModel):
     #              reassign all objects to another repo first, before a repo can be deleted
     source_repo = models.ForeignKey(SourceRepository, on_delete=models.PROTECT)
     source_repo_entry_id = models.CharField(max_length=255)
+    date_synced = models.DateTimeField(editable=False, null=True)
 
     class Meta:
         abstract = True
