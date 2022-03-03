@@ -64,9 +64,13 @@ DOCKER = env.bool('DOCKER', default=True)
 
 SITE_URL = env.str('SITE_URL')
 
+DISABLE_USER_REPO = env.bool('DISABLE_USER_REPO', default=False)
+
 CAS_API_BASE = env.str('CAS_API_BASE', default=None)
 
 DEFAULT_USER_REPO = env.str('DEFAULT_USER_REPO', default=None)
+
+USER_REPO_CACHE_TIME = env.int('USER_REPO_CACHE_TIME', default=15)
 
 USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY', default=None)
 

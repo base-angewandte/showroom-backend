@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 
+from django.conf import settings
+
 from api.permissions import ActivityPermission
 from api.repositories.portfolio.search_indexer import index_activity
 from api.repositories.user_preferences.sync import pull_user_data
@@ -72,19 +74,19 @@ class ActivityViewSet(
         # built. TODO: refactor this to an async worker
         index_activity(serializer.instance)
 
-        if serializer.instance.belongs_to:
-            serializer.instance.belongs_to.enqueue_list_render_job()
-            # TODO: make the caching time configurable
-            date_mark = datetime.today() + timedelta(minutes=15)
-            if (
-                serializer.instance.belongs_to.date_changed.timestamp()
-                < date_mark.timestamp()
-            ):
+        if not settings.DISABLE_USER_REPO:
+            if serializer.instance.belongs_to:
+                serializer.instance.belongs_to.enqueue_list_render_job()
+                t_synced = serializer.instance.belongs_to.date_synced
+                t_cache = datetime.today() - timedelta(
+                    minutes=settings.USER_REPO_CACHE_TIME
+                )
+                if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
+                    # TODO: convert to job
+                    pull_user_data(serializer.instance.source_repo_owner_id)
+            else:
                 # TODO: convert to job
                 pull_user_data(serializer.instance.source_repo_owner_id)
-        else:
-            # TODO: convert to job
-            pull_user_data(serializer.instance.source_repo_owner_id)
 
         response = {
             'created': [],

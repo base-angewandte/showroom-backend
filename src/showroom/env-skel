@@ -68,14 +68,18 @@ POSTGRES_PASSWORD=password
 ## the standard port is already in use by another container.
 # REDIS_PORT=6379
 
-# User Preferences data config parameters, e.g. http://127.0.0.1:8000/api/v1/
+## If no entity syncing should be done, this has to be set to True
+# DISABLE_USER_REPO=False
+
+## User Preferences data config parameters, e.g. http://127.0.0.1:8000/api/v1/
 # CAS_API_BASE=
 # USER_PREFERENCES_API_KEY=
+## Number of minutes until an entity will be resynced upon request
+# USER_REPO_CACHE_TIME=15
 
-# Default user repository url, e.g. https://basedev.uni-ak.ac.at/
+## Default repository id that users will be associated with
 # DEFAULT_USER_REPO=
 
-#
 ## The default limit for a search, if now explicit limit parameter is set
 # SEARCH_LIMIT=100
 
