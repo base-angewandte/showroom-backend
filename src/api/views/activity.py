@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -6,6 +8,7 @@ from rest_framework.response import Response
 
 from api.permissions import ActivityPermission
 from api.repositories.portfolio.search_indexer import index_activity
+from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
@@ -71,9 +74,17 @@ class ActivityViewSet(
 
         if serializer.instance.belongs_to:
             serializer.instance.belongs_to.enqueue_list_render_job()
+            # TODO: make the caching time configurable
+            date_mark = datetime.today() + timedelta(minutes=15)
+            if (
+                serializer.instance.belongs_to.date_changed.timestamp()
+                < date_mark.timestamp()
+            ):
+                # TODO: convert to job
+                pull_user_data(serializer.instance.source_repo_owner_id)
         else:
-            # TODO: start a job to fetch the entity from CAS/UserPreferences
-            pass
+            # TODO: convert to job
+            pull_user_data(serializer.instance.source_repo_owner_id)
 
         response = {
             'created': [],
