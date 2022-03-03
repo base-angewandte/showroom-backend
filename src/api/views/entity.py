@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
@@ -12,6 +14,7 @@ from django.utils.text import slugify
 
 from api.permissions import EntityEditPermission
 from api.repositories.portfolio import activity_lists
+from api.repositories.user_preferences import sync
 from api.serializers.entity import (
     EntityEditSerializer,
     EntityListEditSerializer,
@@ -81,6 +84,19 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
+        if not settings.DISABLE_USER_REPO:
+            t_synced = instance.date_synced
+            t_cache = datetime.today() - timedelta(
+                minutes=settings.USER_REPO_CACHE_TIME
+            )
+            if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
+                # TODO: discuss whether this should be executed directly or relegated to an async
+                #       job. in the latter case the current request would be served the cached data
+                try:
+                    sync.pull_user_data(instance.source_repo_entry_id)
+                except sync.UserPrefError:
+                    # TODO: discuss what to do if the sync fails but we already have some data
+                    pass
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
