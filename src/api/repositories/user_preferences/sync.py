@@ -57,14 +57,13 @@ def pull_user_data(username, update_entry=True):
             )
             entity.source_repo_data = result
             entity.save()
-            entity.update_from_repo_data()
-            entity.update_activities()
         except Entity.DoesNotExist:
             entity = Entity.objects.create(
                 source_repo_entry_id=username,
                 source_repo=default_user_repo,
                 source_repo_data=result,
             )
-            entity.update_from_repo_data()
+        entity.update_from_repo_data()
+        entity.update_activities()
 
     return result
