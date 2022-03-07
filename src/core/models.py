@@ -135,6 +135,24 @@ class Entity(AbstractShowroomObject):
             job_id=job_id,
         )
 
+    def update_activities(self):
+        """Associate all activities belonging to this entry.
+
+        Checks for all activities which have a source_repo_owner_id set
+        to this entity's source_repo_entry_id but are not yet associated
+        with the entity in Showroom (e.g. because the activities have
+        been pushed before the entity was created). Those activities
+        will then be updated so their belongs_to key points to the
+        current entity. Also a list render job will be scheduled
+        """
+        # TODO: discuss: should we generally update all activities or check for those where
+        #       belongs_to is not yet set?
+        activities = Activity.objects.filter(
+            source_repo_owner_id=self.source_repo_entry_id
+        )
+        activities.update(belongs_to=self)
+        self.enqueue_list_render_job()
+
     def update_from_repo_data(self):
         # this functionality is located in the api.repositories.user_preferences module so we could
         # later allow for different backends providing their own transformation function
