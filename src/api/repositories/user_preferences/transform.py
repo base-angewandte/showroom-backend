@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime
+
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -51,5 +52,5 @@ def update_entity_from_source_repo_data(entity):
     # the secondary_field only contains the bio
     # TODO: bio
 
-    entity.date_synced = datetime.now()
+    entity.date_synced = timezone.now()
     entity.save()
