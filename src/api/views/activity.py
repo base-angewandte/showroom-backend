@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 
+from django_rq import get_queue
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
+from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
 
@@ -76,17 +78,36 @@ class ActivityViewSet(
 
         if not settings.DISABLE_USER_REPO:
             if serializer.instance.belongs_to:
+                # in case the entity is already in the system, we'll sync it from UP
+                # if the current version is older than the configured sync time
                 serializer.instance.belongs_to.enqueue_list_render_job()
                 t_synced = serializer.instance.belongs_to.date_synced
                 t_cache = datetime.today() - timedelta(
                     minutes=settings.USER_REPO_CACHE_TIME
                 )
                 if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
-                    # TODO: convert to job
-                    pull_user_data(serializer.instance.source_repo_owner_id)
+                    queue = get_queue('default')
+                    queue.enqueue(
+                        pull_user_data,
+                        username=serializer.instance.source_repo_owner_id,
+                    )
+
             else:
-                # TODO: convert to job
-                pull_user_data(serializer.instance.source_repo_owner_id)
+                # in case the entity is not in the system yet, we fetch it from UP,
+                # but with a small delay, so in case many activities are pushed at
+                # once, the sync job for the entity is only executed after the last
+                # activity was pushed
+                job_id = f'entity_sync_{serializer.instance.source_repo_owner_id}'
+                queue = get_queue('default')
+                registry = ScheduledJobRegistry(queue=queue)
+                if job_id in registry:
+                    registry.remove(job_id)
+                queue.enqueue_in(
+                    timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+                    pull_user_data,
+                    username=serializer.instance.source_repo_owner_id,
+                    job_id=job_id,
+                )
 
         response = {
             'created': [],
