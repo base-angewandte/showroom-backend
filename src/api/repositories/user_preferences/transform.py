@@ -55,7 +55,8 @@ def update_entity_from_source_repo_data(entity):
             skills[lang] = {
                 'label': label,
                 'data': [
-                    {'value': skill['label'].get(lang)} for skill in data['skills']
+                    {'value': skill['label'].get(lang), 'source': ''}
+                    for skill in data['skills']
                 ],
             }
         primary_details.append(skills)
@@ -109,7 +110,7 @@ def update_entity_from_source_repo_data(entity):
             contact[lang]['data'].append(
                 {
                     'label': contact_labels['gnd_viaf'][lang],
-                    'value': f'https://d-nb.info/gnd/{gnd_viaf}',
+                    'value': gnd_viaf,
                     'url': f'https://d-nb.info/gnd/{gnd_viaf}',
                 }
             )
@@ -117,7 +118,7 @@ def update_entity_from_source_repo_data(entity):
             contact[lang]['data'].append(
                 {
                     'label': contact_labels['orcid'][lang],
-                    'value': f'https://orcid.org/{orcid}',
+                    'value': orcid,
                     'url': f'https://orcid.org/{orcid}',
                 },
             )
