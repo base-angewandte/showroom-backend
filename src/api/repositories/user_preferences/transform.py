@@ -2,6 +2,8 @@ import logging
 
 from django.utils import timezone
 
+from api.repositories.portfolio import LANGUAGES, get_preflabel
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,20 +39,89 @@ def update_entity_from_source_repo_data(entity):
     data = entity.source_repo_data
     entity.title = data.get('name')
     subtext = []
-    # TODO: add position, title
+    # TODO: design says: add position, title here. but: where do we get that from?
     subtext.append(entity.source_repo.label_institution)
-    # TODO: add department
+    # TODO: design says: add department here. but: not yet implemented in UP
     entity.subtext = subtext
 
-    # now assemble und update the primary_field data
-    # TODO: contact details (address from LDAP)
-    # TODO: skills and expertise
-    # TODO: GND, VIAF, ORCID, Recherche (user profile incl. link)
-    # TODO: e-mail
-    # TODO: URL / website
-
-    # the secondary_field only contains the bio
-    # TODO: bio
-
+    # now assemble und update the primary_details data
+    primary_details = []
+    # add skills and expertise, if there are any set
+    if data.get('skills'):
+        skills = {}
+        for lang in LANGUAGES:
+            # TODO: use skills concept as soon as it is implemented in the vocabulary
+            label = 'Expertise'
+            skills[lang] = {
+                'label': label,
+                'data': [
+                    {'value': skill['label'].get(lang)} for skill in data['skills']
+                ],
+            }
+        primary_details.append(skills)
+    # add contact data (includes, location, e-mail, URL, and GND/VIAF and ORCID links)
+    contact = {}
+    # TODO: adapt after User Preferences labels are added to the vocabulary
+    contact_labels = {
+        'contact': {'en': 'Contact', 'de': 'Kontakt'},
+        'location': {
+            'en': get_preflabel('location', lang='en').capitalize(),
+            'de': get_preflabel('location', lang='de').capitalize(),
+        },
+        'tel': {'en': 'Tel', 'de': 'Tel'},
+        'mail': {'en': 'E-mail', 'de': 'E-Mail'},
+        'website': {'en': 'Website', 'de': 'Website'},
+        'gnd_viaf': {'en': 'GND/VIAF', 'de': 'GND/VIAF'},
+        'orcid': {'en': 'ORCID', 'de': 'ORCID'},
+    }
+    for lang in LANGUAGES:
+        # TODO: use contact concept as soon as it is implemented in the vocabulary
+        label = get_preflabel('location', lang=lang).capitalize()
+        if lang == 'en':
+            label = 'Contact'
+        elif lang == 'de':
+            label = 'Kontakt'
+        contact[lang] = {
+            'label': label,
+            'data': [],
+        }
+        contact[lang]['data'].append(
+            {'label': contact_labels['location'][lang], 'value': data.get('location')},
+        )
+        if email := data.get('contact_email'):
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['mail'][lang],
+                    'value': email,
+                    'url': f'mailto:{email}',
+                },
+            )
+        # TODO: phone would be next in terms of design, but where does this come from?
+        if website := data.get('website'):
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['website'][lang],
+                    'value': website,
+                    'url': website,
+                },
+            )
+        if gnd_viaf := data.get('gnd_viaf'):
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['gnd_viaf'][lang],
+                    'value': f'https://d-nb.info/gnd/{gnd_viaf}',
+                    'url': f'https://d-nb.info/gnd/{gnd_viaf}',
+                }
+            )
+        if orcid := data.get('orcid_pid'):
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['orcid'][lang],
+                    'value': f'https://orcid.org/{orcid}',
+                    'url': f'https://orcid.org/{orcid}',
+                },
+            )
+    primary_details.append(contact)
+    entity.primary_details = primary_details
     entity.date_synced = timezone.now()
     entity.save()
