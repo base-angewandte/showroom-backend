@@ -44,22 +44,15 @@ def update_entity_from_source_repo_data(entity):
     # TODO: design says: add department here. but: not yet implemented in UP
     entity.subtext = subtext
 
+    # add skills and expertise (if there are any set)
+    expertise = {}
+    if skills := data.get('skills'):
+        for lang in LANGUAGES:
+            expertise[lang] = [skill['label'].get(lang) for skill in skills]
+    entity.expertise = expertise
+
     # now assemble und update the primary_details data
     primary_details = []
-    # add skills and expertise, if there are any set
-    if data.get('skills'):
-        skills = {}
-        for lang in LANGUAGES:
-            # TODO: use skills concept as soon as it is implemented in the vocabulary
-            label = 'Expertise'
-            skills[lang] = {
-                'label': label,
-                'data': [
-                    {'value': skill['label'].get(lang), 'source': ''}
-                    for skill in data['skills']
-                ],
-            }
-        primary_details.append(skills)
     # add contact data (includes, location, e-mail, URL, and GND/VIAF and ORCID links)
     contact = {}
     # TODO: adapt after User Preferences labels are added to the vocabulary

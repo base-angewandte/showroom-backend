@@ -69,6 +69,9 @@ class EntitySerializer(serializers.ModelSerializer):
                 if add_list:
                     ret['list'].append(activity_list[list_id])
 
+        # return the localised version of the expertise
+        ret['expertise'] = ret['expertise'].get(self.context['request'].LANGUAGE_CODE)
+
         # now filter out the requested languages for the detail fields and lists
         localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
 
