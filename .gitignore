@@ -135,6 +135,7 @@ dmypy.json
 
 ## PyCharm
 .idea/
+.editorconfig
 
 ## Visual Studio Code
 .vscode/
