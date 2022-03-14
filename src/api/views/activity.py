@@ -108,6 +108,11 @@ class ActivityViewSet(
                     username=serializer.instance.source_repo_owner_id,
                     job_id=job_id,
                 )
+        # in case the user repo is turned off, we nevertheless want to check, if there
+        # is already an entity in the system, for which we can generate a new list
+        else:
+            if serializer.instance.belongs_to:
+                serializer.instance.belongs_to.enqueue_list_render_job()
 
         response = {
             'created': [],
