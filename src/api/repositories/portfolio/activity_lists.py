@@ -167,7 +167,8 @@ def render_list_from_activities(activities, username):
                 activity_list['document_publication']['review'].append(activity)
             # - general documents/publications
             if (
-                activity not in activity_list['document_publication']['monograph']
+                typ in types['document_publication']
+                and activity not in activity_list['document_publication']['monograph']
                 and activity
                 not in activity_list['document_publication']['composite_volume']
                 and activity not in activity_list['document_publication']['article']
