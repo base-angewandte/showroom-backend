@@ -84,7 +84,7 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        if not settings.DISABLE_USER_REPO:
+        if not settings.DISABLE_USER_REPO and instance.type == Entity.PERSON:
             t_synced = instance.date_synced
             t_cache = datetime.today() - timedelta(
                 minutes=settings.USER_REPO_CACHE_TIME
