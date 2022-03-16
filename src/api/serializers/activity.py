@@ -1,6 +1,3 @@
-import sys
-from traceback import print_tb
-
 from rest_framework import serializers
 
 from django.conf import settings
@@ -98,16 +95,9 @@ class ActivitySerializer(serializers.ModelSerializer):
                 code=500,
             )
         except Exception as e:
-            if settings.DEBUG:
-                exc = sys.exc_info()
-                logger.error(
-                    f'Caught unexpected exception when trying to transform repo data: {e} ({exc[0]})'
-                )
-                print_tb(exc[2])
-            else:
-                logger.error(
-                    f'Caught unexpected exception when trying to transform repo data: {e}'
-                )
+            logger.exception(
+                'Caught unexpected exception when trying to transform repo data'
+            )
             # TODO: check why we the 500 response code is ignored and turned into a 400
             raise serializers.ValidationError(
                 {'server error': f'An unexpected error happened: {e}'},
