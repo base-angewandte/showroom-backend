@@ -301,9 +301,11 @@ def get_combined_locations(data):
             if locations := item.get('location'):
                 for location in locations:
                     loc = {
-                        'coordinates': location.get('geometry').get('coordinates'),
                         'data': [location.get('label')],
                     }
+                    if geometry := location.get('geometry'):
+                        if coordinates := geometry.get('coordinates'):
+                            loc['coordinates'] = coordinates
                     if street := location.get('street'):
                         if hn := location.get('house_number'):
                             street = f'{street} {hn}'
