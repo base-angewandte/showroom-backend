@@ -30,7 +30,7 @@ restart-gunicorn:
 	docker-compose exec showroom-django bash -c 'kill -HUP `cat /var/run/django.pid`'
 
 restart-rq:
-    docker-compose restart showroom-rq-worker-1 showroom-rq-worker-2
+	docker-compose restart showroom-rq-worker-1 showroom-rq-worker-2
 
 reload: restart-gunicorn restart-rq
 
