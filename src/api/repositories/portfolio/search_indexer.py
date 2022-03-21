@@ -23,10 +23,11 @@ def index_activity(activity):
             indexed[lang].append(subtitle)
         if texts := data.get('texts'):
             for text in texts:
-                for text_data in text.get('data'):
-                    ln = text_data['language']['source'].split('/')[-1]
-                    if ln == lang:
-                        indexed[lang].append(text_data.get('text'))
+                if type(text) is dict:
+                    for text_data in text.get('data'):
+                        ln = text_data['language']['source'].split('/')[-1]
+                        if ln == lang:
+                            indexed[lang].append(text_data.get('text'))
 
     # TODO: should type and keywords be added here as well?
 
