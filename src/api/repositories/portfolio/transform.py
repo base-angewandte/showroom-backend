@@ -1,4 +1,5 @@
 import logging
+import re
 
 from django.conf import settings
 from django.utils.text import slugify
@@ -1497,36 +1498,43 @@ def get_publisher_place_date(data):
     if not (inner_data := data.get('data')):
         return None
 
-    line = ''
+    value_parts = []
     if publishers := inner_data.get('publishers'):
         p_list = [p.get('label') for p in publishers]
-        line = ', '.join(p_list)
+        value_parts.append(', '.join(p_list))
 
     if locations := inner_data.get('location'):
         l_list = [loc.get('label') for loc in locations]
-        line = f'{line}, {", ".join(l_list)}'
+        value_parts.append(', '.join(l_list))
 
-    if date := inner_data.get('date'):
-        line = f'{line}, {date}'
+    date = inner_data.get('date')
 
-    if not line:
+    if not value_parts and not date:
         return None
 
     transformed = {}
     for lang in LANGUAGES:
-        if not publishers:
-            label = (
-                get_preflabel('date', lang=lang)
-                + '/'
-                + get_preflabel('location', lang=lang)
-            )
-        elif len(publishers) > 1:
-            label = get_altlabel('publisher', lang=lang)
+        if date:
+            value = ', '.join(value_parts + [transform_api_date(date, lang)])
         else:
-            label = get_preflabel('publisher', lang=lang)
+            value = ', '.join(value_parts)
+
+        label_parts = []
+        if publishers:
+            if len(publishers) > 1:
+                label_parts.append(get_altlabel('publisher', lang=lang).capitalize())
+            else:
+                label_parts.append(get_preflabel('publisher', lang=lang).capitalize())
+        if locations:
+            if len(locations) > 1:
+                label_parts.append(get_altlabel('location', lang=lang).capitalize())
+            else:
+                label_parts.append(get_preflabel('location', lang=lang).capitalize())
+        if date:
+            label_parts.append(get_preflabel('date', lang=lang).capitalize())
         transformed[lang] = {
-            'label': label,
-            'data': line,
+            'label': ', '.join(label_parts),
+            'data': value,
         }
 
     return transformed
@@ -1810,6 +1818,15 @@ def list_published_in(data):
             transformed[lang] = {'label': label, 'data': lines}
 
     return transformed
+
+
+def transform_api_date(date, lang):
+    if re.match(r'^[0-9]{4}$', date):
+        return date
+    if re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', date):
+        # TODO: tbd: display localised date version
+        return f'{date[8:]}.{date[5:7]}.{date[0:4]}'
+    return date
 
 
 def transform_entity(entity):
