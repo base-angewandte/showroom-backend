@@ -2,7 +2,7 @@ import logging
 
 from rest_framework import serializers
 
-from core.models import Activity, Album
+from core.models import ShowroomObject
 
 logger = logging.getLogger(__name__)
 
@@ -11,22 +11,10 @@ def get_serialized_showcase_and_warnings(showcase):
     serialized = []
     warnings = []
     for id, showcase_type in showcase:
-        if showcase_type == 'activity':
-            try:
-                item = Activity.objects.get(pk=id)
-            except Activity.DoesNotExist:
-                warnings.append(f'Activity {id} does not exist.')
-                continue
-        elif showcase_type == 'album':
-            try:
-                item = Album.objects.get(pk=id)
-            except Album.DoesNotExist:
-                warnings.append(f'Album {id} does not exist.')
-                continue
-        else:
-            # in case something else was stored, we want to log an error, but
-            # continue assembling the showcase output
-            logger.error(f'Invalid showcase object: {id}, {showcase_type}')
+        try:
+            item = ShowroomObject.objects.get(pk=id)
+        except ShowroomObject.DoesNotExist:
+            warnings.append(f'{showcase_type} {id} does not exist.')
             continue
 
         serializer = ShowcaseSerializer(item)
@@ -65,11 +53,13 @@ class ShowcaseSerializer(serializers.Serializer):
     def to_representation(self, instance):
         ret = {
             'id': instance.id,
-            'showcase_type': 'activity' if type(instance) == Activity else 'album',
+            'showcase_type': 'activity'
+            if instance.type == ShowroomObject.ACTIVITY
+            else 'album',
             'title': instance.title,
             'previews': [],
         }
-        if type(instance) == Activity:
+        if instance.type == ShowroomObject.ACTIVITY:
             ret['subtext'] = '. '.join(instance.subtext)
             ret['additional'] = instance.get_showcase_date_info()
             ret['type'] = instance.type
@@ -92,7 +82,7 @@ class ShowcaseSerializer(serializers.Serializer):
             if not ret['previews'] and alternative_preview:
                 widths = ['640w', '768w', '1024w', '1366w', '1600w', '1632w']
                 ret['previews'] = [{w: alternative_preview} for w in widths]
-        elif type(instance) == Album:
+        elif instance.type == ShowroomObject.ALBUM:
             ret['subtext'] = instance.subtitle
             ret['total'] = instance.activities.count()
         return ret

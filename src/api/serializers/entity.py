@@ -2,24 +2,18 @@ from rest_framework import serializers
 
 from django.utils.text import slugify
 
-from core.models import Entity
+from core.models import ShowroomObject
 
 from ..repositories.portfolio import activity_lists
-from . import abstract_showroom_object_fields
+from . import showroom_object_fields
 from .generic import CommonTextSerializer, localise_detail_fields
 from .showcase import get_serialized_showcase_and_warnings
 
 
 class EntitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Entity
-        fields = abstract_showroom_object_fields + [
-            'type',
-            'expertise',
-            'showcase',
-            'photo',
-            'parent',
-        ]
+        model = ShowroomObject
+        fields = showroom_object_fields
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -29,18 +23,20 @@ class EntitySerializer(serializers.ModelSerializer):
             ret['id'] = f'entity-{instance.id}'
         else:
             ret['id'] = f'{slugify(instance.title)}-{instance.id}'
-        if instance.parent:
-            if not instance.parent.title:
-                ret['parent'] = f'entity-{instance.parent.id}'
+        if instance.belongs_to:
+            if not instance.belongs_to.title:
+                ret['parent'] = f'entity-{instance.belongs_to.id}'
             else:
-                ret['parent'] = f'{slugify(instance.parent.title)}-{instance.parent.id}'
+                ret[
+                    'parent'
+                ] = f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}'
 
         # TODO: refactor this (also in get_serach_item(), to be configurable)
-        if instance.type == 'P':
+        if instance.type == ShowroomObject.PERSON:
             ret['type'] = 'person'
-        elif instance.type == 'I':
+        elif instance.type == ShowroomObject.INSTITUTION:
             ret['type'] = 'institution'
-        elif instance.type == 'D':
+        elif instance.type == ShowroomObject.DEPARTMENT:
             ret['type'] = 'department'
 
         # make sure to only provide an empty list if showcase is None or {}

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from api.permissions import ActivityPermission
 from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
-from core.models import Activity, Media
+from core.models import Media, ShowroomObject
 
 
 class MediaViewSet(
@@ -36,8 +36,10 @@ class MediaViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            activity = Activity.objects.get(source_repo_entry_id=source_repo_entry_id)
-        except Activity.DoesNotExist:
+            activity = ShowroomObject.objects.get(
+                source_repo_object_id=source_repo_entry_id
+            )
+        except ShowroomObject.DoesNotExist:
             return Response(
                 {
                     'source_repo_entry_id': [

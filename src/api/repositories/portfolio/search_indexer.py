@@ -3,7 +3,7 @@ import re
 
 from django.conf import settings
 
-from core.models import ActivitySearch, ActivitySearchDateRanges, ActivitySearchDates
+from core.models import DateRangeSearchIndex, DateSearchIndex, TextSearchIndex
 
 from . import get_schema
 from .mapping import map_indexer
@@ -45,13 +45,15 @@ def index_activity(activity):
 
     for lang, values in indexed.items():
         try:
-            search_index = ActivitySearch.objects.get(activity=activity, language=lang)
-        except ActivitySearch.DoesNotExist:
+            search_index = TextSearchIndex.objects.get(
+                showroom_object=activity, language=lang
+            )
+        except TextSearchIndex.DoesNotExist:
             search_index = False
 
         if not search_index:
-            ActivitySearch.objects.create(
-                activity=activity, language=lang, text='; '.join(values)
+            TextSearchIndex.objects.create(
+                showroom_object=activity, language=lang, text='; '.join(values)
             )
         else:
             search_index.text = '; '.join(values)
@@ -94,16 +96,16 @@ def index_activity(activity):
                 if date := dl.get('date'):
                     append_date(date.get('date'), dates, date_ranges)
         # clear all old search index values for this activity
-        ActivitySearchDates.objects.filter(activity=activity).delete()
-        ActivitySearchDateRanges.objects.filter(activity=activity).delete()
+        DateSearchIndex.objects.filter(showroom_object=activity).delete()
+        DateRangeSearchIndex.objects.filter(showroom_object=activity).delete()
         # store the collected dates and date ranges as new search index values
-        ActivitySearchDates.objects.bulk_create(
-            [ActivitySearchDates(activity=activity, date=date) for date in dates]
+        DateSearchIndex.objects.bulk_create(
+            [DateSearchIndex(showroom_object=activity, date=date) for date in dates]
         )
-        ActivitySearchDateRanges.objects.bulk_create(
+        DateRangeSearchIndex.objects.bulk_create(
             [
-                ActivitySearchDateRanges(
-                    activity=activity, date_from=dr[0], date_to=dr[1]
+                DateRangeSearchIndex(
+                    showroom_object=activity, date_from=dr[0], date_to=dr[1]
                 )
                 for dr in date_ranges
             ]

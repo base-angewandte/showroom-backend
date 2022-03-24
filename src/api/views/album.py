@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from api.serializers.album import AlbumSerializer
 from api.serializers.generic import Responses
-from core.models import Album
+from core.models import ShowroomObject
 
 
 @extend_schema_view(
@@ -45,7 +45,7 @@ from core.models import Album
     update=extend_schema(exclude=True),
 )
 class AlbumViewSet(viewsets.ModelViewSet):
-    queryset = Album.objects.all()
+    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ALBUM)
     serializer_class = AlbumSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 

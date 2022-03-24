@@ -4,7 +4,7 @@ import re
 from django.conf import settings
 from django.utils.text import slugify
 
-from core.models import Entity
+from core.models import ShowroomObject
 
 from . import (
     LANGUAGES,
@@ -1832,12 +1832,12 @@ def transform_api_date(date, lang):
 def transform_entity(entity):
     if source_repo_entity_id := entity.get('source'):
         try:
-            e = Entity.objects.get(source_repo_entry_id=source_repo_entity_id)
+            e = ShowroomObject.objects.get(source_repo_entry_id=source_repo_entity_id)
             return {
                 'value': e.title,
                 'source': f'{slugify(e.title)}-{e.id}',
             }
-        except Entity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             pass
     return {
         'value': entity['label'],

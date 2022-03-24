@@ -24,7 +24,7 @@ from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
 from api.views.search import CsrfExemptSessionAuthentication
-from core.models import Activity, Album, Entity
+from core.models import ShowroomObject
 from core.validators import validate_showcase
 
 
@@ -59,7 +59,13 @@ class EntityViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Entity.objects.all()
+    queryset = ShowroomObject.objects.filter(
+        type__in=[
+            ShowroomObject.PERSON,
+            ShowroomObject.DEPARTMENT,
+            ShowroomObject.INSTITUTION,
+        ]
+    )
     serializer_class = EntitySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     # we only want partial updates enabled, therefore removing put
@@ -84,7 +90,7 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        if not settings.DISABLE_USER_REPO and instance.type == Entity.PERSON:
+        if not settings.DISABLE_USER_REPO and instance.type == ShowroomObject.PERSON:
             t_synced = instance.date_synced
             t_cache = datetime.today() - timedelta(
                 minutes=settings.USER_REPO_CACHE_TIME
@@ -144,7 +150,7 @@ class EntityViewSet(
                     data.append({'id': schema, 'hidden': True})
 
             # update entity
-            instance.list_ordering = data
+            instance.entitydetails.list_ordering = data
             instance.save()
 
             return Response(
@@ -302,16 +308,10 @@ def get_rendered_edit_showcase(showcase, include_details=False):
             if include_details:
                 sc_item['details'] = {}
                 item = None
-                if sc_type == 'activity':
-                    try:
-                        item = Activity.objects.get(pk=sc_id)
-                    except Activity.DoesNotExist:
-                        pass
-                elif sc_type == 'album':
-                    try:
-                        item = Album.objects.get(pk=sc_id)
-                    except Album.DoesNotExist:
-                        pass
+                try:
+                    item = ShowroomObject.objects.get(pk=sc_id)
+                except ShowroomObject.DoesNotExist:
+                    pass
                 if item:
                     sc_item['details'] = ShowcaseSerializer(item).data
             ret.append(sc_item)

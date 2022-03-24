@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-abstract_showroom_object_fields = [
+showroom_object_fields = [
     'id',
     'title',
     'subtext',
@@ -11,5 +11,10 @@ abstract_showroom_object_fields = [
     'secondary_details',
     'locations',
     'source_repo',
-    'source_repo_entry_id',
+    'source_repo_object_id',
+    'source_repo_owner_id',
+    'source_repo_data',
+    'date_synced',
+    'belongs_to',
+    'relations_to',
 ]

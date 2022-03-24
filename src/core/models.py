@@ -9,6 +9,8 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from api.repositories.portfolio import activity_lists
 from api.repositories.user_preferences.transform import (
@@ -39,36 +41,81 @@ class SourceRepository(models.Model):
         return f'[{self.id}] {self.label_institution} : {self.label_repository}'
 
 
-class AbstractShowroomObject(AbstractBaseModel):
+class ShowroomObject(AbstractBaseModel):
+    ACTIVITY = 'act'
+    ALBUM = 'alb'
+    PERSON = 'per'
+    INSTITUTION = 'ins'
+    DEPARTMENT = 'dep'
+    TYPE_CHOICES = [
+        (ACTIVITY, 'activity'),
+        (ALBUM, 'album'),
+        (PERSON, 'person'),
+        (INSTITUTION, 'institution'),
+        (DEPARTMENT, 'department'),
+    ]
+
     id = ShortUUIDField(primary_key=True)
     title = models.CharField(max_length=255)
     subtext = JSONField(blank=True, null=True)
+    type = models.CharField(max_length=3, choices=TYPE_CHOICES)
     list = JSONField(blank=True, null=True)
     primary_details = JSONField(blank=True, null=True)
     secondary_details = JSONField(blank=True, null=True)
     locations = JSONField(blank=True, null=True)
     # TODO@review: is models.PROTECT the right constraint here?
-    #   reasoning: we would not want to accidentally delete all objects of a repo only because a repo itself is deleted.
-    #              as repo deletion will be a rare activity we could make sure that the admins explicitly delete or
-    #              reassign all objects to another repo first, before a repo can be deleted
+    #   reasoning: we would not want to accidentally delete all objects of a repo only
+    #   because a repo itself is deleted. as repo deletion will be a rare activity we
+    #   could make sure that the admins explicitly delete or reassign all objects to
+    #   another repo first, before a repo can be deleted
     source_repo = models.ForeignKey(SourceRepository, on_delete=models.PROTECT)
-    source_repo_entry_id = models.CharField(max_length=255)
+    source_repo_object_id = models.CharField(max_length=255)
+    source_repo_owner_id = models.CharField(max_length=255, blank=True, null=True)
+    source_repo_data = JSONField(blank=True, null=True)
     date_synced = models.DateTimeField(editable=False, null=True)
 
-    class Meta:
-        abstract = True
+    belongs_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True
+    )
+    relations_to = models.ManyToManyField(
+        'self', symmetrical=False, related_name='relations_from', blank=True
+    )
+
+    # TODO: add gin indizes for those fields used for full text search
+
+    def __str__(self):
+        return f'{self.title} (ID: {self.id}, type: {self.type})'
+
+    def get_showcase_date_info(self):
+        dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]
+        dates.extend(
+            [
+                f'{d.date_from} - {d.date_to}'
+                for d in self.daterangesearchindex_set.order_by('date_from')
+            ]
+        )
+        ret = ', '.join(dates)
+        return ret
 
 
-class Entity(AbstractShowroomObject):
-    PERSON = 'P'
-    INSTITUTION = 'I'
-    DEPARTMENT = 'D'
-    ENTITY_TYPE_CHOICES = [
-        (PERSON, 'person'),
-        (INSTITUTION, 'institution'),
-        (DEPARTMENT, 'department'),
-    ]
-    type = models.CharField(max_length=1, choices=ENTITY_TYPE_CHOICES)
+@receiver(post_save, sender=ShowroomObject)
+def create_object_details(sender, instance, created, raw, *args, **kwargs):
+    if not created or raw:
+        return
+    if instance.type == ShowroomObject.ACTIVITY:
+        ActivityDetail.objects.get_or_create(showroom_object=instance)
+    elif instance.type in [
+        ShowroomObject.PERSON,
+        ShowroomObject.DEPARTMENT,
+        ShowroomObject.INSTITUTION,
+    ]:
+        EntityDetail.objects.get_or_create(showroom_object=instance)
+
+
+class EntityDetail(models.Model):
+    showroom_object = models.OneToOneField(
+        ShowroomObject, on_delete=models.CASCADE, primary_key=True
+    )
     expertise = JSONField(blank=True, null=True)
     showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
@@ -80,18 +127,9 @@ class Entity(AbstractShowroomObject):
         default=get_default_list_ordering,
         validators=[validate_list_ordering],
     )
-    parent_choice_limit = Q(type='I') | Q(type='D')
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        limit_choices_to=parent_choice_limit,
-    )
-    source_repo_data = JSONField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.title} (ID: {self.id})'
+        return f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
 
     def get_editing_list(self, lang=settings.LANGUAGE_CODE):
         ret = []
@@ -104,17 +142,22 @@ class Entity(AbstractShowroomObject):
         return ret
 
     def render_list(self):
+        filters = activity_lists.get_data_contains_filters(
+            self.showroom_object.source_repo_object_id
+        )
         q_filter = None
-        for f in activity_lists.get_data_contains_filters(self.source_repo_entry_id):
+        for f in filters:
             if not q_filter:
                 q_filter = Q(source_repo_data__data__contains=f)
             else:
                 q_filter = q_filter | Q(source_repo_data__data__contains=f)
-        activities = Activity.objects.filter(
-            belongs_to=self, type__isnull=False
+        activities = ShowroomObject.objects.filter(
+            type=ShowroomObject.ACTIVITY,
+            belongs_to=self.showroom_object,
+            type__isnull=False,
         ).filter(q_filter)
         self.list = activity_lists.render_list_from_activities(
-            activities, self.source_repo_entry_id
+            activities, self.showroom_object.source_repo_object_id
         )
         self.save()
 
@@ -145,60 +188,43 @@ class Entity(AbstractShowroomObject):
         will then be updated so their belongs_to key points to the
         current entity. Also a list render job will be scheduled
         """
-        # TODO: discuss: should we generally update all activities or check for those where
-        #       belongs_to is not yet set?
-        activities = Activity.objects.filter(
-            source_repo_owner_id=self.source_repo_entry_id
+        # TODO: discuss: should we generally update all activities or check for those
+        #       where belongs_to is not yet set?
+        activities = ShowroomObject.objects.filter(
+            type=ShowroomObject.ACTIVITY,
+            source_repo_owner_id=self.showroom_object.source_repo_object_id,
         )
-        activities.update(belongs_to=self)
+        activities.update(belongs_to=self.showroom_object)
         self.enqueue_list_render_job()
 
     def update_from_repo_data(self):
-        # this functionality is located in the api.repositories.user_preferences module so we could
-        # later allow for different backends providing their own transformation function
+        # this functionality is located in the api.repositories.user_preferences module
+        # so we could later allow for different backends providing their own
+        # transformation function
         update_entity_from_source_repo_data(self)
 
 
-class Activity(AbstractShowroomObject):
-    type = JSONField(blank=True, null=True)
-    source_repo_owner_id = models.CharField(max_length=255)
-    source_repo_data = JSONField(blank=True, null=True)
-    featured_media = models.ForeignKey(
+class ActivityDetail(models.Model):
+    showroom_object = models.OneToOneField(
+        ShowroomObject, on_delete=models.CASCADE, primary_key=True
+    )
+    activity_type = JSONField(blank=True, null=True)
+    keywords = JSONField(blank=True, null=True)
+    featured_medium = models.ForeignKey(
         'Media',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='featured_by',
     )
-    # TODO@review: is cascading the right constraint here?
-    #   reasoning: if an entity that has activities (which should be a person) is deleted from the DB, all their
-    #              activities should be deleted as well
-    belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True)
-    relations_to = models.ManyToManyField(
-        'self', symmetrical=False, related_name='relations_from', blank=True
-    )
-    # the following fields are only needed to be more efficient in search
-    keywords = JSONField(blank=True, null=True)
-    collection_type = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.title} (ID: {self.id})'
-
-    def get_showcase_date_info(self):
-        dates = [f'{d.date}' for d in self.activitysearchdates_set.order_by('date')]
-        dates.extend(
-            [
-                f'{d.date_from} - {d.date_to}'
-                for d in self.activitysearchdateranges_set.order_by('date_from')
-            ]
-        )
-        ret = ', '.join(dates)
-        return ret
+        return f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
 
 
-class ActivitySearch(models.Model):
+class TextSearchIndex(models.Model):
     id = models.AutoField(primary_key=True)
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     language = models.CharField(max_length=255)
     text = models.TextField(default='')
     text_vector = SearchVectorField(null=True)
@@ -207,30 +233,17 @@ class ActivitySearch(models.Model):
         indexes = (GinIndex(fields=['text_vector']),)
 
 
-class ActivitySearchDates(models.Model):
+class DateSearchIndex(models.Model):
     id = models.AutoField(primary_key=True)
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     date = models.DateField()
 
 
-class ActivitySearchDateRanges(models.Model):
+class DateRangeSearchIndex(models.Model):
     id = models.AutoField(primary_key=True)
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     date_from = models.DateField()
     date_to = models.DateField()
-
-
-class Album(models.Model):
-    id = ShortUUIDField(primary_key=True)
-    title = models.CharField(max_length=255)
-    subtitle = models.CharField(max_length=255)
-    secondary_details = JSONField(blank=True, null=True)
-    # TODO@review: is cascading the right constraint here? see remark in Activity
-    belongs_to = models.ForeignKey(Entity, on_delete=models.CASCADE)
-    activities = models.ManyToManyField(Activity)
-
-    def __str__(self):
-        return f'{self.title}. {self.subtitle} (ID: {self.id})'
 
 
 class Media(models.Model):
@@ -250,12 +263,11 @@ class Media(models.Model):
     id = ShortUUIDField(primary_key=True)
     type = models.CharField(max_length=1, choices=MEDIA_TYPE_CHOICES)
     file = models.CharField(max_length=255)
-    # TODO@review: is cascading the right constraint here?
-    #   reasoning: if an activity is deleted all its associated media should also be deleted
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     # TODO@review: should we limit max_length here to 129 or even to 90?
-    #   reasoning: there was a 127 limit defined in old RFCs for type nad subtype; newer RFCs suggest even a 64 char
-    #              limit for type and subtype; the longest IANA registered types are between 80 & 90 characters
+    #   reasoning: there was a 127 limit defined in old RFCs for type nad subtype;
+    #   newer RFCs suggest even a 64 char limit for type and subtype; the longest IANA
+    #   registered types are between 80 & 90 characters
     mime_type = models.CharField(max_length=255)
     exif = JSONField(blank=True, null=True)
     license = JSONField(blank=True, null=True)
@@ -265,4 +277,5 @@ class Media(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False)
 
     def __str__(self):
-        return f'[{self.id}] {self.type}: {self.file}'
+        f_name = self.file.split('/')[-1]
+        return f'[{self.id}] {self.type}: {f_name} (belongs to: {self.showroom_object})'

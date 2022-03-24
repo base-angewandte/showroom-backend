@@ -16,7 +16,7 @@ from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
-from core.models import Activity
+from core.models import ShowroomObject
 
 
 @extend_schema_view(
@@ -35,7 +35,7 @@ class ActivityViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Activity.objects.all()
+    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
     permission_classes = [ActivityPermission]
 
@@ -56,14 +56,14 @@ class ActivityViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            instance = Activity.objects.get(
-                source_repo_entry_id=serializer.validated_data['source_repo_entry_id'],
+            instance = ShowroomObject.objects.get(
+                source_repo_object_id=serializer.validated_data['source_repo_entry_id'],
                 source_repo=serializer.validated_data['source_repo'],
             )
             serializer.instance = instance
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             instance = False
-        except Activity.MultipleObjectsReturned:
+        except ShowroomObject.MultipleObjectsReturned:
             return Response(
                 {
                     'detail': 'More than one activity with this id exists. '
@@ -155,11 +155,11 @@ class ActivityViewSet(
     )
     def destroy(self, request, *args, **kwargs):
         try:
-            activity = Activity.objects.get(
-                source_repo_entry_id=kwargs['pk'],
+            activity = ShowroomObject.objects.get(
+                source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
         rerender_list = True if activity.belongs_to else False
         self.perform_destroy(activity)
@@ -198,11 +198,11 @@ class ActivityViewSet(
     @action(detail=True, methods=['post'])
     def relations(self, request, *args, **kwargs):
         try:
-            activity = Activity.objects.get(
+            activity = ShowroomObject.objects.get(
                 source_repo_entry_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
         if (related_to := request.data.get('related_to')) is None:
             return Response(
@@ -232,13 +232,13 @@ class ActivityViewSet(
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                related_activity = Activity.objects.get(
-                    source_repo_entry_id=related,
+                related_activity = ShowroomObject.objects.get(
+                    source_repo_object_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )
                 relations_added.append(related)
                 activity.relations_to.add(related_activity)
-            except Activity.DoesNotExist:
+            except ShowroomObject.DoesNotExist:
                 relations_not_added.append(related)
 
         ret = {

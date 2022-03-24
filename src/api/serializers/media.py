@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from django.conf import settings
 
-from core.models import Activity, Media
+from core.models import Media, ShowroomObject
 
 
 class MediaSerializer(serializers.ModelSerializer):
@@ -12,7 +12,7 @@ class MediaSerializer(serializers.ModelSerializer):
             'id',
             'type',
             'file',
-            'activity',
+            'showroom_object',
             'mime_type',
             'exif',
             'license',
@@ -34,10 +34,10 @@ class MediaSerializer(serializers.ModelSerializer):
             # activity also has to be set to an existing activity, so we can get
             # the repos base url
             try:
-                activity = Activity.objects.get(
-                    source_repo_entry_id=data.get('source_repo_entry_id')
+                activity = ShowroomObject.objects.get(
+                    source_repo_entry_id=data.get('source_repo_object_id')
                 )
-            except Activity.DoesNotExist:
+            except ShowroomObject.DoesNotExist:
                 raise serializers.ValidationError(
                     {
                         'source_repo_entry_id': [

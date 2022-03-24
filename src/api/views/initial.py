@@ -11,7 +11,7 @@ from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import filter_current_activities
-from core.models import Entity
+from core.models import ShowroomObject
 from showroom import settings
 
 logger = logging.getLogger(__name__)
@@ -66,8 +66,8 @@ class InitialViewSet(viewsets.GenericViewSet):
 
 def get_initial_response(request, pk):
     try:
-        entity = Entity.objects.get(pk=pk)
-    except Entity.DoesNotExist:
+        entity = ShowroomObject.objects.get(pk=pk)
+    except ShowroomObject.DoesNotExist:
         return Response(
             {'detail': 'No entity found with this id.'},
             status=status.HTTP_404_NOT_FOUND,

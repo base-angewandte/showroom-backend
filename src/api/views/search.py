@@ -14,7 +14,7 @@ from django.db.models import Q, Sum, Value
 from api.repositories.portfolio.search import get_search_item
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
-from core.models import Activity, Entity
+from core.models import ShowroomObject
 
 label_results_generic = {
     'en': 'Search results',
@@ -182,20 +182,21 @@ def filter_activities(values, limit, offset, language):
             query = query | text_search_query(value)
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     activities_queryset = (
-        Activity.objects.filter(activitysearch__language=language)
+        ShowroomObject.objects.filter(textsearchindex__language=language)
         .annotate(rank=rank)
         .exclude(rank=0)
         .distinct()
         .order_by('-rank')
     )
     found_activities_count = activities_queryset.count()
+    # TODO: adapt to new model and use standard text search with trigram similarity
 
     # Before we apply any pagination, we also search through all related entities, to
     # get their total count as well.
     vector = SearchVector('activity__activitysearch__text_vector')
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     entities_queryset = (
-        Entity.objects.filter(activity__activitysearch__language=language)
+        ShowroomObject.objects.filter(activity__activitysearch__language=language)
         .annotate(rank=Sum(rank))
         .exclude(rank=0)
         .distinct()
@@ -244,7 +245,7 @@ def filter_current_activities(values, limit, offset, language):
     #       Case, When and annotations, to generate a more useful ranking.
     #       See: https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
 
-    activities_queryset = Activity.objects.all()
+    activities_queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
     today = date.today()
     future_limit = today + timedelta(days=settings.CURRENT_ACTIVITIES_FUTURE)
     past_limit = today - timedelta(days=settings.CURRENT_ACTIVITIES_PAST)
@@ -356,7 +357,7 @@ def filter_date(values, limit, offset, language):
         else:
             flt = flt | add_flt
 
-    activities_queryset = Activity.objects.filter(flt).distinct()
+    activities_queryset = ShowroomObject.objects.filter(flt).distinct()
     total = activities_queryset.count()
     results = [
         get_search_item(activity, language)
@@ -427,7 +428,7 @@ def filter_daterange(values, limit, offset, language):
         else:
             flt = flt | add_flt
 
-    activities_queryset = Activity.objects.filter(flt).distinct()
+    activities_queryset = ShowroomObject.objects.filter(flt).distinct()
     total = activities_queryset.count()
     results = [
         get_search_item(activity, language)
@@ -459,7 +460,7 @@ def filter_type(values, limit, offset, language):
     if not values:
         raise ParseError('Type filter needs at least one value', 400)
 
-    queryset = Activity.objects.all()
+    queryset = ShowroomObject.objects.all()
     # TODO: discuss what the ordering criteria are
     queryset = queryset.order_by('-date_created')
     q_filter = None
@@ -506,7 +507,7 @@ def filter_keywords(values, limit, offset, language):
     if not values:
         raise ParseError('Keywords filter needs at least one value', 400)
 
-    queryset = Activity.objects.all()
+    queryset = ShowroomObject.objects.all()
     # TODO: discuss what the ordering criteria are
     queryset = queryset.order_by('-date_created')
     for idx, value in enumerate(values):

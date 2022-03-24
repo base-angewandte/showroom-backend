@@ -7,7 +7,7 @@ from api.serializers.autocomplete import (
     AutocompleteRequestSerializer,
 )
 from api.views.filter import get_static_filter_label
-from core.models import Activity
+from core.models import ShowroomObject
 
 
 class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -41,7 +41,7 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if filter_id == 'default':
             filter_id = 'activities'
         if filter_id == 'activities':
-            activities = Activity.objects.filter(title__icontains=q)
+            activities = ShowroomObject.objects.filter(title__icontains=q)
             if limit:
                 activities = activities[0:limit]
             for activity in activities:

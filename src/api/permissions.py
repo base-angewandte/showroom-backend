@@ -2,7 +2,7 @@ from rest_framework import permissions
 
 from django.conf import settings
 
-from core.models import Entity, SourceRepository
+from core.models import ShowroomObject, SourceRepository
 
 
 class ActivityPermission(permissions.BasePermission):
@@ -47,7 +47,9 @@ class EntityEditPermission(permissions.BasePermission):
         # TODO: discuss: theoretically there could be more than one entity
         #       associated to one user. also there could be users with the same
         #       ID from different repositories. how do we want to handle that?
-        entities = Entity.objects.filter(source_repo_entry_id=request.user.username)
+        entities = ShowroomObject.objects.filter(
+            type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
+        )
         if not entities:
             return False
         allowed = [entity.id for entity in entities]

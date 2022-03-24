@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.conf import settings
 
 from api.serializers.filter import FilterSerializer
-from core.models import Activity
+from core.models import ShowroomObject
 
 static_filters = [
     {
@@ -118,7 +118,9 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
     searches."""
     # TODO: cache the dynamic filters for 30 min
     # TODO: add entity keywords to the keywords filter
-    activities = Activity.objects.exclude(source_repo_data__keywords=None)
+    activities = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY).exclude(
+        source_repo_data__keywords=None
+    )
     keywords = set()
     for activity in activities:
         for kw in activity.source_repo_data['keywords']:
@@ -133,7 +135,11 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
     }
 
-    activities = Activity.objects.exclude(type__isnull=True).exclude(type={})
+    activities = (
+        ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+        .exclude(activitydetail__activity_type__isnull=True)
+        .exclude(activitydetail__activity_type={})
+    )
     types = set()
     for ac in activities:
         types.add((ac.type['label'][lang], ac.type['label'][settings.LANGUAGE_CODE]))
