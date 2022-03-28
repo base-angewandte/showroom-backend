@@ -113,7 +113,7 @@ class MediaViewSet(
         try:
             instance = Media.objects.get(
                 source_repo_media_id=kwargs['pk'],
-                activity__source_repo=request.META.get('HTTP_X_API_CLIENT'),
+                showroom_object__source_repo=request.META.get('HTTP_X_API_CLIENT'),
             )
         except Media.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
