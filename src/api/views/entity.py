@@ -1,18 +1,18 @@
 from datetime import datetime, timedelta
 
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, serializers, viewsets
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
-from api.permissions import EntityEditPermission
+from api.permissions import ActivityPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
 from api.repositories.user_preferences import sync
 from api.serializers.entity import (
@@ -28,37 +28,7 @@ from core.models import ShowroomObject
 from core.validators import validate_showcase
 
 
-@extend_schema_view(
-    create=extend_schema(
-        tags=['repo'],
-        responses={
-            201: EntitySerializer,
-            400: Responses.Error400,
-            403: Responses.Error403,
-        },
-    ),
-    retrieve=extend_schema(
-        tags=['public'],
-        responses={
-            200: EntitySerializer,
-            404: Responses.Error404,
-        },
-    ),
-    partial_update=extend_schema(
-        tags=['auth'],
-        responses={
-            204: None,
-            400: Responses.Error400,
-            403: Responses.Error403,
-            404: Responses.Error404,
-        },
-    ),
-)
-class EntityViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class EntityViewSet(viewsets.GenericViewSet):
     queryset = ShowroomObject.objects.filter(
         type__in=[
             ShowroomObject.PERSON,
@@ -67,7 +37,10 @@ class EntityViewSet(
         ]
     )
     serializer_class = EntitySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # Entities should be only manipulated by repositories, similar to Activities, so
+    # we'll reuse ActivityPermission and use other permissions explicitly on all custom
+    # actions, when needed
+    permission_classes = [ActivityPermission]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
     http_method_names = ['get', 'head', 'options', 'patch', 'post']
@@ -105,6 +78,17 @@ class EntityViewSet(
                     pass
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=['repo'],
+        responses={
+            201: EntitySerializer,
+            400: Responses.Error400,
+            403: Responses.Error403,
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        return Response({'detail': 'not yet implemented'}, 500)
 
     @extend_schema(
         methods=['GET'],
