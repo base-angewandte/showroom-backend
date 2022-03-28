@@ -215,7 +215,7 @@ class ActivityViewSet(
     def relations(self, request, *args, **kwargs):
         try:
             activity = ShowroomObject.objects.get(
-                source_repo_entry_id=kwargs['pk'],
+                source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
         except ShowroomObject.DoesNotExist:
