@@ -4,6 +4,7 @@ logger = logging.getLogger(__name__)
 
 showroom_object_fields = [
     'id',
+    'type',
     'title',
     'subtext',
     'list',

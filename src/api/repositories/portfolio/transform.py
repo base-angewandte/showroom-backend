@@ -1830,9 +1830,9 @@ def transform_api_date(date, lang):
 
 
 def transform_entity(entity):
-    if source_repo_entity_id := entity.get('source'):
+    if source_repo_object_id := entity.get('source'):
         try:
-            e = ShowroomObject.objects.get(source_repo_entry_id=source_repo_entity_id)
+            e = ShowroomObject.objects.get(source_repo_object_id=source_repo_object_id)
             return {
                 'value': e.title,
                 'source': f'{slugify(e.title)}-{e.id}',

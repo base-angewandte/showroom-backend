@@ -57,7 +57,9 @@ class ActivityViewSet(
         serializer.is_valid(raise_exception=True)
         try:
             instance = ShowroomObject.objects.get(
-                source_repo_object_id=serializer.validated_data['source_repo_entry_id'],
+                source_repo_object_id=serializer.validated_data[
+                    'source_repo_object_id'
+                ],
                 source_repo=serializer.validated_data['source_repo'],
             )
             serializer.instance = instance
@@ -72,6 +74,20 @@ class ActivityViewSet(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer.save()
+
+        # now fill the ActivityDetail belonging to this ShowroomObject
+        repo_data = serializer.instance.source_repo_data
+        serializer.instance.activitydetail.activity_type = repo_data.get('type')
+        serializer.instance.activitydetail.keywords = (
+            {
+                kw['label'][settings.LANGUAGE_CODE]: True
+                for kw in repo_data.get('keywords')
+            }
+            if repo_data.get('keywords')
+            else {}
+        )
+        serializer.instance.activitydetail.save()
+
         # as soon as the serializer is saved we want the full text search index to be
         # built. TODO: refactor this to an async worker
         index_activity(serializer.instance)
@@ -122,14 +138,14 @@ class ActivityViewSet(
         if instance:
             response['updated'].append(
                 {
-                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'id': serializer.validated_data['source_repo_object_id'],
                     'showroom_id': serializer.data['id'],
                 }
             )
         else:
             response['created'].append(
                 {
-                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'id': serializer.validated_data['source_repo_object_id'],
                     'showroom_id': serializer.data['id'],
                 }
             )

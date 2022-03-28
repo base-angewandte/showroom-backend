@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from django.conf import settings
 from django.utils.text import slugify
 
 from api.repositories import portfolio
@@ -28,7 +27,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         new_data = {
-            'source_repo_entry_id': data.get('source_repo_entry_id'),
+            'source_repo_object_id': data.get('source_repo_entry_id'),
             'source_repo_owner_id': data.get('source_repo_owner_id'),
             'source_repo': data.get('source_repo'),
         }
@@ -45,15 +44,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data['title'] = repo_data.get('title')
         subtext = repo_data.get('subtitle')
         new_data['subtext'] = [subtext] if subtext else []
-        new_data['type'] = repo_data.get('type')
-        new_data['keywords'] = (
-            {
-                kw['label'][settings.LANGUAGE_CODE]: True
-                for kw in repo_data.get('keywords')
-            }
-            if repo_data.get('keywords')
-            else {}
-        )
+        new_data['type'] = ShowroomObject.ACTIVITY
 
         try:
             new_data['belongs_to'] = ShowroomObject.objects.get(
