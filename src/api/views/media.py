@@ -48,14 +48,14 @@ class MediaViewSet(
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
-        request.data['activity'] = activity.id
+        request.data['showroom_object'] = activity.id
         # now get the serializer and process the data
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             instance = Media.objects.get(
                 source_repo_media_id=serializer.validated_data['source_repo_media_id'],
-                activity_id=activity.id,
+                showroom_object=activity,
             )
             serializer.instance = instance
         except Media.DoesNotExist:

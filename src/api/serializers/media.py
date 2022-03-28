@@ -35,7 +35,7 @@ class MediaSerializer(serializers.ModelSerializer):
             # the repos base url
             try:
                 activity = ShowroomObject.objects.get(
-                    source_repo_entry_id=data.get('source_repo_object_id')
+                    source_repo_object_id=data.get('source_repo_entry_id')
                 )
             except ShowroomObject.DoesNotExist:
                 raise serializers.ValidationError(
@@ -70,7 +70,7 @@ class MediaSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         # throw out things we don't need / don't want to show
-        ret.pop('activity')  # media are only read-accessible via an activity
+        ret.pop('showroom_object')  # media are only read-accessible via an activity
         ret.pop('source_repo_media_id')
         ret.pop('exif')
         # rename file to original and add repo_base
