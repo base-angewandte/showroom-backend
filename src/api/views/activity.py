@@ -15,7 +15,6 @@ from api.repositories.portfolio.search_indexer import index_activity
 from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
-from api.serializers.media import MediaSerializer
 from core.models import ShowroomObject
 
 
@@ -176,17 +175,6 @@ class ActivityViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         if rerender_list:
             activity.belongs_to.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @extend_schema(
-        tags=['public'],
-        responses={
-            200: MediaSerializer(many=True),
-            404: Responses.Error404,
-        },
-    )
-    @action(detail=True, methods=['get'])
-    def media(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=400)
 
     @extend_schema(
         tags=['repo'],
