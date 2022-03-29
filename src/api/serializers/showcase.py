@@ -62,7 +62,7 @@ class ShowcaseSerializer(serializers.Serializer):
         if instance.type == ShowroomObject.ACTIVITY:
             ret['subtext'] = '. '.join(instance.subtext)
             ret['additional'] = instance.get_showcase_date_info()
-            ret['type'] = instance.type
+            ret['type'] = instance.activitydetail.activity_type
             media = instance.media_set.all()
             # Similar to search results we take the previews from the first image
             # we find in the activity. If there is no image, we'll use thumbnails of
@@ -83,6 +83,6 @@ class ShowcaseSerializer(serializers.Serializer):
                 widths = ['640w', '768w', '1024w', '1366w', '1600w', '1632w']
                 ret['previews'] = [{w: alternative_preview} for w in widths]
         elif instance.type == ShowroomObject.ALBUM:
-            ret['subtext'] = instance.subtitle
-            ret['total'] = instance.activities.count()
+            ret['subtext'] = instance.subtext
+            ret['total'] = instance.relations_to.count()
         return ret
