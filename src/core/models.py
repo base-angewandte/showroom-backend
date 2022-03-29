@@ -162,7 +162,7 @@ class EntityDetail(models.Model):
         self.save()
 
     def enqueue_list_render_job(self):
-        job_id = f'entity_list_render_{self.id}'
+        job_id = f'entity_list_render_{self.showroom_object.id}'
         queue = get_queue('default')
         registry = ScheduledJobRegistry(queue=queue)
         # in case this job gets scheduled several times before it is being executed

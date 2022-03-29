@@ -128,7 +128,7 @@ class ActivityViewSet(
         # is already an entity in the system, for which we can generate a new list
         else:
             if serializer.instance.belongs_to:
-                serializer.instance.belongs_to.enqueue_list_render_job()
+                serializer.instance.belongs_to.entitydetail.enqueue_list_render_job()
 
         response = {
             'created': [],
