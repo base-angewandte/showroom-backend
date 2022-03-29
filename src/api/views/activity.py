@@ -28,13 +28,7 @@ from core.models import ShowroomObject
         },
     ),
 )
-class ActivityViewSet(
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
+class ActivityViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
     permission_classes = [ActivityPermission]

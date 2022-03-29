@@ -97,6 +97,9 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.pop('source_repo_object_id')
         ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
+        # set type to activity type (instead of showroom object type) and add keywords
+        ret['type'] = instance.activitydetail.activity_type
+        ret['keywords'] = instance.activitydetail.keywords
         # add timestamps
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created
