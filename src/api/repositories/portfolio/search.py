@@ -81,7 +81,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         and item.activitydetail
         and item.activitydetail.activity_type
     ):
-        activity_schema = get_schema(item.activitydetail.type.get('source'))
+        activity_schema = get_schema(item.activitydetail.activity_type.get('source'))
     mapping = map_search(search_item['type'], activity_schema)
 
     functions = {
@@ -141,7 +141,8 @@ def get_architecture_contributors(item, lang):
 
 def get_activity_type_university(item, lang):
     ret = []
-    if item.type and (type_label := item.type.get('label')):
+    typ = item.activitydetail.activity_type
+    if typ and (type_label := typ.get('label')):
         ret.append(type_label.get(lang))
     ret.append(item.source_repo.label_institution)
     return ret

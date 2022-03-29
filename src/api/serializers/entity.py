@@ -40,18 +40,20 @@ class EntitySerializer(serializers.ModelSerializer):
             ret['type'] = 'department'
 
         # make sure to only provide an empty list if showcase is None or {}
-        if not instance.showcase:
-            instance.showcase = []
-        sc, sc_warnings = get_serialized_showcase_and_warnings(instance.showcase)
+        if not instance.entitydetail.showcase:
+            instance.entitydetail.showcase = []
+        sc, sc_warnings = get_serialized_showcase_and_warnings(
+            instance.entitydetail.showcase
+        )
         ret['showcase'] = sc
         if sc_warnings:
             ret['showcase_warnings'] = sc_warnings
 
         # we have to bring list into a format similar to that in activities based
         # on list_ordering
-        activity_list = ret.pop('list')
+        activity_list = instance.entitydetail.list
         ret['list'] = []
-        for order in instance.list_ordering:
+        for order in instance.entitydetail.list_ordering:
             if order['hidden']:
                 continue
             if (list_id := order['id']) in activity_list:
@@ -66,10 +68,10 @@ class EntitySerializer(serializers.ModelSerializer):
                     ret['list'].append(activity_list[list_id])
 
         # return the localised version of the expertise
-        if type(ret['expertise']) is dict:
-            ret['expertise'] = ret['expertise'].get(
-                self.context['request'].LANGUAGE_CODE
-            )
+        ret['expertise'] = []
+        expertise = instance.entitydetail.expertise
+        if type(expertise) is dict:
+            ret['expertise'] = expertise.get(self.context['request'].LANGUAGE_CODE)
 
         # now filter out the requested languages for the detail fields and lists
         localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
