@@ -168,7 +168,7 @@ def filter_activities(values, limit, offset, language):
     if not values:
         raise ParseError('Activities filter needs at least one value', 400)
 
-    vector = SearchVector('activitysearch__text_vector')
+    vector = SearchVector('textsearchindex__text_vector')
     query = None
     for _idx, value in enumerate(values):
         if type(value) is not str:
@@ -193,10 +193,12 @@ def filter_activities(values, limit, offset, language):
 
     # Before we apply any pagination, we also search through all related entities, to
     # get their total count as well.
-    vector = SearchVector('activity__activitysearch__text_vector')
+    vector = SearchVector('showroomobject__textsearchindex__text_vector')
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     entities_queryset = (
-        ShowroomObject.objects.filter(activity__activitysearch__language=language)
+        ShowroomObject.objects.filter(
+            showroomobject__textsearchindex__language=language
+        )
         .annotate(rank=Sum(rank))
         .exclude(rank=0)
         .distinct()
@@ -348,9 +350,9 @@ def filter_date(values, limit, offset, language):
                 'Only dates of format YYYY-MM-DD can be used as date filter values',
                 400,
             )
-        add_flt = Q(activitysearchdates__date=value) | (
-            Q(activitysearchdateranges__date_from__lte=value)
-            & Q(activitysearchdateranges__date_to__gte=value)
+        add_flt = Q(datesearchindex__date=value) | (
+            Q(daterangesearchindex__date_from__lte=value)
+            & Q(daterangesearchindex__date_to__gte=value)
         )
         if not flt:
             flt = add_flt
@@ -405,23 +407,23 @@ def filter_daterange(values, limit, offset, language):
         # in case only date_from is provided, all dates in its future should be found
         if not d_to:
             add_flt = (
-                Q(activitysearchdates__date__gte=d_from)
-                | Q(activitysearchdateranges__date_from__gte=d_from)
-                | Q(activitysearchdateranges__date_to__gte=d_from)
+                Q(datesearchindex__date__gte=d_from)
+                | Q(daterangesearchindex__date_from__gte=d_from)
+                | Q(daterangesearchindex__date_to__gte=d_from)
             )
         # in case only date_to is provided, all dates past this date should be found
         elif not d_from:
             add_flt = (
-                Q(activitysearchdates__date__lte=d_to)
-                | Q(activitysearchdateranges__date_from__lte=d_to)
-                | Q(activitysearchdateranges__date_to__lte=d_to)
+                Q(datesearchindex__date__lte=d_to)
+                | Q(daterangesearchindex__date_from__lte=d_to)
+                | Q(daterangesearchindex__date_to__lte=d_to)
             )
         # if both parameters are provided, we search within the given date range
         else:
             add_flt = (
-                Q(activitysearchdates__date__range=[d_from, d_to])
-                | Q(activitysearchdateranges__date_from__range=[d_from, d_to])
-                | Q(activitysearchdateranges__date_to__range=[d_from, d_to])
+                Q(datesearchindex__date__range=[d_from, d_to])
+                | Q(daterangesearchindex__date_from__range=[d_from, d_to])
+                | Q(daterangesearchindex__date_to__range=[d_from, d_to])
             )
         if not flt:
             flt = add_flt
@@ -472,9 +474,11 @@ def filter_type(values, limit, offset, language):
         if type(typ) is not str:
             raise ParseError('Malformed type filter', 400)
         if not q_filter:
-            q_filter = Q(type__label__contains={'en': typ})
+            q_filter = Q(activitydetail__activity_type__label__contains={'en': typ})
         else:
-            q_filter = q_filter | Q(type__label__contains={'en': typ})
+            q_filter = q_filter | Q(
+                activitydetail__activity_type__label__contains={'en': typ}
+            )
     queryset = queryset.filter(q_filter)
 
     total_count = queryset.count()
@@ -518,9 +522,9 @@ def filter_keywords(values, limit, offset, language):
         if type(kw) is not str:
             raise ParseError('Malformed keyword filter', 400)
         if idx == 0:
-            q_filter = Q(keywords__has_key=kw)
+            q_filter = Q(activitydetail__keywords__has_key=kw)
         else:
-            q_filter = q_filter | Q(keywords__has_key=kw)
+            q_filter = q_filter | Q(activitydetail__keywords__has_key=kw)
     queryset = queryset.filter(q_filter)
 
     total_count = queryset.count()
