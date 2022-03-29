@@ -250,25 +250,25 @@ def filter_current_activities(values, limit, offset, language):
     future_limit = today + timedelta(days=settings.CURRENT_ACTIVITIES_FUTURE)
     past_limit = today - timedelta(days=settings.CURRENT_ACTIVITIES_PAST)
 
-    today_activities = activities_queryset.filter(activitysearchdates__date=today)
+    today_activities = activities_queryset.filter(datesearchindex__date=today)
     today_count = today_activities.count()
     future_activities = (
         activities_queryset.filter(
             (
-                Q(activitysearchdates__date__gt=today)
-                & Q(activitysearchdates__date__lte=future_limit)
+                Q(datesearchindex__date__gt=today)
+                & Q(datesearchindex__date__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_to__gt=today)
-                & Q(activitysearchdateranges__date_to__lte=future_limit)
+                Q(daterangesearchindex__date_to__gt=today)
+                & Q(daterangesearchindex__date_to__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_from__gt=today)
-                & Q(activitysearchdateranges__date_from__lte=future_limit)
+                Q(daterangesearchindex__date_from__gt=today)
+                & Q(daterangesearchindex__date_from__lte=future_limit)
             )
         )
         # exclude entries that are already in today_activities
-        .exclude(activitysearchdates__date=today)
+        .exclude(datesearchindex__date=today)
         # filter out duplicates
         .distinct()
     )
@@ -276,33 +276,33 @@ def filter_current_activities(values, limit, offset, language):
     past_activities = (
         activities_queryset.filter(
             (
-                Q(activitysearchdates__date__lt=today)
-                & Q(activitysearchdates__date__gte=past_limit)
+                Q(datesearchindex__date__lt=today)
+                & Q(datesearchindex__date__gte=past_limit)
             )
             | (
-                Q(activitysearchdateranges__date_from__lt=today)
-                & Q(activitysearchdateranges__date_from__gte=past_limit)
+                Q(daterangesearchindex__date_from__lt=today)
+                & Q(daterangesearchindex__date_from__gte=past_limit)
             )
             | (
-                Q(activitysearchdateranges__date_to__lt=today)
-                & Q(activitysearchdateranges__date_to__gte=past_limit)
+                Q(daterangesearchindex__date_to__lt=today)
+                & Q(daterangesearchindex__date_to__gte=past_limit)
             )
         )
         # exclude entries that are already in today_activities
-        .exclude(activitysearchdates__date=today)
+        .exclude(datesearchindex__date=today)
         # exclude entries that are already in future_activities
         .exclude(
             (
-                Q(activitysearchdates__date__gt=today)
-                & Q(activitysearchdates__date__lte=future_limit)
+                Q(datesearchindex__date__gt=today)
+                & Q(datesearchindex__date__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_to__gt=today)
-                & Q(activitysearchdateranges__date_to__lte=future_limit)
+                Q(daterangesearchindex__date_to__gt=today)
+                & Q(daterangesearchindex__date_to__lte=future_limit)
             )
             | (
-                Q(activitysearchdateranges__date_from__gt=today)
-                & Q(activitysearchdateranges__date_from__lte=future_limit)
+                Q(daterangesearchindex__date_from__gt=today)
+                & Q(daterangesearchindex__date_from__lte=future_limit)
             )
         )
         # filter out duplicates

@@ -85,11 +85,11 @@ def get_initial_response(request, pk):
         'results': [],
     }
 
-    if entity.showcase is None or entity.showcase == []:
-        entity.showcase = settings.DEFAULT_SHOWCASE
+    if entity.entitydetail.showcase is None or entity.entitydetail.showcase == []:
+        entity.entitydetail.showcase = settings.DEFAULT_SHOWCASE
 
     response['showcase'], showcase_warnings = get_serialized_showcase_and_warnings(
-        entity.showcase
+        entity.entitydetail.showcase
     )
 
     # if anything went wrong with serializing single showcase items, we still want
