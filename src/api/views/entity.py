@@ -117,7 +117,8 @@ class EntityViewSet(viewsets.GenericViewSet):
         # GET /entities/{id}/list
         if request.method.lower() == 'get':
             return Response(
-                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+                instance.entitydetail.get_editing_list(lang=self.request.LANGUAGE_CODE),
+                status=200,
             )
 
         # PATCH /entities/{id}/list
@@ -134,11 +135,13 @@ class EntityViewSet(viewsets.GenericViewSet):
                     data.append({'id': schema, 'hidden': True})
 
             # update entity
-            instance.entitydetails.list_ordering = data
+            instance.entitydetail.list_ordering = data
             instance.save()
+            instance.entitydetail.render_list()
 
             return Response(
-                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+                instance.entitydetail.get_editing_list(lang=self.request.LANGUAGE_CODE),
+                status=200,
             )
 
     @extend_schema(
