@@ -134,7 +134,7 @@ def validate_showcase(value):
         valid_sc_types = ['activity', 'album']
         if (sc_type := item[1]) not in valid_sc_types:
             raise ValidationError(
-                f'showcase items have to be of these types: {valid_sc_types}',
+                f'{sc_type} is not a valid showcase type. allowed types: {valid_sc_types}',
                 params={'value': value},
             )
         if type(sc_id := item[0]) != str:
@@ -142,10 +142,14 @@ def validate_showcase(value):
                 'showcase item ID has to be str', params={'value': value}
             )
 
-        model_name = {'activity': 'Activity', 'album': 'Album'}
-        model = apps.get_model('core', model_name[sc_type])
+        model = apps.get_model('core', 'ShowroomObject')
         try:
-            model.objects.get(pk=sc_id)
+            item = model.objects.get(pk=sc_id)
+            allowed_types = ['act', 'alb']
+            if item.type not in allowed_types:
+                raise ValidationError(
+                    f'type "{item.type}" of showcase item ID {sc_id} is not valid. allowed types: {allowed_types}'
+                )
         except model.DoesNotExist:
             raise ValidationError(
                 f'showcase item ID {sc_id} does not exist', params={'value': value}

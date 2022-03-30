@@ -212,7 +212,7 @@ class EntityViewSet(viewsets.GenericViewSet):
                 ret['secondary_details'] = instance.secondary_details
             if include_showcase:
                 ret['showcase'] = get_rendered_edit_showcase(
-                    instance.showcase,
+                    instance.entitydetail.showcase,
                     include_details=include_showcase_details,
                 )
 
@@ -225,13 +225,15 @@ class EntityViewSet(viewsets.GenericViewSet):
 
             # update entity
             if (showcase := data.get('showcase')) is not None:
-                instance.showcase = []
+                instance.entitydetail.showcase = []
                 for sc_item in showcase:
                     if 'type' not in sc_item:
                         sc_item['type'] = 'activity'
-                    instance.showcase.append([sc_item['id'], sc_item['type']])
+                    instance.entitydetail.showcase.append(
+                        [sc_item['id'], sc_item['type']]
+                    )
                 try:
-                    validate_showcase(instance.showcase)
+                    validate_showcase(instance.entitydetail.showcase)
                 except ValidationError as err:
                     raise serializers.ValidationError({'showcase': err})
             if (secondary_details := data.get('secondary_details')) is not None:
@@ -250,7 +252,7 @@ class EntityViewSet(viewsets.GenericViewSet):
 
             if showcase is not None:
                 ret['showcase'] = get_rendered_edit_showcase(
-                    instance.showcase, include_details=True
+                    instance.entitydetail.showcase, include_details=True
                 )
 
         return Response(ret, status=200)
