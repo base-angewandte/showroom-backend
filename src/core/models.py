@@ -201,7 +201,7 @@ class EntityDetail(models.Model):
         # this functionality is located in the api.repositories.user_preferences module
         # so we could later allow for different backends providing their own
         # transformation function
-        update_entity_from_source_repo_data(self)
+        update_entity_from_source_repo_data(self.showroom_object)
 
 
 class ActivityDetail(models.Model):

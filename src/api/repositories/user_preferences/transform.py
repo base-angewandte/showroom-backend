@@ -49,7 +49,7 @@ def update_entity_from_source_repo_data(entity):
     if skills := data.get('skills'):
         for lang in LANGUAGES:
             expertise[lang] = [skill['label'].get(lang) for skill in skills]
-    entity.expertise = expertise
+    entity.entitydetail.expertise = expertise
 
     # now assemble und update the primary_details data
     primary_details = []

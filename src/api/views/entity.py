@@ -72,7 +72,7 @@ class EntityViewSet(viewsets.GenericViewSet):
                 # TODO: discuss whether this should be executed directly or relegated to an async
                 #       job. in the latter case the current request would be served the cached data
                 try:
-                    sync.pull_user_data(instance.source_repo_entry_id)
+                    sync.pull_user_data(instance.source_repo_object_id)
                 except sync.UserPrefError:
                     # TODO: discuss what to do if the sync fails but we already have some data
                     pass

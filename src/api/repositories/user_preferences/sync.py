@@ -52,18 +52,18 @@ def pull_user_data(username, update_entry=True):
 
         try:
             entity = ShowroomObject.objects.get(
-                source_repo_entry_id=username,
+                source_repo_object_id=username,
                 source_repo_id=settings.DEFAULT_USER_REPO,
             )
             entity.source_repo_data = result
             entity.save()
         except ShowroomObject.DoesNotExist:
             entity = ShowroomObject.objects.create(
-                source_repo_entry_id=username,
+                source_repo_object_id=username,
                 source_repo=default_user_repo,
                 source_repo_data=result,
             )
-        entity.update_from_repo_data()
-        entity.update_activities()
+        entity.entitydetail.update_from_repo_data()
+        entity.entitydetail.update_activities()
 
     return result
