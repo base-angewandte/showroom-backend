@@ -17,6 +17,13 @@ class EntitySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        # remove plain repo data
+        ret.pop('source_repo')
+        ret.pop('source_repo_data')
+        ret.pop('source_repo_object_id')
+        ret.pop('source_repo_owner_id')
+        ret.pop('relations_to')
+        ret.pop('belongs_to')
 
         # transform the id and parent id to include name
         if not instance.title:
