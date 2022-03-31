@@ -89,7 +89,7 @@ class ActivityViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             if serializer.instance.belongs_to:
                 # in case the entity is already in the system, we'll sync it from UP
                 # if the current version is older than the configured sync time
-                serializer.instance.belongs_to.enqueue_list_render_job()
+                serializer.instance.belongs_to.entitydetail.enqueue_list_render_job()
                 t_synced = serializer.instance.belongs_to.date_synced
                 t_cache = datetime.today() - timedelta(
                     minutes=settings.USER_REPO_CACHE_TIME
