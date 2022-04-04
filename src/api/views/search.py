@@ -90,6 +90,9 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             filter_function_map = {
                 'fulltext': get_fulltext_filter,
                 'activity': get_activity_filter,
+                'person': get_person_filter,
+                'date': get_date_filter,
+                'daterange': get_daterange_filter,
             }
             filter_func = filter_function_map.get(flt['id'])
             if filter_func is None:
@@ -180,7 +183,125 @@ def get_activity_filter(values, lang):
 
 def get_person_filter(values, lang):
     filters = None
+    for value in values:
+        if type(value) not in [str, dict]:
+            raise ParseError(
+                'Only strings or dicts are allowed as person filter parameters', 400
+            )
+        if type(value) is str:
+            add_filter = Q(
+                type__in=[
+                    ShowroomObject.PERSON,
+                    ShowroomObject.DEPARTMENT,
+                    ShowroomObject.INSTITUTION,
+                ]
+            ) & (
+                Q(title__icontains=value)
+                | Q(subtext__icontains=value)
+                | (
+                    Q(textsearchindex__text__icontains=value)
+                    & Q(textsearchindex__language=lang)
+                )
+            )
+        else:
+            obj_id = value.get('id')
+            if not obj_id or type(obj_id) is not str:
+                raise ParseError(
+                    'dict values in person filter have to contain an id of type str',
+                    400,
+                )
+            obj_id = obj_id.split('-')[-1]
+            add_filter = Q(pk=obj_id) | Q(relations_to__id=obj_id)
+        if filters is None:
+            filters = add_filter
+        else:
+            filters = filters | add_filter
     return filters
+
+
+def get_date_filter(values, lang):
+    if not values:
+        raise ParseError('Date filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not str:
+            raise ParseError(
+                'Only strings are allowed as date filter values',
+                400,
+            )
+        if not re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', value):
+            raise ParseError(
+                'Only dates of format YYYY-MM-DD can be used as date filter values',
+                400,
+            )
+        add_flt = Q(datesearchindex__date=value) | (
+            Q(daterangesearchindex__date_from__lte=value)
+            & Q(daterangesearchindex__date_to__gte=value)
+        )
+        if not flt:
+            flt = add_flt
+        else:
+            flt = flt | add_flt
+    return flt
+
+
+def get_daterange_filter(values, lang):
+    if not values:
+        raise ParseError('Date range filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict or (
+            value.get('date_from') is None and value.get('date_to') is None
+        ):
+            raise ParseError(
+                'Date range filter values have to be objects containing date_from and date_to properties',
+                400,
+            )
+
+        d_pattern = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+        d_from = value.get('date_from')
+        d_to = value.get('date_to')
+        if (d_from and not re.match(d_pattern, d_from)) or (
+            d_to and not re.match(d_pattern, d_to)
+        ):
+            raise ParseError(
+                'Only dates of format YYYY-MM-DD can be used as date range filter from and to values',
+                400,
+            )
+        if not d_from and not d_to:
+            raise ParseError(
+                'At least one of the two date range parameters have to be valid dates',
+                400,
+            )
+        # in case only date_from is provided, all dates in its future should be found
+        if not d_to:
+            add_flt = (
+                Q(datesearchindex__date__gte=d_from)
+                | Q(daterangesearchindex__date_from__gte=d_from)
+                | Q(daterangesearchindex__date_to__gte=d_from)
+            )
+        # in case only date_to is provided, all dates past this date should be found
+        elif not d_from:
+            add_flt = (
+                Q(datesearchindex__date__lte=d_to)
+                | Q(daterangesearchindex__date_from__lte=d_to)
+                | Q(daterangesearchindex__date_to__lte=d_to)
+            )
+        # if both parameters are provided, we search within the given date range
+        else:
+            add_flt = (
+                Q(datesearchindex__date__range=[d_from, d_to])
+                | Q(daterangesearchindex__date_from__range=[d_from, d_to])
+                | Q(daterangesearchindex__date_to__range=[d_from, d_to])
+            )
+        if not flt:
+            flt = add_flt
+        else:
+            flt = flt | add_flt
+
+    return flt
 
 
 # TODO: once the new search is fully implemented, throw out dead code below
@@ -380,116 +501,6 @@ def filter_current_activities(values, limit, offset, language):
             get_search_item(activity, language)
             for activity in final[offset : offset + limit]
         ],
-    }
-
-
-def filter_date(values, limit, offset, language):
-    if not values:
-        raise ParseError('Date filter needs at least one value', 400)
-
-    flt = None
-    for value in values:
-        if type(value) is not str:
-            raise ParseError(
-                'Only strings are allowed as date filter values',
-                400,
-            )
-        if not re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', value):
-            raise ParseError(
-                'Only dates of format YYYY-MM-DD can be used as date filter values',
-                400,
-            )
-        add_flt = Q(datesearchindex__date=value) | (
-            Q(daterangesearchindex__date_from__lte=value)
-            & Q(daterangesearchindex__date_to__gte=value)
-        )
-        if not flt:
-            flt = add_flt
-        else:
-            flt = flt | add_flt
-
-    activities_queryset = ShowroomObject.objects.filter(flt).distinct()
-    total = activities_queryset.count()
-    results = [
-        get_search_item(activity, language)
-        for activity in activities_queryset[offset : offset + limit]
-    ]
-
-    return {
-        'label': label_results_generic.get(language),
-        'total': total,
-        'data': results,
-    }
-
-
-def filter_daterange(values, limit, offset, language):
-    if not values:
-        raise ParseError('Date range filter needs at least one value', 400)
-
-    flt = None
-    for value in values:
-        if (
-            type(value) is not dict
-            or value.get('date_from') is None
-            or value.get('date_to') is None
-        ):
-            raise ParseError(
-                'Date range filter values have to be objects containing date_from and date_to properties',
-                400,
-            )
-
-        d_pattern = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-        d_from = value['date_from']
-        d_to = value['date_to']
-        if (d_from and not re.match(d_pattern, d_from)) or (
-            d_to and not re.match(d_pattern, d_to)
-        ):
-            raise ParseError(
-                'Only dates of format YYYY-MM-DD can be used as date range filter from and to values',
-                400,
-            )
-        if not d_from and not d_to:
-            raise ParseError(
-                'At least one of the two date range parameters have to be valid dates',
-                400,
-            )
-        # in case only date_from is provided, all dates in its future should be found
-        if not d_to:
-            add_flt = (
-                Q(datesearchindex__date__gte=d_from)
-                | Q(daterangesearchindex__date_from__gte=d_from)
-                | Q(daterangesearchindex__date_to__gte=d_from)
-            )
-        # in case only date_to is provided, all dates past this date should be found
-        elif not d_from:
-            add_flt = (
-                Q(datesearchindex__date__lte=d_to)
-                | Q(daterangesearchindex__date_from__lte=d_to)
-                | Q(daterangesearchindex__date_to__lte=d_to)
-            )
-        # if both parameters are provided, we search within the given date range
-        else:
-            add_flt = (
-                Q(datesearchindex__date__range=[d_from, d_to])
-                | Q(daterangesearchindex__date_from__range=[d_from, d_to])
-                | Q(daterangesearchindex__date_to__range=[d_from, d_to])
-            )
-        if not flt:
-            flt = add_flt
-        else:
-            flt = flt | add_flt
-
-    activities_queryset = ShowroomObject.objects.filter(flt).distinct()
-    total = activities_queryset.count()
-    results = [
-        get_search_item(activity, language)
-        for activity in activities_queryset[offset : offset + limit]
-    ]
-
-    return {
-        'label': label_results_generic.get(language),
-        'total': total,
-        'data': results,
     }
 
 
