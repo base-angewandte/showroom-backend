@@ -94,7 +94,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'date': get_date_filter,
                 'daterange': get_daterange_filter,
                 'keyword': get_keyword_filter,
-                'type': get_type_filter,
+                'type': get_activity_type_filter,
             }
             filter_func = filter_function_map.get(flt['id'])
             if filter_func is None:
@@ -325,7 +325,7 @@ def get_keyword_filter(values, lang):
     return Q(type=ShowroomObject.ACTIVITY) & flt
 
 
-def get_type_filter(values, lang):
+def get_activity_type_filter(values, lang):
     if not values:
         raise ParseError('Type filter needs at least one value', 400)
 

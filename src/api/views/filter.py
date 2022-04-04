@@ -131,7 +131,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         typ = activity.activitydetail.activity_type
         types.add((typ['label'][lang], typ['label'][settings.LANGUAGE_CODE]))
     activity_types_filter = {
-        'id': 'type',
+        'id': 'activity_type',
         'type': 'chips',
         'label': label_activity_types[lang],
         'hidden': False,
