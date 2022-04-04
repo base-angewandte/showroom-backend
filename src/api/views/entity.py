@@ -236,6 +236,7 @@ class EntityViewSet(viewsets.GenericViewSet):
                     validate_showcase(instance.entitydetail.showcase)
                 except ValidationError as err:
                     raise serializers.ValidationError({'showcase': err})
+                instance.entitydetail.save()
             if (secondary_details := data.get('secondary_details')) is not None:
                 instance.secondary_details = secondary_details
             instance.save()
