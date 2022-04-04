@@ -81,7 +81,7 @@ class ShowroomObject(AbstractBaseModel):
     source_repo = models.ForeignKey(SourceRepository, on_delete=models.PROTECT)
     source_repo_object_id = models.CharField(max_length=255)
     source_repo_owner_id = models.CharField(max_length=255, blank=True, null=True)
-    source_repo_data = JSONField(blank=True, null=True)
+    source_repo_data = JSONField(default=dict)
     date_synced = models.DateTimeField(editable=False, null=True)
 
     belongs_to = models.ForeignKey(
