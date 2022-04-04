@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import date, timedelta
 
@@ -15,6 +16,9 @@ from api.repositories.portfolio.search import get_search_item
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import ShowroomObject
+from general.postgres import SearchVectorJSON
+
+logger = logging.getLogger(__name__)
 
 label_results_generic = {
     'en': 'Search results',
@@ -24,6 +28,12 @@ label_current_activities = {
     'en': 'Current activities',
     'de': 'Aktuelle Aktivitäten',
 }
+
+text_search_vectors = (
+    SearchVector('title', weight='A')
+    + SearchVectorJSON('subtext', weight='B')
+    + SearchVector('textsearchindex__text_vector', weight='C')
+)
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -53,6 +63,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         filters = s.data.get('filters')
         limit = s.data.get('limit')
         offset = s.data.get('offset')
+        order_by = s.data.get('order_by')
         lang = request.LANGUAGE_CODE
 
         if offset is None:
@@ -66,75 +77,113 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if limit is None:
             limit = settings.SEARCH_LIMIT
 
-        results = []
-        for flt in filters:
-            # for now the default filter is the same as activities
-            # TODO: change, as soon as we have entities and albums in our test data
-            if flt['id'] == 'activities' or flt['id'] == 'default':
-                results.append(
-                    filter_activities(flt['filter_values'], limit, offset, lang)
-                )
-            if flt['id'] == 'type':
-                results.append(filter_type(flt['filter_values'], limit, offset, lang))
-            if flt['id'] == 'keywords':
-                results.append(
-                    filter_keywords(flt['filter_values'], limit, offset, lang)
-                )
-            if flt['id'] == 'current_activities':
-                results.append(
-                    filter_current_activities(flt['filter_values'], limit, offset, lang)
-                )
-            if flt['id'] == 'start_page':
-                # as we have no user specific start page filters yet in v1.0, we can
-                # just return the current activities result set
-                results.append(
-                    filter_current_activities(flt['filter_values'], limit, offset, lang)
-                )
-            if flt['id'] == 'date':
-                results.append(filter_date(flt['filter_values'], limit, offset, lang))
-            if flt['id'] == 'daterange':
-                results.append(
-                    filter_daterange(flt['filter_values'], limit, offset, lang)
-                )
-
-        # TODO: discuss if/how search result consolidation should happen
-        #       will probably mostly depend on scoring, so dicuss scoring as well
-        if len(results) == 1:
-            return Response(results[0], status=200)
-        else:
-            consolidated_label = 'Consolidated search results: ' + ', '.join(
-                [r['label'] for r in results]
-            )
-            consolidated_results = []
-            ids = []
-            total = 0
-            for idx, r in enumerate(results):
-                if idx == 0:
-                    consolidated_results.extend(r['data'])
-                    ids.extend([r['id'] for r in consolidated_results])
-                    total += r['total']
-                else:
-                    # filter out duplicates before processing the result set
-                    for i, item in enumerate(r['data']):
-                        if item['id'] in ids:
-                            r['data'].pop(i)
-                    # now add the total and as many items as needed to fill the limit
-                    # TODO: something still seems to be off with the total in cases
-                    #       where the limit is significantly lower than the total
-                    total += len(r['data'])
-                    for item in r['data']:
-                        ids.append(item['id'])
-                        if len(consolidated_results) < limit:
-                            consolidated_results.append(item)
-
+        allowed_order_by = ['default', 'rank', 'currentness', None]
+        if order_by not in allowed_order_by:
             return Response(
-                {
-                    'label': consolidated_label,
-                    'total': total,
-                    'data': consolidated_results,
-                },
-                status=200,
+                {'detail': f'invalid order_by parameter. allowed: {allowed_order_by}'},
+                status=400,
             )
+
+        queryset = ShowroomObject.objects.all()
+        q_filter = None
+        for flt in filters:
+            filter_function_map = {
+                'fulltext': get_fulltext_filter,
+                'activity': get_activity_filter,
+            }
+            filter_func = filter_function_map.get(flt['id'])
+            if filter_func is None:
+                return Response(
+                    {'detail': f'filter id {flt["id"]} is not implemented'}, status=400
+                )
+            append_filter = filter_func(flt['filter_values'], lang)
+            # if a filter function does not return any filter, we ignore this but log
+            # a warning
+            if append_filter is None:
+                logger.warning(
+                    f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
+                )
+                continue
+            if q_filter is None:
+                q_filter = append_filter
+            else:
+                q_filter = q_filter & append_filter
+
+        if q_filter:
+            queryset = queryset.filter(q_filter).distinct()
+        count = queryset.count()
+
+        results = [
+            get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
+        ]
+
+        return Response(
+            {
+                'label': label_results_generic[lang],
+                'total': count,
+                'data': results,
+            },
+            status=200,
+        )
+
+
+def get_fulltext_filter(values, lang):
+    filters = None
+    for value in values:
+        if type(value) is not str:
+            raise ParseError('fulltext filter values have to be strings', 400)
+        add_filter = (
+            Q(title__icontains=value)
+            | Q(subtext__icontains=value)
+            | (
+                Q(textsearchindex__text__icontains=value)
+                & Q(textsearchindex__language=lang)
+            )
+        )
+        if filters is None:
+            filters = add_filter
+        else:
+            filters = filters | add_filter
+    return filters
+
+
+def get_activity_filter(values, lang):
+    filters = None
+    for value in values:
+        if type(value) not in [str, dict]:
+            raise ParseError(
+                'Only strings or dicts are allowed as activity filter parameters', 400
+            )
+        if type(value) is str:
+            add_filter = Q(type=ShowroomObject.ACTIVITY) & (
+                Q(title__icontains=value)
+                | Q(subtext__icontains=value)
+                | (
+                    Q(textsearchindex__text__icontains=value)
+                    & Q(textsearchindex__language=lang)
+                )
+            )
+        else:
+            obj_id = value.get('id')
+            if not obj_id or type(obj_id) is not str:
+                raise ParseError(
+                    'dict values in activity filter have to contain an id of type str',
+                    400,
+                )
+            add_filter = Q(pk=obj_id) | Q(relations_to__id=obj_id)
+        if filters is None:
+            filters = add_filter
+        else:
+            filters = filters | add_filter
+    return filters
+
+
+def get_person_filter(values, lang):
+    filters = None
+    return filters
+
+
+# TODO: once the new search is fully implemented, throw out dead code below
 
 
 def text_search_query(text):
