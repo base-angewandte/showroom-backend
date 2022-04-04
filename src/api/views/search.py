@@ -95,6 +95,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'daterange': get_daterange_filter,
                 'keyword': get_keyword_filter,
                 'type': get_activity_type_filter,
+                'institution': get_institution_filter,
             }
             filter_func = filter_function_map.get(flt['id'])
             if filter_func is None:
@@ -342,6 +343,25 @@ def get_activity_type_filter(values, lang):
         else:
             flt = flt | Q(activitydetail__activity_type__label__contains={'en': typ})
     return Q(type=ShowroomObject.ACTIVITY) & flt
+
+
+def get_institution_filter(values, lang):
+    if not values:
+        raise ParseError('institution filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict:
+            raise ParseError('Malformed institution filter', 400)
+        if not (repo_id := value.get('id')):
+            raise ParseError('Malformed institution filter', 400)
+        if type(repo_id) is not int:
+            raise ParseError('Malformed institution filter', 400)
+        if not flt:
+            flt = Q(source_repo__id=repo_id)
+        else:
+            flt = flt | Q(source_repo__id=repo_id)
+    return flt
 
 
 # TODO: once the new search is fully implemented, throw out dead code below
