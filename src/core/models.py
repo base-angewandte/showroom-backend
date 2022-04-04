@@ -28,6 +28,16 @@ def get_default_list_ordering():
     return [{'id': c, 'hidden': False} for c in activity_lists.list_collections]
 
 
+def get_default_entity_secondary_details():
+    # TODO: make this dynamic as soon as we have labels in SKOS vocab
+    return [
+        {
+            'de': {'data': '', 'label': 'Biografie'},
+            'en': {'data': '', 'label': 'Curriculum Vitae'},
+        }
+    ]
+
+
 class SourceRepository(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True)
     label_institution = models.CharField(max_length=255)
@@ -110,6 +120,8 @@ def create_object_details(sender, instance, created, raw, *args, **kwargs):
         ShowroomObject.INSTITUTION,
     ]:
         EntityDetail.objects.get_or_create(showroom_object=instance)
+        instance.secondary_details = get_default_entity_secondary_details()
+        instance.save()
 
 
 class EntityDetail(models.Model):
