@@ -113,7 +113,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
             # keywords should be sortable by localised value
             keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
     keyword_filter = {
-        'id': 'keywords',
+        'id': 'keyword',
         'type': 'chips',
         'label': label_keywords[lang],
         'hidden': False,
