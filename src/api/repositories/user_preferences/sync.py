@@ -62,6 +62,7 @@ def pull_user_data(username, update_entry=True):
                 source_repo_object_id=username,
                 source_repo=default_user_repo,
                 source_repo_data=result,
+                type=ShowroomObject.PERSON,
             )
         entity.entitydetail.update_from_repo_data()
         entity.entitydetail.update_activities()
