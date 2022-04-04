@@ -5,29 +5,38 @@ from rest_framework.response import Response
 from django.conf import settings
 
 from api.serializers.filter import FilterSerializer
-from core.models import ShowroomObject
+from core.models import ShowroomObject, SourceRepository
 
 static_filters = [
     {
-        'id': 'activities',
-        'type': 'chips',
-        'freetext_allowed': True,
+        'id': 'fulltext',
+        'type': 'text',
         'label': {
-            'en': 'Activities',
-            'de': 'Aktivitäten',
+            'en': 'Full-text search of all Showroom objects',
+            'de': 'Volltext-Suche über alle Showroom-Objekte',
         },
         'hidden': False,
     },
-    # {
-    #     'id': 'persons',
-    #     'type': 'chips',
-    #     'freetext_allowed': True,
-    #     'label': {
-    #         'en': 'Persons',
-    #         'de': 'Personen',
-    #     },
-    #     'hidden': False,
-    # },
+    {
+        'id': 'activity',
+        'type': 'chips',
+        'freetext_allowed': True,
+        'label': {
+            'en': 'Filter for activities',
+            'de': 'Nach Aktivitäten suchen',
+        },
+        'hidden': False,
+    },
+    {
+        'id': 'person',
+        'type': 'chips',
+        'freetext_allowed': True,
+        'label': {
+            'en': 'Filter for persons',
+            'de': 'Nach Personen suchen',
+        },
+        'hidden': False,
+    },
     # {
     #     'id': 'locations',
     #     'type': 'chips',
@@ -66,34 +75,6 @@ static_filters = [
     #     },
     #     'hidden': False,
     # },
-    # {
-    #     'id': 'current_activities',
-    #     'type': 'chips',
-    #     'freetext_allowed': True,
-    #     'label': {
-    #         'en': 'Current activities',
-    #         'de': 'Aktuelle Aktivitäten',
-    #     },
-    #     'hidden': False,
-    # },
-    {
-        'id': 'start_page',
-        'type': 'text',
-        'label': {
-            'en': 'Start page',
-            'de': 'Startseite',
-        },
-        'hidden': True,
-    },
-    {
-        'id': 'default',
-        'type': 'text',
-        'label': {
-            'en': 'Default filter for generic text search',
-            'de': 'Standardfilter für generische Textsuche',
-        },
-        'hidden': True,
-    },
 ]
 
 label_keywords = {
@@ -104,6 +85,11 @@ label_keywords = {
 label_activity_types = {
     'en': 'Activity types',
     'de': 'Art der Aktivität',
+}
+
+label_institutions = {
+    'en': 'Limit search to objects from one instiution\'s repository',
+    'de': 'Suche auf Einträge einer Institution limitieren',
 }
 
 
@@ -152,7 +138,18 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'freetext_allowed': False,
         'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
     }
-    return [keyword_filter, activity_types_filter]
+
+    institutions = SourceRepository.objects.all()
+    institution_filter = {
+        'id': 'institution',
+        'type': 'chips',
+        'label': label_institutions[lang],
+        'hidden': True,
+        'freetext_allowed': False,
+        'options': [{'id': i.id, 'label': i.label_institution} for i in institutions],
+    }
+
+    return [keyword_filter, activity_types_filter, institution_filter]
 
 
 class FilterViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
