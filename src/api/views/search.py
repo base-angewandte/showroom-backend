@@ -93,6 +93,8 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'person': get_person_filter,
                 'date': get_date_filter,
                 'daterange': get_daterange_filter,
+                'keyword': get_keyword_filter,
+                'type': get_type_filter,
             }
             filter_func = filter_function_map.get(flt['id'])
             if filter_func is None:
@@ -304,6 +306,44 @@ def get_daterange_filter(values, lang):
     return flt
 
 
+def get_keyword_filter(values, lang):
+    if not values:
+        raise ParseError('Keywords filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict:
+            raise ParseError('Malformed keyword filter', 400)
+        if not (kw := value.get('id')):
+            raise ParseError('Malformed keyword filter', 400)
+        if type(kw) is not str:
+            raise ParseError('Malformed keyword filter', 400)
+        if flt is None:
+            flt = Q(activitydetail__keywords__has_key=kw)
+        else:
+            flt = flt | Q(activitydetail__keywords__has_key=kw)
+    return Q(type=ShowroomObject.ACTIVITY) & flt
+
+
+def get_type_filter(values, lang):
+    if not values:
+        raise ParseError('Type filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict:
+            raise ParseError('Malformed type filter', 400)
+        if not (typ := value.get('id')):
+            raise ParseError('Malformed type filter', 400)
+        if type(typ) is not str:
+            raise ParseError('Malformed type filter', 400)
+        if not flt:
+            flt = Q(activitydetail__activity_type__label__contains={'en': typ})
+        else:
+            flt = flt | Q(activitydetail__activity_type__label__contains={'en': typ})
+    return Q(type=ShowroomObject.ACTIVITY) & flt
+
+
 # TODO: once the new search is fully implemented, throw out dead code below
 
 
@@ -501,99 +541,4 @@ def filter_current_activities(values, limit, offset, language):
             get_search_item(activity, language)
             for activity in final[offset : offset + limit]
         ],
-    }
-
-
-def filter_type(values, limit, offset, language):
-    """Filters all showroom activities for certain types.
-
-    Filters all showroom activities for activities of certain types, that are
-    provided through the values parameter. Different values for types are combined
-    in a logical OR filter. So all activities will be returned that are of any of
-    the provided types.
-    The results are paginated by limit and offset values, but a total count for all
-    found entities and activities will always be returned in the result.
-
-    :param values: A list of filter id dicts listed by the GET /filters endpoint
-    :param limit: Maximum amount of activities to return
-    :param offset: The 0-indexed offset of the first activity in the result set
-    :return: A SearchResult dictionary, as defined in the API spec.
-    """
-    if not values:
-        raise ParseError('Type filter needs at least one value', 400)
-
-    queryset = ShowroomObject.objects.all()
-    # TODO: discuss what the ordering criteria are
-    queryset = queryset.order_by('-date_created')
-    q_filter = None
-    for value in values:
-        if type(value) is not dict:
-            raise ParseError('Malformed type filter', 400)
-        if not (typ := value.get('id')):
-            raise ParseError('Malformed type filter', 400)
-        if type(typ) is not str:
-            raise ParseError('Malformed type filter', 400)
-        if not q_filter:
-            q_filter = Q(activitydetail__activity_type__label__contains={'en': typ})
-        else:
-            q_filter = q_filter | Q(
-                activitydetail__activity_type__label__contains={'en': typ}
-            )
-    queryset = queryset.filter(q_filter)
-
-    total_count = queryset.count()
-
-    end = offset + limit
-    queryset = queryset[offset:end]
-
-    return {
-        'label': 'Activities filtered by type',
-        'total': total_count,
-        'data': [get_search_item(activity, language) for activity in queryset],
-    }
-
-
-def filter_keywords(values, limit, offset, language):
-    """Filters all showroom activities for certain types.
-
-    Filters all showroom activities for activities with certain keywords, that are
-    provided through the values parameter. Different values for keywords are combined
-    in a logical OR filter. So all activities will be returned that have any of
-    the provided keywords.
-    The results are paginated by limit and offset values, but a total count for all
-    found entities and activities will always be returned in the result.
-
-    :param values: A list of filter id dicts listed by the GET /filters endpoint
-    :param limit: Maximum amount of activities to return
-    :param offset: The 0-indexed offset of the first activity in the result set
-    :return: A SearchResult dictionary, as defined in the API spec.
-    """
-    if not values:
-        raise ParseError('Keywords filter needs at least one value', 400)
-
-    queryset = ShowroomObject.objects.all()
-    # TODO: discuss what the ordering criteria are
-    queryset = queryset.order_by('-date_created')
-    for idx, value in enumerate(values):
-        if type(value) is not dict:
-            raise ParseError('Malformed keyword filter', 400)
-        if not (kw := value.get('id')):
-            raise ParseError('Malformed keyword filter', 400)
-        if type(kw) is not str:
-            raise ParseError('Malformed keyword filter', 400)
-        if idx == 0:
-            q_filter = Q(activitydetail__keywords__has_key=kw)
-        else:
-            q_filter = q_filter | Q(activitydetail__keywords__has_key=kw)
-    queryset = queryset.filter(q_filter)
-
-    total_count = queryset.count()
-
-    end = offset + limit
-    queryset = queryset[offset:end]
-
-    return {
-        'label': 'Activities filtered by keywords',
-        'total': total_count,
-        'data': [get_search_item(activity, language) for activity in queryset],
     }
