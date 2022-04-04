@@ -72,8 +72,13 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                     alternative_preview = medium.specifics.get('thumbnail')
         if not search_item['image_url'] and alternative_preview:
             search_item['image_url'] = alternative_preview
-    else:
-        search_item['image_url'] = item.photo if item.photo else None
+    elif item.type in [
+        ShowroomObject.PERSON,
+        ShowroomObject.DEPARTMENT,
+        ShowroomObject.INSTITUTION,
+    ]:
+        photo = item.entitydetail.photo
+        search_item['image_url'] = photo if photo else None
 
     activity_schema = None
     if (
@@ -141,9 +146,10 @@ def get_architecture_contributors(item, lang):
 
 def get_activity_type_university(item, lang):
     ret = []
-    typ = item.activitydetail.activity_type
-    if typ and (type_label := typ.get('label')):
-        ret.append(type_label.get(lang))
+    if item.type == ShowroomObject.ACTIVITY:
+        typ = item.activitydetail.activity_type
+        if typ and (type_label := typ.get('label')):
+            ret.append(type_label.get(lang))
     ret.append(item.source_repo.label_institution)
     return ret
 
@@ -278,7 +284,8 @@ def get_text_keywords(item, lang):
 
 def get_title_subtitle(item, lang):
     ret = [item.title]
-    ret.extend(item.subtext)
+    if type(item.subtext) is list:
+        ret.extend(item.subtext)
     return ret
 
 
