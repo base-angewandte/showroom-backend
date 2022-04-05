@@ -153,6 +153,30 @@ class EntityDetail(models.Model):
                 ret.append(loc_list)
         return ret
 
+    def create_relations_from_activities(self):
+        filters = activity_lists.get_data_contains_filters(
+            self.showroom_object.source_repo_object_id
+        )
+        q_filter = None
+        for f in filters:
+            if not q_filter:
+                q_filter = Q(source_repo_data__data__contains=f)
+            else:
+                q_filter = q_filter | Q(source_repo_data__data__contains=f)
+        activities = ShowroomObject.objects.filter(
+            type=ShowroomObject.ACTIVITY,
+            activitydetail__activity_type__isnull=False,
+        )
+        relations_model = ShowroomObject.relations_to.through
+        relations = [
+            relations_model(
+                from_showroomobject_id=activity.id,
+                to_showroomobject_id=self.showroom_object.id,
+            )
+            for activity in activities
+        ]
+        relations_model.objects.bulk_create(relations, ignore_conflicts=True)
+
     def render_list(self):
         filters = activity_lists.get_data_contains_filters(
             self.showroom_object.source_repo_object_id
@@ -166,12 +190,26 @@ class EntityDetail(models.Model):
         activities = ShowroomObject.objects.filter(
             type=ShowroomObject.ACTIVITY,
             belongs_to=self.showroom_object,
-            type__isnull=False,
+            activitydetail__activity_type__isnull=False,
         ).filter(q_filter)
         self.list = activity_lists.render_list_from_activities(
             activities, self.showroom_object.source_repo_object_id
         )
         self.save()
+
+    def enqueue_create_relations_job(self):
+        job_id = f'entity_create_relations_from_activities_{self.showroom_object.id}'
+        queue = get_queue('default')
+        registry = ScheduledJobRegistry(queue=queue)
+        # similar to enqueue_list_render_job we only want to enqueue a single job if
+        # several are scheduled within a short period
+        if job_id in registry:
+            registry.remove(job_id)
+        queue.enqueue_in(
+            timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+            self.create_relations_from_activities,
+            job_id=job_id,
+        )
 
     def enqueue_list_render_job(self):
         job_id = f'entity_list_render_{self.showroom_object.id}'
@@ -198,7 +236,9 @@ class EntityDetail(models.Model):
         with the entity in Showroom (e.g. because the activities have
         been pushed before the entity was created). Those activities
         will then be updated so their belongs_to key points to the
-        current entity. Also a list render job will be scheduled
+        current entity. Also a list render job will be scheduled, as
+        well as a job creation relations from activities in which this
+        entity is mentioned in a significant role.
         """
         # TODO: discuss: should we generally update all activities or check for those
         #       where belongs_to is not yet set?
@@ -208,6 +248,7 @@ class EntityDetail(models.Model):
         )
         activities.update(belongs_to=self.showroom_object)
         self.enqueue_list_render_job()
+        self.enqueue_create_relations_job()
 
     def update_from_repo_data(self):
         # this functionality is located in the api.repositories.user_preferences module
