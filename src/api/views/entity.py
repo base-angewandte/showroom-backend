@@ -22,9 +22,11 @@ from api.serializers.entity import (
     EntityListEditSerializer,
     EntitySerializer,
 )
+from api.serializers.filter import FilterSerializer
 from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
+from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import (
     CsrfExemptSessionAuthentication,
     get_date_filter,
@@ -267,6 +269,39 @@ class EntityViewSet(viewsets.GenericViewSet):
                 )
 
         return Response(ret, status=200)
+
+    @extend_schema(
+        tags=['public'],
+        parameters=[
+            OpenApiParameter(
+                name='Accept-Language',
+                type=str,
+                default=settings.LANGUAGE_CODE,
+                location=OpenApiParameter.HEADER,
+                description='The ISO 2 letter language code to use for localisation',
+            ),
+        ],
+        responses={
+            200: FilterSerializer,
+        },
+    )
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def filters(self, request, *args, **kwargs):
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+
+        lang = request.LANGUAGE_CODE
+        if lang not in [ln[0] for ln in settings.LANGUAGES]:
+            lang = settings.LANGUAGE_CODE
+
+        filters = [
+            {
+                key: (value if key != 'label' else value[lang])
+                for key, value in _filter.items()
+            }
+            for _filter in static_entity_filters
+        ]
+        filters.extend(get_dynamic_entity_filters(instance, lang=lang))
+        return Response(filters, status=200)
 
     @extend_schema(
         tags=['public'],
