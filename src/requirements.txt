@@ -71,7 +71,9 @@ lxml==4.8.0
     # via python-cas
 packaging==21.3
     # via redis
-pip-tools==5.3.1
+pep517==0.12.0
+    # via pip-tools
+pip-tools==6.5.1
     # via -r src/requirements.in
 portalocker==2.4.0
     # via concurrent-log-handler
@@ -113,7 +115,6 @@ shortuuid==1.0.1
 six==1.16.0
     # via
     #   isodate
-    #   pip-tools
     #   python-cas
     #   rdflib
 skosmos-client==0.3.0
@@ -122,12 +123,16 @@ sqlparse==0.4.2
     # via
     #   django
     #   django-debug-toolbar
+tomli==2.0.1
+    # via pep517
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==1.26.9
     # via requests
 werkzeug==1.0.1
     # via -r src/requirements.in
+wheel==0.37.1
+    # via pip-tools
 wrapt==1.14.0
     # via deprecated
 zipp==3.8.0
