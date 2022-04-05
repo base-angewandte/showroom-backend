@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound
@@ -11,12 +11,17 @@ from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.text import slugify
 
 from api.permissions import ActivityPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
 from api.repositories.portfolio.search import get_search_item
 from api.repositories.user_preferences import sync
+from api.serializers.autocomplete import (
+    AutocompleteItemSerializer,
+    AutocompleteRequestSerializer,
+)
 from api.serializers.entity import (
     EntityEditSerializer,
     EntityListEditSerializer,
@@ -26,7 +31,11 @@ from api.serializers.filter import FilterSerializer
 from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
-from api.views.filter import get_dynamic_entity_filters, static_entity_filters
+from api.views.filter import (
+    get_dynamic_entity_filters,
+    get_static_filter_label,
+    static_entity_filters,
+)
 from api.views.search import (
     CsrfExemptSessionAuthentication,
     get_activity_type_filter,
@@ -270,6 +279,72 @@ class EntityViewSet(viewsets.GenericViewSet):
                     instance.entitydetail.showcase, include_details=True
                 )
 
+        return Response(ret, status=200)
+
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: OpenApiResponse(
+                description='',
+                response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
+                # TODO: add description and examples
+            ),
+        },
+    )
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[AllowAny],
+        serializer_class=AutocompleteRequestSerializer,
+    )
+    def autocomplete(self, request, *args, **kwargs):
+        s = self.get_serializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+        q = s.data.get('q')
+        filter_id = s.data.get('filter_id')
+        limit = s.data.get('limit')
+        lang = request.LANGUAGE_CODE
+
+        allowed_filters = ['default', 'activity', 'person']
+        if filter_id not in allowed_filters:
+            return Response(
+                {
+                    'detail': f'{filter_id} is not an allowed autocomplete filter. allowed: {allowed_filters}',
+                },
+                status=400,
+            )
+
+        items = []
+        q_filter = None
+        if filter_id == 'default':
+            pass
+        elif filter_id == 'activity':
+            q_filter = Q(type=ShowroomObject.ACTIVITY)
+        elif filter_id == 'person':
+            q_filter = Q(type=ShowroomObject.PERSON)
+
+        objects = ShowroomObject.objects.filter(belongs_to=instance, title__icontains=q)
+        if q_filter:
+            objects = objects.filter(q_filter)
+        if limit:
+            objects = objects[0:limit]
+        for obj in objects:
+            items.append(
+                {
+                    'id': obj.id,
+                    'title': obj.title,
+                    'subtext': obj.subtext,
+                }
+            )
+
+        ret = [
+            {
+                'source': filter_id,
+                'label': get_static_filter_label(filter_id, lang),
+                'data': items,
+            }
+        ]
         return Response(ret, status=200)
 
     @extend_schema(

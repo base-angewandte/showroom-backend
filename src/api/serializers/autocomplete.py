@@ -15,5 +15,5 @@ class AutocompleteItemSerializer(serializers.Serializer):
 
 class AutocompleteRequestSerializer(serializers.Serializer):
     q = serializers.CharField()
-    filter_id = serializers.CharField(required=False, default='activities')
+    filter_id = serializers.CharField(required=False, default='activity')
     limit = serializers.IntegerField(required=False)
