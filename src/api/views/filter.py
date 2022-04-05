@@ -12,8 +12,8 @@ static_filters = [
         'id': 'fulltext',
         'type': 'text',
         'label': {
-            'en': 'Full-text search of all Showroom objects',
-            'de': 'Volltext-Suche über alle Showroom-Objekte',
+            'en': 'Text',
+            'de': 'Text',
         },
         'hidden': False,
     },
@@ -22,8 +22,8 @@ static_filters = [
         'type': 'chips',
         'freetext_allowed': True,
         'label': {
-            'en': 'Filter for activities',
-            'de': 'Nach Aktivitäten suchen',
+            'en': 'Activities',
+            'de': 'Aktivitäten',
         },
         'hidden': False,
     },
@@ -32,8 +32,8 @@ static_filters = [
         'type': 'chips',
         'freetext_allowed': True,
         'label': {
-            'en': 'Filter for persons',
-            'de': 'Nach Personen suchen',
+            'en': 'Persons',
+            'de': 'Personen',
         },
         'hidden': False,
     },
@@ -88,8 +88,8 @@ label_activity_types = {
 }
 
 label_institutions = {
-    'en': 'Limit search to objects from one instiution\'s repository',
-    'de': 'Suche auf Einträge einer Institution limitieren',
+    'en': 'Institution',
+    'de': 'Institution',
 }
 
 
