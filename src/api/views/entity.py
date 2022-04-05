@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -14,6 +15,7 @@ from django.utils.text import slugify
 
 from api.permissions import ActivityPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
+from api.repositories.portfolio.search import get_search_item
 from api.repositories.user_preferences import sync
 from api.serializers.entity import (
     EntityEditSerializer,
@@ -23,9 +25,17 @@ from api.serializers.entity import (
 from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
-from api.views.search import CsrfExemptSessionAuthentication
+from api.views.search import (
+    CsrfExemptSessionAuthentication,
+    get_date_filter,
+    get_daterange_filter,
+    get_fulltext_filter,
+    label_results_generic,
+)
 from core.models import ShowroomObject
 from core.validators import validate_showcase
+
+logger = logging.getLogger(__name__)
 
 
 class EntityViewSet(viewsets.GenericViewSet):
@@ -270,11 +280,66 @@ class EntityViewSet(viewsets.GenericViewSet):
     def search(self, request, *args, **kwargs):
         s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+        filters = s.data.get('filters')
+        limit = s.data.get('limit')
+        offset = s.data.get('offset')
+        lang = request.LANGUAGE_CODE
+
+        if offset is None:
+            offset = 0
+        elif offset < 0:
+            return Response({'detail': 'negative offset not allowed'}, status=400)
+        if limit is not None and limit < 1:
+            return Response(
+                {'detail': 'negative or zero limit not allowed'}, status=400
+            )
+        if limit is None:
+            limit = settings.SEARCH_LIMIT
+
+        queryset = ShowroomObject.objects.filter(belongs_to=instance)
+
+        q_filter = None
+        if filters:
+            allowed_filters = ['fulltext', 'date', 'daterange']
+            for flt in filters:
+                if flt['id'] not in allowed_filters:
+                    return Response(
+                        f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed_filters}',
+                        400,
+                    )
+                append_filter = None
+                if flt['id'] == 'fulltext':
+                    append_filter = get_fulltext_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'date':
+                    append_filter = get_date_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'daterange':
+                    append_filter = get_daterange_filter(flt['filter_values'], lang)
+                # if a filter function does not return any filter, we ignore this but log
+                # a warning
+                if append_filter is None:
+                    logger.warning(
+                        f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
+                    )
+                    continue
+                if q_filter is None:
+                    q_filter = append_filter
+                else:
+                    q_filter = q_filter & append_filter
+
+        if q_filter:
+            queryset = queryset.filter(q_filter).distinct()
+        count = queryset.count()
+
+        results = [
+            get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
+        ]
+
         return Response(
             {
-                'label': 'Entity search is not yet implemented',
-                'total': 0,
-                'data': [],
+                'label': label_results_generic[lang],
+                'total': count,
+                'data': results,
             },
             status=200,
         )
