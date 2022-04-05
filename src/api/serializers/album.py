@@ -1,16 +1,16 @@
 from rest_framework import serializers
 
-from core.models import Album
+from core.models import ShowroomObject
 
 
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Album
+        model = ShowroomObject
         fields = [
             'id',
             'title',
-            'subtitle',
+            'subtext',
             'secondary_details',
             'belongs_to',
-            'activities',
+            'relations_to',
         ]

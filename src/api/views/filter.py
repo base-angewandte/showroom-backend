@@ -5,45 +5,15 @@ from rest_framework.response import Response
 from django.conf import settings
 
 from api.serializers.filter import FilterSerializer
-from core.models import Activity
+from core.models import ShowroomObject, SourceRepository
 
-static_filters = [
+static_entity_filters = [
     {
-        'id': 'activities',
-        'type': 'chips',
-        'freetext_allowed': True,
+        'id': 'fulltext',
+        'type': 'text',
         'label': {
-            'en': 'Activities',
-            'de': 'Aktivitäten',
-        },
-        'hidden': False,
-    },
-    # {
-    #     'id': 'persons',
-    #     'type': 'chips',
-    #     'freetext_allowed': True,
-    #     'label': {
-    #         'en': 'Persons',
-    #         'de': 'Personen',
-    #     },
-    #     'hidden': False,
-    # },
-    # {
-    #     'id': 'locations',
-    #     'type': 'chips',
-    #     'freetext_allowed': True,
-    #     'label': {
-    #         'en': 'Locations',
-    #         'de': 'Orte',
-    #     },
-    #     'hidden': False,
-    # },
-    {
-        'id': 'daterange',
-        'type': 'daterange',
-        'label': {
-            'en': 'Date Range',
-            'de': 'Datumsbereich',
+            'en': 'Text',
+            'de': 'Text',
         },
         'hidden': False,
     },
@@ -56,6 +26,48 @@ static_filters = [
         },
         'hidden': False,
     },
+    {
+        'id': 'daterange',
+        'type': 'daterange',
+        'label': {
+            'en': 'Date Range',
+            'de': 'Datumsbereich',
+        },
+        'hidden': False,
+    },
+]
+
+static_filters = [
+    {
+        'id': 'activity',
+        'type': 'chips',
+        'freetext_allowed': True,
+        'label': {
+            'en': 'Activities',
+            'de': 'Aktivitäten',
+        },
+        'hidden': False,
+    },
+    {
+        'id': 'person',
+        'type': 'chips',
+        'freetext_allowed': True,
+        'label': {
+            'en': 'Persons',
+            'de': 'Personen',
+        },
+        'hidden': False,
+    },
+    # {
+    #     'id': 'locations',
+    #     'type': 'chips',
+    #     'freetext_allowed': True,
+    #     'label': {
+    #         'en': 'Locations',
+    #         'de': 'Orte',
+    #     },
+    #     'hidden': False,
+    # },
     # {
     #     'id': 'albums',
     #     'type': 'chips',
@@ -66,35 +78,8 @@ static_filters = [
     #     },
     #     'hidden': False,
     # },
-    # {
-    #     'id': 'current_activities',
-    #     'type': 'chips',
-    #     'freetext_allowed': True,
-    #     'label': {
-    #         'en': 'Current activities',
-    #         'de': 'Aktuelle Aktivitäten',
-    #     },
-    #     'hidden': False,
-    # },
-    {
-        'id': 'start_page',
-        'type': 'text',
-        'label': {
-            'en': 'Start page',
-            'de': 'Startseite',
-        },
-        'hidden': True,
-    },
-    {
-        'id': 'default',
-        'type': 'text',
-        'label': {
-            'en': 'Default filter for generic text search',
-            'de': 'Standardfilter für generische Textsuche',
-        },
-        'hidden': True,
-    },
 ]
+static_filters.extend(static_entity_filters)
 
 label_keywords = {
     'en': 'Keywords',
@@ -104,6 +89,11 @@ label_keywords = {
 label_activity_types = {
     'en': 'Activity types',
     'de': 'Art der Aktivität',
+}
+
+label_institutions = {
+    'en': 'Institution',
+    'de': 'Institution',
 }
 
 
@@ -118,14 +108,16 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
     searches."""
     # TODO: cache the dynamic filters for 30 min
     # TODO: add entity keywords to the keywords filter
-    activities = Activity.objects.exclude(source_repo_data__keywords=None)
+    activities = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY).exclude(
+        source_repo_data__keywords=None
+    )
     keywords = set()
     for activity in activities:
         for kw in activity.source_repo_data['keywords']:
             # keywords should be sortable by localised value
             keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
     keyword_filter = {
-        'id': 'keywords',
+        'id': 'keyword',
         'type': 'chips',
         'label': label_keywords[lang],
         'hidden': False,
@@ -133,18 +125,80 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
         'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
     }
 
-    activities = Activity.objects.exclude(type__isnull=True).exclude(type={})
+    activities = (
+        ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+        .exclude(activitydetail__activity_type__isnull=True)
+        .exclude(activitydetail__activity_type={})
+    )
     types = set()
-    for ac in activities:
-        types.add((ac.type['label'][lang], ac.type['label'][settings.LANGUAGE_CODE]))
+    for activity in activities:
+        typ = activity.activitydetail.activity_type
+        types.add((typ['label'][lang], typ['label'][settings.LANGUAGE_CODE]))
     activity_types_filter = {
-        'id': 'type',
+        'id': 'activity_type',
         'type': 'chips',
         'label': label_activity_types[lang],
         'hidden': False,
         'freetext_allowed': False,
         'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
     }
+
+    institutions = SourceRepository.objects.all()
+    institution_filter = {
+        'id': 'institution',
+        'type': 'chips',
+        'label': label_institutions[lang],
+        'hidden': True,
+        'freetext_allowed': False,
+        'options': [{'id': i.id, 'label': i.label_institution} for i in institutions],
+    }
+
+    return [keyword_filter, activity_types_filter, institution_filter]
+
+
+def get_dynamic_entity_filters(entity, lang=settings.LANGUAGE_CODE):
+    """Returns the filter definitions for keywords and activity type searches
+    on the entity search endpoint."""
+    # TODO: cache the dynamic filters for 30 min
+    activities = ShowroomObject.objects.filter(
+        belongs_to=entity,
+        type=ShowroomObject.ACTIVITY,
+    ).exclude(source_repo_data__keywords=None)
+    keywords = set()
+    for activity in activities:
+        for kw in activity.source_repo_data['keywords']:
+            # keywords should be sortable by localised value
+            keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
+    keyword_filter = {
+        'id': 'keyword',
+        'type': 'chips',
+        'label': label_keywords[lang],
+        'hidden': False,
+        'freetext_allowed': False,
+        'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
+    }
+
+    activities = (
+        ShowroomObject.objects.filter(
+            belongs_to=entity,
+            type=ShowroomObject.ACTIVITY,
+        )
+        .exclude(activitydetail__activity_type__isnull=True)
+        .exclude(activitydetail__activity_type={})
+    )
+    types = set()
+    for activity in activities:
+        typ = activity.activitydetail.activity_type
+        types.add((typ['label'][lang], typ['label'][settings.LANGUAGE_CODE]))
+    activity_types_filter = {
+        'id': 'activity_type',
+        'type': 'chips',
+        'label': label_activity_types[lang],
+        'hidden': False,
+        'freetext_allowed': False,
+        'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
+    }
+
     return [keyword_filter, activity_types_filter]
 
 

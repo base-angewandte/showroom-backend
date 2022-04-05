@@ -2,60 +2,65 @@ from rest_framework import serializers
 
 from django.utils.text import slugify
 
-from core.models import Entity
+from core.models import ShowroomObject
 
 from ..repositories.portfolio import activity_lists
-from . import abstract_showroom_object_fields
+from . import showroom_object_fields
 from .generic import CommonTextSerializer, localise_detail_fields
 from .showcase import get_serialized_showcase_and_warnings
 
 
 class EntitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Entity
-        fields = abstract_showroom_object_fields + [
-            'type',
-            'expertise',
-            'showcase',
-            'photo',
-            'parent',
-        ]
+        model = ShowroomObject
+        fields = showroom_object_fields
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        # remove plain repo data
+        ret.pop('source_repo')
+        ret.pop('source_repo_data')
+        ret.pop('source_repo_object_id')
+        ret.pop('source_repo_owner_id')
+        ret.pop('relations_to')
+        ret.pop('belongs_to')
 
         # transform the id and parent id to include name
         if not instance.title:
             ret['id'] = f'entity-{instance.id}'
         else:
             ret['id'] = f'{slugify(instance.title)}-{instance.id}'
-        if instance.parent:
-            if not instance.parent.title:
-                ret['parent'] = f'entity-{instance.parent.id}'
+        if instance.belongs_to:
+            if not instance.belongs_to.title:
+                ret['parent'] = f'entity-{instance.belongs_to.id}'
             else:
-                ret['parent'] = f'{slugify(instance.parent.title)}-{instance.parent.id}'
+                ret[
+                    'parent'
+                ] = f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}'
 
         # TODO: refactor this (also in get_serach_item(), to be configurable)
-        if instance.type == 'P':
+        if instance.type == ShowroomObject.PERSON:
             ret['type'] = 'person'
-        elif instance.type == 'I':
+        elif instance.type == ShowroomObject.INSTITUTION:
             ret['type'] = 'institution'
-        elif instance.type == 'D':
+        elif instance.type == ShowroomObject.DEPARTMENT:
             ret['type'] = 'department'
 
         # make sure to only provide an empty list if showcase is None or {}
-        if not instance.showcase:
-            instance.showcase = []
-        sc, sc_warnings = get_serialized_showcase_and_warnings(instance.showcase)
+        if not instance.entitydetail.showcase:
+            instance.entitydetail.showcase = []
+        sc, sc_warnings = get_serialized_showcase_and_warnings(
+            instance.entitydetail.showcase
+        )
         ret['showcase'] = sc
         if sc_warnings:
             ret['showcase_warnings'] = sc_warnings
 
         # we have to bring list into a format similar to that in activities based
         # on list_ordering
-        activity_list = ret.pop('list')
+        activity_list = instance.entitydetail.list
         ret['list'] = []
-        for order in instance.list_ordering:
+        for order in instance.entitydetail.list_ordering:
             if order['hidden']:
                 continue
             if (list_id := order['id']) in activity_list:
@@ -70,10 +75,10 @@ class EntitySerializer(serializers.ModelSerializer):
                     ret['list'].append(activity_list[list_id])
 
         # return the localised version of the expertise
-        if type(ret['expertise']) is dict:
-            ret['expertise'] = ret['expertise'].get(
-                self.context['request'].LANGUAGE_CODE
-            )
+        ret['expertise'] = []
+        expertise = instance.entitydetail.expertise
+        if type(expertise) is dict:
+            ret['expertise'] = expertise.get(self.context['request'].LANGUAGE_CODE)
 
         # now filter out the requested languages for the detail fields and lists
         localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)

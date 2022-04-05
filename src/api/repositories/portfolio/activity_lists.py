@@ -128,7 +128,7 @@ def render_list_from_activities(activities, username):
         for collection in list_collections
     }
     for activity in activities:
-        typ = activity.type.get('source')
+        typ = activity.activitydetail.activity_type.get('source')
         typ_short = typ.split('/')[-1]
         roles = get_user_roles(activity, username)
 
@@ -432,7 +432,7 @@ def render_list_from_activities(activities, username):
 def render_activity(activity, lang, username):
     """Render an Activity into a CommonList item."""
     subtitle = '. '.join(activity.subtext) if activity.subtext else ''
-    typ = activity.type['label'].get(lang)
+    typ = activity.activitydetail.activity_type['label'].get(lang)
     # TODO: gather details from source_repo_data
     roles = get_user_roles(activity, username)
     roles = [get_role_label(role, lang) for role in roles]

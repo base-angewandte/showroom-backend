@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.utils.text import slugify
 
-from core.models import Activity, Album
+from core.models import ShowroomObject
 
 from . import get_schema
 from .mapping import map_search
@@ -36,21 +36,21 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     if hasattr(item, 'rank'):
         search_item['score'] = item.rank
 
-    if type(item) == Activity:
+    if item.type == ShowroomObject.ACTIVITY:
         search_item['type'] = 'activity'
-    elif type(item) == Album:
+    elif item.type == ShowroomObject.ALBUM:
         search_item['type'] = 'album'
     else:
         search_item['id'] = slugify(item.title) + '-' + item.id
         # TODO: refactor this (also in entity serializer, to be configurable)
-        if item.type == 'P':
+        if item.type == ShowroomObject.PERSON:
             search_item['type'] = 'person'
-        elif item.type == 'I':
+        elif item.type == ShowroomObject.INSTITUTION:
             search_item['type'] = 'institution'
-        elif item.type == 'D':
+        elif item.type == ShowroomObject.DEPARTMENT:
             search_item['type'] = 'department'
 
-    if type(item) == Activity:
+    if item.type == ShowroomObject.ACTIVITY:
         # featured_media currently cannot be set explicitly in portfolio
         # therefore we just go through all available media and take the first
         # image we can find. if there is no image, we'll look for the first other
@@ -72,12 +72,21 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                     alternative_preview = medium.specifics.get('thumbnail')
         if not search_item['image_url'] and alternative_preview:
             search_item['image_url'] = alternative_preview
-    else:
-        search_item['image_url'] = item.photo if item.photo else None
+    elif item.type in [
+        ShowroomObject.PERSON,
+        ShowroomObject.DEPARTMENT,
+        ShowroomObject.INSTITUTION,
+    ]:
+        photo = item.entitydetail.photo
+        search_item['image_url'] = photo if photo else None
 
     activity_schema = None
-    if type(item) == Activity and item.type:
-        activity_schema = get_schema(item.type.get('source'))
+    if (
+        item.type == ShowroomObject.ACTIVITY
+        and item.activitydetail
+        and item.activitydetail.activity_type
+    ):
+        activity_schema = get_schema(item.activitydetail.activity_type.get('source'))
     mapping = map_search(search_item['type'], activity_schema)
 
     functions = {
@@ -137,8 +146,10 @@ def get_architecture_contributors(item, lang):
 
 def get_activity_type_university(item, lang):
     ret = []
-    if item.type and (type_label := item.type.get('label')):
-        ret.append(type_label.get(lang))
+    if item.type == ShowroomObject.ACTIVITY:
+        typ = item.activitydetail.activity_type
+        if typ and (type_label := typ.get('label')):
+            ret.append(type_label.get(lang))
     ret.append(item.source_repo.label_institution)
     return ret
 
@@ -273,7 +284,8 @@ def get_text_keywords(item, lang):
 
 def get_title_subtitle(item, lang):
     ret = [item.title]
-    ret.extend(item.subtext)
+    if type(item.subtext) is list:
+        ret.extend(item.subtext)
     return ret
 
 

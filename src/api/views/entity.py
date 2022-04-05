@@ -1,67 +1,69 @@
+import logging
 from datetime import datetime, timedelta
 
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, serializers, viewsets
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.text import slugify
 
-from api.permissions import EntityEditPermission
+from api.permissions import ActivityPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
+from api.repositories.portfolio.search import get_search_item
 from api.repositories.user_preferences import sync
+from api.serializers.autocomplete import (
+    AutocompleteItemSerializer,
+    AutocompleteRequestSerializer,
+)
 from api.serializers.entity import (
     EntityEditSerializer,
     EntityListEditSerializer,
     EntitySerializer,
 )
+from api.serializers.filter import FilterSerializer
 from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
-from api.views.search import CsrfExemptSessionAuthentication
-from core.models import Activity, Album, Entity
+from api.views.filter import (
+    get_dynamic_entity_filters,
+    get_static_filter_label,
+    static_entity_filters,
+)
+from api.views.search import (
+    CsrfExemptSessionAuthentication,
+    get_activity_type_filter,
+    get_date_filter,
+    get_daterange_filter,
+    get_fulltext_filter,
+    get_keyword_filter,
+    label_results_generic,
+)
+from core.models import ShowroomObject
 from core.validators import validate_showcase
 
+logger = logging.getLogger(__name__)
 
-@extend_schema_view(
-    create=extend_schema(
-        tags=['repo'],
-        responses={
-            201: EntitySerializer,
-            400: Responses.Error400,
-            403: Responses.Error403,
-        },
-    ),
-    retrieve=extend_schema(
-        tags=['public'],
-        responses={
-            200: EntitySerializer,
-            404: Responses.Error404,
-        },
-    ),
-    partial_update=extend_schema(
-        tags=['auth'],
-        responses={
-            204: None,
-            400: Responses.Error400,
-            403: Responses.Error403,
-            404: Responses.Error404,
-        },
-    ),
-)
-class EntityViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
-    queryset = Entity.objects.all()
+
+class EntityViewSet(viewsets.GenericViewSet):
+    queryset = ShowroomObject.objects.filter(
+        type__in=[
+            ShowroomObject.PERSON,
+            ShowroomObject.DEPARTMENT,
+            ShowroomObject.INSTITUTION,
+        ]
+    )
     serializer_class = EntitySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # Entities should be only manipulated by repositories, similar to Activities, so
+    # we'll reuse ActivityPermission and use other permissions explicitly on all custom
+    # actions, when needed
+    permission_classes = [ActivityPermission]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
     http_method_names = ['get', 'head', 'options', 'patch', 'post']
@@ -84,7 +86,7 @@ class EntityViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        if not settings.DISABLE_USER_REPO and instance.type == Entity.PERSON:
+        if not settings.DISABLE_USER_REPO and instance.type == ShowroomObject.PERSON:
             t_synced = instance.date_synced
             t_cache = datetime.today() - timedelta(
                 minutes=settings.USER_REPO_CACHE_TIME
@@ -93,12 +95,23 @@ class EntityViewSet(
                 # TODO: discuss whether this should be executed directly or relegated to an async
                 #       job. in the latter case the current request would be served the cached data
                 try:
-                    sync.pull_user_data(instance.source_repo_entry_id)
+                    sync.pull_user_data(instance.source_repo_object_id)
                 except sync.UserPrefError:
                     # TODO: discuss what to do if the sync fails but we already have some data
                     pass
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=['repo'],
+        responses={
+            201: EntitySerializer,
+            400: Responses.Error400,
+            403: Responses.Error403,
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        return Response({'detail': 'not yet implemented'}, 500)
 
     @extend_schema(
         methods=['GET'],
@@ -127,7 +140,8 @@ class EntityViewSet(
         # GET /entities/{id}/list
         if request.method.lower() == 'get':
             return Response(
-                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+                instance.entitydetail.get_editing_list(lang=self.request.LANGUAGE_CODE),
+                status=200,
             )
 
         # PATCH /entities/{id}/list
@@ -144,11 +158,13 @@ class EntityViewSet(
                     data.append({'id': schema, 'hidden': True})
 
             # update entity
-            instance.list_ordering = data
+            instance.entitydetail.list_ordering = data
             instance.save()
+            instance.entitydetail.render_list()
 
             return Response(
-                instance.get_editing_list(lang=self.request.LANGUAGE_CODE), status=200
+                instance.entitydetail.get_editing_list(lang=self.request.LANGUAGE_CODE),
+                status=200,
             )
 
     @extend_schema(
@@ -219,7 +235,7 @@ class EntityViewSet(
                 ret['secondary_details'] = instance.secondary_details
             if include_showcase:
                 ret['showcase'] = get_rendered_edit_showcase(
-                    instance.showcase,
+                    instance.entitydetail.showcase,
                     include_details=include_showcase_details,
                 )
 
@@ -232,15 +248,18 @@ class EntityViewSet(
 
             # update entity
             if (showcase := data.get('showcase')) is not None:
-                instance.showcase = []
+                instance.entitydetail.showcase = []
                 for sc_item in showcase:
                     if 'type' not in sc_item:
                         sc_item['type'] = 'activity'
-                    instance.showcase.append([sc_item['id'], sc_item['type']])
+                    instance.entitydetail.showcase.append(
+                        [sc_item['id'], sc_item['type']]
+                    )
                 try:
-                    validate_showcase(instance.showcase)
+                    validate_showcase(instance.entitydetail.showcase)
                 except ValidationError as err:
                     raise serializers.ValidationError({'showcase': err})
+                instance.entitydetail.save()
             if (secondary_details := data.get('secondary_details')) is not None:
                 instance.secondary_details = secondary_details
             instance.save()
@@ -257,10 +276,109 @@ class EntityViewSet(
 
             if showcase is not None:
                 ret['showcase'] = get_rendered_edit_showcase(
-                    instance.showcase, include_details=True
+                    instance.entitydetail.showcase, include_details=True
                 )
 
         return Response(ret, status=200)
+
+    @extend_schema(
+        tags=['public'],
+        responses={
+            200: OpenApiResponse(
+                description='',
+                response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
+                # TODO: add description and examples
+            ),
+        },
+    )
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[AllowAny],
+        serializer_class=AutocompleteRequestSerializer,
+    )
+    def autocomplete(self, request, *args, **kwargs):
+        s = self.get_serializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+        q = s.data.get('q')
+        filter_id = s.data.get('filter_id')
+        limit = s.data.get('limit')
+        lang = request.LANGUAGE_CODE
+
+        allowed_filters = ['default', 'activity', 'person']
+        if filter_id not in allowed_filters:
+            return Response(
+                {
+                    'detail': f'{filter_id} is not an allowed autocomplete filter. allowed: {allowed_filters}',
+                },
+                status=400,
+            )
+
+        items = []
+        q_filter = None
+        if filter_id == 'default':
+            pass
+        elif filter_id == 'activity':
+            q_filter = Q(type=ShowroomObject.ACTIVITY)
+        elif filter_id == 'person':
+            q_filter = Q(type=ShowroomObject.PERSON)
+
+        objects = ShowroomObject.objects.filter(belongs_to=instance, title__icontains=q)
+        if q_filter:
+            objects = objects.filter(q_filter)
+        if limit:
+            objects = objects[0:limit]
+        for obj in objects:
+            items.append(
+                {
+                    'id': obj.id,
+                    'title': obj.title,
+                    'subtext': obj.subtext,
+                }
+            )
+
+        ret = [
+            {
+                'source': filter_id,
+                'label': get_static_filter_label(filter_id, lang),
+                'data': items,
+            }
+        ]
+        return Response(ret, status=200)
+
+    @extend_schema(
+        tags=['public'],
+        parameters=[
+            OpenApiParameter(
+                name='Accept-Language',
+                type=str,
+                default=settings.LANGUAGE_CODE,
+                location=OpenApiParameter.HEADER,
+                description='The ISO 2 letter language code to use for localisation',
+            ),
+        ],
+        responses={
+            200: FilterSerializer,
+        },
+    )
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def filters(self, request, *args, **kwargs):
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+
+        lang = request.LANGUAGE_CODE
+        if lang not in [ln[0] for ln in settings.LANGUAGES]:
+            lang = settings.LANGUAGE_CODE
+
+        filters = [
+            {
+                key: (value if key != 'label' else value[lang])
+                for key, value in _filter.items()
+            }
+            for _filter in static_entity_filters
+        ]
+        filters.extend(get_dynamic_entity_filters(instance, lang=lang))
+        return Response(filters, status=200)
 
     @extend_schema(
         tags=['public'],
@@ -274,11 +392,70 @@ class EntityViewSet(
     def search(self, request, *args, **kwargs):
         s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
+        instance = self.get_object_or_404(pk=kwargs['pk'])
+        filters = s.data.get('filters')
+        limit = s.data.get('limit')
+        offset = s.data.get('offset')
+        lang = request.LANGUAGE_CODE
+
+        if offset is None:
+            offset = 0
+        elif offset < 0:
+            return Response({'detail': 'negative offset not allowed'}, status=400)
+        if limit is not None and limit < 1:
+            return Response(
+                {'detail': 'negative or zero limit not allowed'}, status=400
+            )
+        if limit is None:
+            limit = settings.SEARCH_LIMIT
+
+        queryset = ShowroomObject.objects.filter(belongs_to=instance)
+
+        q_filter = None
+        if filters:
+            allowed = ['fulltext', 'date', 'daterange', 'keyword', 'activity_type']
+            for flt in filters:
+                if flt['id'] not in allowed:
+                    return Response(
+                        f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed}',
+                        400,
+                    )
+                append_filter = None
+                if flt['id'] == 'fulltext':
+                    append_filter = get_fulltext_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'date':
+                    append_filter = get_date_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'daterange':
+                    append_filter = get_daterange_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'keyword':
+                    append_filter = get_keyword_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'activity_type':
+                    append_filter = get_activity_type_filter(flt['filter_values'], lang)
+                # if a filter function does not return any filter, we ignore this but log
+                # a warning
+                if append_filter is None:
+                    logger.warning(
+                        f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
+                    )
+                    continue
+                if q_filter is None:
+                    q_filter = append_filter
+                else:
+                    q_filter = q_filter & append_filter
+
+        if q_filter:
+            queryset = queryset.filter(q_filter).distinct()
+        count = queryset.count()
+
+        results = [
+            get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
+        ]
+
         return Response(
             {
-                'label': 'Entity search is not yet implemented',
-                'total': 0,
-                'data': [],
+                'label': label_results_generic[lang],
+                'total': count,
+                'data': results,
             },
             status=200,
         )
@@ -302,16 +479,10 @@ def get_rendered_edit_showcase(showcase, include_details=False):
             if include_details:
                 sc_item['details'] = {}
                 item = None
-                if sc_type == 'activity':
-                    try:
-                        item = Activity.objects.get(pk=sc_id)
-                    except Activity.DoesNotExist:
-                        pass
-                elif sc_type == 'album':
-                    try:
-                        item = Album.objects.get(pk=sc_id)
-                    except Album.DoesNotExist:
-                        pass
+                try:
+                    item = ShowroomObject.objects.get(pk=sc_id)
+                except ShowroomObject.DoesNotExist:
+                    pass
                 if item:
                     sc_item['details'] = ShowcaseSerializer(item).data
             ret.append(sc_item)

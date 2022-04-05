@@ -11,7 +11,7 @@ from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import filter_current_activities
-from core.models import Entity
+from core.models import ShowroomObject
 from showroom import settings
 
 logger = logging.getLogger(__name__)
@@ -66,8 +66,8 @@ class InitialViewSet(viewsets.GenericViewSet):
 
 def get_initial_response(request, pk):
     try:
-        entity = Entity.objects.get(pk=pk)
-    except Entity.DoesNotExist:
+        entity = ShowroomObject.objects.get(pk=pk)
+    except ShowroomObject.DoesNotExist:
         return Response(
             {'detail': 'No entity found with this id.'},
             status=status.HTTP_404_NOT_FOUND,
@@ -85,11 +85,11 @@ def get_initial_response(request, pk):
         'results': [],
     }
 
-    if entity.showcase is None or entity.showcase == []:
-        entity.showcase = settings.DEFAULT_SHOWCASE
+    if entity.entitydetail.showcase is None or entity.entitydetail.showcase == []:
+        entity.entitydetail.showcase = settings.DEFAULT_SHOWCASE
 
     response['showcase'], showcase_warnings = get_serialized_showcase_and_warnings(
-        entity.showcase
+        entity.entitydetail.showcase
     )
 
     # if anything went wrong with serializing single showcase items, we still want

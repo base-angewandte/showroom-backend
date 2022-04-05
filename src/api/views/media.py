@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from api.permissions import ActivityPermission
 from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
-from core.models import Activity, Media
+from core.models import Media, ShowroomObject
 
 
 class MediaViewSet(
@@ -36,8 +36,10 @@ class MediaViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            activity = Activity.objects.get(source_repo_entry_id=source_repo_entry_id)
-        except Activity.DoesNotExist:
+            activity = ShowroomObject.objects.get(
+                source_repo_object_id=source_repo_entry_id
+            )
+        except ShowroomObject.DoesNotExist:
             return Response(
                 {
                     'source_repo_entry_id': [
@@ -46,14 +48,14 @@ class MediaViewSet(
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
-        request.data['activity'] = activity.id
+        request.data['showroom_object'] = activity.id
         # now get the serializer and process the data
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             instance = Media.objects.get(
                 source_repo_media_id=serializer.validated_data['source_repo_media_id'],
-                activity_id=activity.id,
+                showroom_object=activity,
             )
             serializer.instance = instance
         except Media.DoesNotExist:
@@ -111,7 +113,7 @@ class MediaViewSet(
         try:
             instance = Media.objects.get(
                 source_repo_media_id=kwargs['pk'],
-                activity__source_repo=request.META.get('HTTP_X_API_CLIENT'),
+                showroom_object__source_repo=request.META.get('HTTP_X_API_CLIENT'),
             )
         except Media.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)

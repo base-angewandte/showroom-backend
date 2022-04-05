@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from django.conf import settings
 from django.utils.text import slugify
 
 from api.repositories import portfolio
@@ -9,10 +8,10 @@ from api.repositories.portfolio import (
     MappingNotFoundError,
     transform,
 )
-from core.models import Activity, Entity
+from core.models import ShowroomObject
 
 from ..repositories.portfolio.search import get_search_item
-from . import abstract_showroom_object_fields, logger
+from . import logger, showroom_object_fields
 from .generic import localise_detail_fields
 from .media import MediaSerializer
 
@@ -23,20 +22,12 @@ class ActivityRelationSerializer(serializers.Serializer):
 
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Activity
-        fields = abstract_showroom_object_fields + [
-            'source_repo_owner_id',
-            'source_repo_data',
-            'featured_media',
-            'belongs_to',
-            'relations_to',
-            'type',
-            'keywords',
-        ]
+        model = ShowroomObject
+        fields = showroom_object_fields
 
     def to_internal_value(self, data):
         new_data = {
-            'source_repo_entry_id': data.get('source_repo_entry_id'),
+            'source_repo_object_id': data.get('source_repo_entry_id'),
             'source_repo_owner_id': data.get('source_repo_owner_id'),
             'source_repo': data.get('source_repo'),
         }
@@ -53,21 +44,13 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data['title'] = repo_data.get('title')
         subtext = repo_data.get('subtitle')
         new_data['subtext'] = [subtext] if subtext else []
-        new_data['type'] = repo_data.get('type')
-        new_data['keywords'] = (
-            {
-                kw['label'][settings.LANGUAGE_CODE]: True
-                for kw in repo_data.get('keywords')
-            }
-            if repo_data.get('keywords')
-            else {}
-        )
+        new_data['type'] = ShowroomObject.ACTIVITY
 
         try:
-            new_data['belongs_to'] = Entity.objects.get(
-                source_repo_entry_id=data.get('source_repo_owner_id')
+            new_data['belongs_to'] = ShowroomObject.objects.get(
+                source_repo_object_id=data.get('source_repo_owner_id')
             ).id
-        except Entity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             new_data['belongs_to'] = None
         new_data['source_repo_data'] = repo_data
 
@@ -111,9 +94,12 @@ class ActivitySerializer(serializers.ModelSerializer):
         # remove plain repo data
         ret.pop('source_repo')
         ret.pop('source_repo_data')
-        ret.pop('source_repo_entry_id')
+        ret.pop('source_repo_object_id')
         ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
+        # set type to activity type (instead of showroom object type) and add keywords
+        ret['type'] = instance.activitydetail.activity_type
+        ret['keywords'] = instance.activitydetail.keywords
         # add timestamps
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created

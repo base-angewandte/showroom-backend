@@ -15,8 +15,7 @@ from api.repositories.portfolio.search_indexer import index_activity
 from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
-from api.serializers.media import MediaSerializer
-from core.models import Activity
+from core.models import ShowroomObject
 
 
 @extend_schema_view(
@@ -28,14 +27,8 @@ from core.models import Activity
         },
     ),
 )
-class ActivityViewSet(
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    queryset = Activity.objects.all()
+class ActivityViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
     permission_classes = [ActivityPermission]
 
@@ -56,14 +49,16 @@ class ActivityViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            instance = Activity.objects.get(
-                source_repo_entry_id=serializer.validated_data['source_repo_entry_id'],
+            instance = ShowroomObject.objects.get(
+                source_repo_object_id=serializer.validated_data[
+                    'source_repo_object_id'
+                ],
                 source_repo=serializer.validated_data['source_repo'],
             )
             serializer.instance = instance
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             instance = False
-        except Activity.MultipleObjectsReturned:
+        except ShowroomObject.MultipleObjectsReturned:
             return Response(
                 {
                     'detail': 'More than one activity with this id exists. '
@@ -72,6 +67,20 @@ class ActivityViewSet(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer.save()
+
+        # now fill the ActivityDetail belonging to this ShowroomObject
+        repo_data = serializer.instance.source_repo_data
+        serializer.instance.activitydetail.activity_type = repo_data.get('type')
+        serializer.instance.activitydetail.keywords = (
+            {
+                kw['label'][settings.LANGUAGE_CODE]: True
+                for kw in repo_data.get('keywords')
+            }
+            if repo_data.get('keywords')
+            else {}
+        )
+        serializer.instance.activitydetail.save()
+
         # as soon as the serializer is saved we want the full text search index to be
         # built. TODO: refactor this to an async worker
         index_activity(serializer.instance)
@@ -80,7 +89,7 @@ class ActivityViewSet(
             if serializer.instance.belongs_to:
                 # in case the entity is already in the system, we'll sync it from UP
                 # if the current version is older than the configured sync time
-                serializer.instance.belongs_to.enqueue_list_render_job()
+                serializer.instance.belongs_to.entitydetail.enqueue_list_render_job()
                 t_synced = serializer.instance.belongs_to.date_synced
                 t_cache = datetime.today() - timedelta(
                     minutes=settings.USER_REPO_CACHE_TIME
@@ -112,7 +121,7 @@ class ActivityViewSet(
         # is already an entity in the system, for which we can generate a new list
         else:
             if serializer.instance.belongs_to:
-                serializer.instance.belongs_to.enqueue_list_render_job()
+                serializer.instance.belongs_to.entitydetail.enqueue_list_render_job()
 
         response = {
             'created': [],
@@ -122,14 +131,14 @@ class ActivityViewSet(
         if instance:
             response['updated'].append(
                 {
-                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'id': serializer.validated_data['source_repo_object_id'],
                     'showroom_id': serializer.data['id'],
                 }
             )
         else:
             response['created'].append(
                 {
-                    'id': serializer.validated_data['source_repo_entry_id'],
+                    'id': serializer.validated_data['source_repo_object_id'],
                     'showroom_id': serializer.data['id'],
                 }
             )
@@ -155,28 +164,17 @@ class ActivityViewSet(
     )
     def destroy(self, request, *args, **kwargs):
         try:
-            activity = Activity.objects.get(
-                source_repo_entry_id=kwargs['pk'],
+            activity = ShowroomObject.objects.get(
+                source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
         rerender_list = True if activity.belongs_to else False
         self.perform_destroy(activity)
         if rerender_list:
             activity.belongs_to.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @extend_schema(
-        tags=['public'],
-        responses={
-            200: MediaSerializer(many=True),
-            404: Responses.Error404,
-        },
-    )
-    @action(detail=True, methods=['get'])
-    def media(self, request, *args, **kwargs):
-        return Response({'detail': 'Not yet implemented'}, status=400)
 
     @extend_schema(
         tags=['repo'],
@@ -198,11 +196,11 @@ class ActivityViewSet(
     @action(detail=True, methods=['post'])
     def relations(self, request, *args, **kwargs):
         try:
-            activity = Activity.objects.get(
-                source_repo_entry_id=kwargs['pk'],
+            activity = ShowroomObject.objects.get(
+                source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
-        except Activity.DoesNotExist:
+        except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
         if (related_to := request.data.get('related_to')) is None:
             return Response(
@@ -232,13 +230,13 @@ class ActivityViewSet(
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                related_activity = Activity.objects.get(
-                    source_repo_entry_id=related,
+                related_activity = ShowroomObject.objects.get(
+                    source_repo_object_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )
                 relations_added.append(related)
                 activity.relations_to.add(related_activity)
-            except Activity.DoesNotExist:
+            except ShowroomObject.DoesNotExist:
                 relations_not_added.append(related)
 
         ret = {

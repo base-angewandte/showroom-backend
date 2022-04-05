@@ -2,12 +2,14 @@ from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.response import Response
 
+from django.db.models import Q
+
 from api.serializers.autocomplete import (
     AutocompleteItemSerializer,
     AutocompleteRequestSerializer,
 )
 from api.views.filter import get_static_filter_label
-from core.models import Activity
+from core.models import ShowroomObject
 
 
 class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -35,32 +37,36 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         limit = s.data.get('limit')
         lang = request.LANGUAGE_CODE
 
-        items = []
-        # for now the default filter is the same as activities
-        # TODO: change, as soon as we have entities and albums in our test data
-        if filter_id == 'default':
-            filter_id = 'activities'
-        if filter_id == 'activities':
-            activities = Activity.objects.filter(title__icontains=q)
-            if limit:
-                activities = activities[0:limit]
-            for activity in activities:
-                items.append(
-                    {
-                        'id': activity.id,
-                        'title': activity.title,
-                        'subtext': activity.subtext,
-                    }
-                )
-
-        else:
+        allowed_filters = ['default', 'activity', 'person']
+        if filter_id not in allowed_filters:
             return Response(
                 {
-                    'source': filter_id,
-                    'label': 'This autocomplete filter is not implemented yet',
-                    'data': [],
+                    'detail': f'{filter_id} is not an allowed autocomplete filter. allowed: {allowed_filters}',
                 },
-                status=200,
+                status=400,
+            )
+
+        items = []
+        q_filter = None
+        if filter_id == 'default':
+            pass
+        elif filter_id == 'activity':
+            q_filter = Q(type=ShowroomObject.ACTIVITY)
+        elif filter_id == 'person':
+            q_filter = Q(type=ShowroomObject.PERSON)
+
+        objects = ShowroomObject.objects.filter(title__icontains=q)
+        if q_filter:
+            objects = objects.filter(q_filter)
+        if limit:
+            objects = objects[0:limit]
+        for obj in objects:
+            items.append(
+                {
+                    'id': obj.id,
+                    'title': obj.title,
+                    'subtext': obj.subtext,
+                }
             )
 
         ret = [

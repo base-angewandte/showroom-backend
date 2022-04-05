@@ -2,7 +2,7 @@ import requests
 
 from django.conf import settings
 
-from core.models import Entity, SourceRepository
+from core.models import ShowroomObject, SourceRepository
 
 
 class UserPrefError(Exception):
@@ -51,19 +51,20 @@ def pull_user_data(username, update_entry=True):
             raise UserPrefError('Configured SourceRepository does not exist!')
 
         try:
-            entity = Entity.objects.get(
-                source_repo_entry_id=username,
+            entity = ShowroomObject.objects.get(
+                source_repo_object_id=username,
                 source_repo_id=settings.DEFAULT_USER_REPO,
             )
             entity.source_repo_data = result
             entity.save()
-        except Entity.DoesNotExist:
-            entity = Entity.objects.create(
-                source_repo_entry_id=username,
+        except ShowroomObject.DoesNotExist:
+            entity = ShowroomObject.objects.create(
+                source_repo_object_id=username,
                 source_repo=default_user_repo,
                 source_repo_data=result,
+                type=ShowroomObject.PERSON,
             )
-        entity.update_from_repo_data()
-        entity.update_activities()
+        entity.entitydetail.update_from_repo_data()
+        entity.entitydetail.update_activities()
 
     return result

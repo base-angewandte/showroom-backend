@@ -7,7 +7,7 @@ from django.conf import settings
 
 from api.serializers.generic import Responses
 from api.serializers.user import UserDataSerializer
-from core.models import Entity
+from core.models import ShowroomObject
 
 
 @extend_schema(
@@ -27,16 +27,20 @@ def get_user_data(request, *args, **kwargs):
         )
 
     try:
-        entity = Entity.objects.get(source_repo_entry_id=request.user.username)
+        entity = ShowroomObject.objects.get(
+            type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
+        )
         entity_id = entity.id
-    except Entity.DoesNotExist:
+    except ShowroomObject.DoesNotExist:
         entity_id = None
-    except Entity.MultipleObjectsReturned:
+    except ShowroomObject.MultipleObjectsReturned:
         # TODO: discuss: how do we want to handle multiple Entities with the same
         #       user set as source_repo_entry_id. See also the similar comment in the
         #       api.permissions.EntityEditPermission class
         #       For simplicity we'll currently just take the first found entity
-        entities = Entity.objects.filter(source_repo_entry_id=request.user.username)
+        entities = ShowroomObject.objects.filter(
+            type=ShowroomObject.PERSON, source_repo_entry_id=request.user.username
+        )
         entity_id = entities[0].id
     ret = {
         'id': request.user.username,

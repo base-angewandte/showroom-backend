@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Activity, Album, Entity, Media, SourceRepository
+from .models import (
+    ActivityDetail,
+    EntityDetail,
+    Media,
+    ShowroomObject,
+    SourceRepository,
+)
 
 
 class SourceRepoAdmin(admin.ModelAdmin):
@@ -13,7 +19,7 @@ class SourceRepoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(SourceRepository, SourceRepoAdmin)
-admin.site.register(Entity)
-admin.site.register(Activity)
-admin.site.register(Album)
+admin.site.register(ShowroomObject)
+admin.site.register(ActivityDetail)
+admin.site.register(EntityDetail)
 admin.site.register(Media)
