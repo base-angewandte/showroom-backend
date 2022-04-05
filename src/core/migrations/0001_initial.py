@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('locations', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
                 ('source_repo_object_id', models.CharField(max_length=255)),
                 ('source_repo_owner_id', models.CharField(blank=True, max_length=255, null=True)),
-                ('source_repo_data', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
+                ('source_repo_data', django.contrib.postgres.fields.jsonb.JSONField(default=dict)),
                 ('date_synced', models.DateTimeField(editable=False, null=True)),
                 ('belongs_to', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.ShowroomObject')),
                 ('relations_to', models.ManyToManyField(blank=True, related_name='relations_from', to='core.ShowroomObject')),
