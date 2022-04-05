@@ -1,4 +1,5 @@
 import logging
+import re
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
@@ -7,10 +8,11 @@ from rest_framework.response import Response
 
 from django.utils.text import slugify
 
+from api.repositories.portfolio.search import get_search_item
 from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
-from api.views.search import filter_current_activities
+from api.views.search import label_current_activities
 from core.models import ShowroomObject
 from showroom import settings
 
@@ -25,6 +27,14 @@ class InitialViewSet(viewsets.GenericViewSet):
 
     @extend_schema(
         tags=['public'],
+        parameters=[
+            OpenApiParameter(
+                'limit',
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                description=f'Optional limit for the search result. Default: {settings.SEARCH_LIMIT}',
+            ),
+        ],
         responses={
             200: OpenApiResponse(
                 description='',
@@ -50,6 +60,12 @@ class InitialViewSet(viewsets.GenericViewSet):
                 OpenApiParameter.PATH,
                 description='ShortUUID of the entity for which initial data should be presented',
             ),
+            OpenApiParameter(
+                'limit',
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                description=f'Optional limit for the search result. Default: {settings.SEARCH_LIMIT}',
+            ),
         ],
         responses={
             200: OpenApiResponse(
@@ -74,6 +90,17 @@ def get_initial_response(request, pk):
         )
     lang = request.LANGUAGE_CODE
 
+    limit = request.GET.get('limit')
+    if limit is None:
+        limit = settings.SEARCH_LIMIT
+    else:
+        if not re.match(r'^[1-9][0-9]*$', limit):
+            return Response(
+                {'detail': 'only positive integers are allowed as limit'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        limit = int(limit)
+
     response = {
         'id': f'{slugify(entity.title)}-{entity.id}',
         'source_institution': {
@@ -97,17 +124,20 @@ def get_initial_response(request, pk):
     if showcase_warnings:
         response['showcase_warnings'] = showcase_warnings
 
-    filter = {
-        'id': 'current_activities',
-        'filter_values': ['42!'],  # TODO: placeholder value until further discussion
-    }
-    found = filter_current_activities(filter['filter_values'], 30, 0, lang)
+    found = ShowroomObject.objects.filter(source_repo__id=settings.DEFAULT_USER_REPO)
+    count = found.count()
+    # TODO: add currentness ordering
+    found = found[0:limit]
     response['results'].append(
         {
-            'label': found['label'],
-            'total': found['total'],
-            'data': found['data'],
-            'filters': [filter],
+            'label': label_current_activities[lang],
+            'total': count,
+            'data': [get_search_item(obj, lang) for obj in found],
+            'filters': {
+                'id': 'institution',
+                'filter_values': [settings.DEFAULT_USER_REPO],
+                'order_by': 'currentness',
+            },
         }
     )
 
