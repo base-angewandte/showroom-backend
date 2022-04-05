@@ -29,9 +29,11 @@ from api.serializers.showcase import ShowcaseSerializer
 from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import (
     CsrfExemptSessionAuthentication,
+    get_activity_type_filter,
     get_date_filter,
     get_daterange_filter,
     get_fulltext_filter,
+    get_keyword_filter,
     label_results_generic,
 )
 from core.models import ShowroomObject
@@ -336,11 +338,11 @@ class EntityViewSet(viewsets.GenericViewSet):
 
         q_filter = None
         if filters:
-            allowed_filters = ['fulltext', 'date', 'daterange']
+            allowed = ['fulltext', 'date', 'daterange', 'keyword', 'activity_type']
             for flt in filters:
-                if flt['id'] not in allowed_filters:
+                if flt['id'] not in allowed:
                     return Response(
-                        f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed_filters}',
+                        f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed}',
                         400,
                     )
                 append_filter = None
@@ -350,6 +352,10 @@ class EntityViewSet(viewsets.GenericViewSet):
                     append_filter = get_date_filter(flt['filter_values'], lang)
                 elif flt['id'] == 'daterange':
                     append_filter = get_daterange_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'keyword':
+                    append_filter = get_keyword_filter(flt['filter_values'], lang)
+                elif flt['id'] == 'activity_type':
+                    append_filter = get_activity_type_filter(flt['filter_values'], lang)
                 # if a filter function does not return any filter, we ignore this but log
                 # a warning
                 if append_filter is None:
