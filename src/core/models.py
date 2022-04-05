@@ -4,7 +4,6 @@ from django_rq.queues import get_queue
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
@@ -67,12 +66,12 @@ class ShowroomObject(AbstractBaseModel):
 
     id = ShortUUIDField(primary_key=True)
     title = models.CharField(max_length=255)
-    subtext = JSONField(blank=True, null=True)
+    subtext = models.JSONField(blank=True, null=True)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES)
-    list = JSONField(blank=True, null=True)
-    primary_details = JSONField(blank=True, null=True)
-    secondary_details = JSONField(blank=True, null=True)
-    locations = JSONField(blank=True, null=True)
+    list = models.JSONField(blank=True, null=True)
+    primary_details = models.JSONField(blank=True, null=True)
+    secondary_details = models.JSONField(blank=True, null=True)
+    locations = models.JSONField(blank=True, null=True)
     # TODO@review: is models.PROTECT the right constraint here?
     #   reasoning: we would not want to accidentally delete all objects of a repo only
     #   because a repo itself is deleted. as repo deletion will be a rare activity we
@@ -81,7 +80,7 @@ class ShowroomObject(AbstractBaseModel):
     source_repo = models.ForeignKey(SourceRepository, on_delete=models.PROTECT)
     source_repo_object_id = models.CharField(max_length=255)
     source_repo_owner_id = models.CharField(max_length=255, blank=True, null=True)
-    source_repo_data = JSONField(default=dict)
+    source_repo_data = models.JSONField(default=dict)
     date_synced = models.DateTimeField(editable=False, null=True)
 
     belongs_to = models.ForeignKey(
@@ -128,13 +127,13 @@ class EntityDetail(models.Model):
     showroom_object = models.OneToOneField(
         ShowroomObject, on_delete=models.CASCADE, primary_key=True
     )
-    expertise = JSONField(blank=True, null=True)
-    showcase = JSONField(blank=True, null=True, validators=[validate_showcase])
+    expertise = models.JSONField(blank=True, null=True)
+    showcase = models.JSONField(blank=True, null=True, validators=[validate_showcase])
     photo = models.CharField(max_length=255, blank=True)
     # we have to use a redefined list property here, because validation works
     # different than for the more generic lists used in activities
-    list = JSONField(default=dict, validators=[validate_entity_list])
-    list_ordering = JSONField(
+    list = models.JSONField(default=dict, validators=[validate_entity_list])
+    list_ordering = models.JSONField(
         blank=False,
         default=get_default_list_ordering,
         validators=[validate_list_ordering],
@@ -261,8 +260,8 @@ class ActivityDetail(models.Model):
     showroom_object = models.OneToOneField(
         ShowroomObject, on_delete=models.CASCADE, primary_key=True
     )
-    activity_type = JSONField(blank=True, null=True)
-    keywords = JSONField(blank=True, null=True)
+    activity_type = models.JSONField(blank=True, null=True)
+    keywords = models.JSONField(blank=True, null=True)
     featured_medium = models.ForeignKey(
         'Media',
         on_delete=models.SET_NULL,
@@ -322,9 +321,9 @@ class Media(models.Model):
     #   newer RFCs suggest even a 64 char limit for type and subtype; the longest IANA
     #   registered types are between 80 & 90 characters
     mime_type = models.CharField(max_length=255)
-    exif = JSONField(blank=True, null=True)
-    license = JSONField(blank=True, null=True)
-    specifics = JSONField(blank=True, null=True)
+    exif = models.JSONField(blank=True, null=True)
+    license = models.JSONField(blank=True, null=True)
+    specifics = models.JSONField(blank=True, null=True)
     source_repo_media_id = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)

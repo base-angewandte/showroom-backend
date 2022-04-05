@@ -3,7 +3,7 @@
 # to update all packages run 'pip-compile --upgrade'
 
 concurrent-log-handler==0.9.17
-django~=2.2
+django~=3.2
 django-cas-ng==4.1.1
 django-cors-headers==3.5.0
 django-debug-toolbar==3.1.1
