@@ -9,7 +9,12 @@ from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
 from django.conf import settings
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.contrib.postgres.search import (
+    SearchQuery,
+    SearchRank,
+    SearchVector,
+    TrigramSimilarity,
+)
 from django.db.models import Case, DurationField, F, Min, Q, Sum, Value, When
 from django.utils import timezone
 
@@ -140,8 +145,20 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
                 .order_by('ranked_date_timediff')
             )
         elif order_by == 'rank':
-            # TODO: implement
-            pass
+            words = []
+            for flt in filters:
+                if flt['id'] in ['fulltext', 'activity', 'person']:
+                    for value in flt['filter_values']:
+                        if type(value) == str:
+                            words.append(value)
+            if words:
+                query = ' '.join(words)
+                trigram_similarity_title = TrigramSimilarity('title', query)
+                trigram_similarity_index = TrigramSimilarity(
+                    'textsearchindex__text', query
+                )
+                rank = trigram_similarity_title + trigram_similarity_index
+                queryset = queryset.annotate(rank=rank).order_by('-rank')
 
     count = queryset.count()
     results = [get_search_item(obj, lang) for obj in queryset[offset : limit + offset]]
