@@ -11,7 +11,6 @@ from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.utils.text import slugify
 
 from api.permissions import ActivityPermission, EntityEditPermission
@@ -19,8 +18,8 @@ from api.repositories.portfolio import activity_lists
 from api.repositories.portfolio.search import get_search_item
 from api.repositories.user_preferences import sync
 from api.serializers.autocomplete import (
-    AutocompleteItemSerializer,
     AutocompleteRequestSerializer,
+    AutocompleteSerializer,
 )
 from api.serializers.entity import (
     EntityEditSerializer,
@@ -31,11 +30,8 @@ from api.serializers.filter import FilterSerializer
 from api.serializers.generic import CommonListEditSerializer, Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from api.serializers.showcase import ShowcaseSerializer
-from api.views.filter import (
-    get_dynamic_entity_filters,
-    get_static_filter_label,
-    static_entity_filters,
-)
+from api.views.autocomplete import AutocompleteViewSet
+from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import (
     CsrfExemptSessionAuthentication,
     get_activity_type_filter,
@@ -286,7 +282,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         responses={
             200: OpenApiResponse(
                 description='',
-                response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
+                response=serializers.ListSerializer(child=AutocompleteSerializer()),
                 # TODO: add description and examples
             ),
         },
@@ -307,7 +303,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         limit = s.data.get('limit')
         lang = request.LANGUAGE_CODE
 
-        allowed_filters = ['default', 'activity', 'person']
+        allowed_filters = ['fulltext', 'activity', 'person']
         if filter_id not in allowed_filters:
             return Response(
                 {
@@ -316,37 +312,16 @@ class EntityViewSet(viewsets.GenericViewSet):
                 status=400,
             )
 
-        items = []
-        q_filter = None
-        if filter_id == 'default':
-            pass
-        elif filter_id == 'activity':
-            q_filter = Q(type=ShowroomObject.ACTIVITY)
-        elif filter_id == 'person':
-            q_filter = Q(type=ShowroomObject.PERSON)
-
-        objects = ShowroomObject.objects.filter(belongs_to=instance, title__icontains=q)
-        if q_filter:
-            objects = objects.filter(q_filter)
-        if limit:
-            objects = objects[0:limit]
-        for obj in objects:
-            items.append(
-                {
-                    'id': obj.id,
-                    'title': obj.title,
-                    'subtext': obj.subtext,
-                }
-            )
-
-        ret = [
-            {
-                'source': filter_id,
-                'label': get_static_filter_label(filter_id, lang),
-                'data': items,
-            }
-        ]
-        return Response(ret, status=200)
+        return Response(
+            AutocompleteViewSet.get_results(
+                ShowroomObject.objects.filter(belongs_to=instance),
+                q,
+                filter_id,
+                limit,
+                lang,
+            ),
+            status=200,
+        )
 
     @extend_schema(
         tags=['public'],

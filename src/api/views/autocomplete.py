@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from api.serializers.autocomplete import (
-    AutocompleteItemSerializer,
     AutocompleteRequestSerializer,
+    AutocompleteSerializer,
 )
 from api.views.filter import get_static_filter_label
 from core.models import ShowroomObject
@@ -24,7 +24,7 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         responses={
             200: OpenApiResponse(
                 description='',
-                response=serializers.ListSerializer(child=AutocompleteItemSerializer()),
+                response=serializers.ListSerializer(child=AutocompleteSerializer()),
                 # TODO: add description and examples
             ),
         },
@@ -46,7 +46,13 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 status=400,
             )
 
-        items = []
+        return Response(
+            self.get_results(ShowroomObject.objects.all(), q, filter_id, limit, lang),
+            status=200,
+        )
+
+    @staticmethod
+    def get_results(base_queryset, q, filter_id, limit, lang):
         q_filter = None
         if filter_id == 'fulltext':
             pass
@@ -55,25 +61,49 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         elif filter_id == 'person':
             q_filter = Q(type=ShowroomObject.PERSON)
 
-        objects = ShowroomObject.objects.filter(title__icontains=q)
+        items_activity = []
+        items_person = []
+        objects = base_queryset.filter(
+            title__icontains=q,
+            type__in=[ShowroomObject.ACTIVITY, ShowroomObject.PERSON],
+        )
         if q_filter:
             objects = objects.filter(q_filter)
         if limit:
             objects = objects[0:limit]
         for obj in objects:
-            items.append(
+            if obj.type == ShowroomObject.ACTIVITY:
+                items_activity.append(
+                    {
+                        'id': obj.id,
+                        'title': obj.title,
+                        'subtext': obj.subtext,
+                    }
+                )
+            elif obj.type == ShowroomObject.PERSON:
+                items_person.append(
+                    {
+                        'id': obj.id,
+                        'title': obj.title,
+                        'subtext': obj.subtext,
+                    }
+                )
+
+        ret = []
+        if items_activity:
+            ret.append(
                 {
-                    'id': obj.id,
-                    'title': obj.title,
-                    'subtext': obj.subtext,
+                    'filter_id': 'activity',
+                    'label': get_static_filter_label('activity', lang),
+                    'data': items_activity,
                 }
             )
-
-        ret = [
-            {
-                'source': filter_id,
-                'label': get_static_filter_label(filter_id, lang),
-                'data': items,
-            }
-        ]
-        return Response(ret, status=200)
+        if items_person:
+            ret.append(
+                {
+                    'filter_id': 'person',
+                    'label': get_static_filter_label('person', lang),
+                    'data': items_person,
+                }
+            )
+        return ret
