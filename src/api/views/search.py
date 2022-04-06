@@ -10,7 +10,8 @@ from rest_framework.response import Response
 
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.db.models import Q, Sum, Value
+from django.db.models import Case, DurationField, F, Min, Q, Sum, Value, When
+from django.utils import timezone
 
 from api.repositories.portfolio.search import get_search_item
 from api.serializers.generic import Responses
@@ -115,8 +116,25 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if order_by in ['title', '-title', 'date_changed', '-date_changed']:
                 queryset = queryset.order_by(order_by)
             elif order_by == 'currentness':
-                # TODO: implement
-                pass
+                now = timezone.now().date()
+                zero = timedelta(days=0)
+                queryset = (
+                    queryset.annotate(
+                        date_timediff=Min(F('daterelevanceindex__date') - now)
+                    )
+                    .annotate(
+                        ranked_date_timediff=Case(
+                            When(date_timediff__gte=zero, then=F('date_timediff')),
+                            When(
+                                date_timediff__lt=zero,
+                                then=F('date_timediff')
+                                * -settings.CURRENTNESS_PAST_WEIGHT,
+                            ),
+                            output_field=DurationField(),
+                        )
+                    )
+                    .order_by('ranked_date_timediff')
+                )
             elif order_by == 'rank':
                 # TODO: implement
                 pass

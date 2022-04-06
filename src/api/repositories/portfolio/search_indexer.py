@@ -3,7 +3,12 @@ import re
 
 from django.conf import settings
 
-from core.models import DateRangeSearchIndex, DateSearchIndex, TextSearchIndex
+from core.models import (
+    DateRangeSearchIndex,
+    DateRelevanceIndex,
+    DateSearchIndex,
+    TextSearchIndex,
+)
 
 from . import get_schema
 from .mapping import map_indexer
@@ -98,6 +103,7 @@ def index_activity(activity):
         # clear all old search index values for this activity
         DateSearchIndex.objects.filter(showroom_object=activity).delete()
         DateRangeSearchIndex.objects.filter(showroom_object=activity).delete()
+        DateRelevanceIndex.objects.filter(showroom_object=activity).delete()
         # store the collected dates and date ranges as new search index values
         DateSearchIndex.objects.bulk_create(
             [DateSearchIndex(showroom_object=activity, date=date) for date in dates]
@@ -109,6 +115,11 @@ def index_activity(activity):
                 )
                 for dr in date_ranges
             ]
+        )
+        dates.extend([dr[0] for dr in date_ranges])
+        dates.extend([dr[1] for dr in date_ranges])
+        DateRelevanceIndex.objects.bulk_create(
+            [DateRelevanceIndex(showroom_object=activity, date=date) for date in dates]
         )
 
 

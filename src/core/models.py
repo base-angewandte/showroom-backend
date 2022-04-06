@@ -298,6 +298,12 @@ class DateRangeSearchIndex(models.Model):
     date_to = models.DateField()
 
 
+class DateRelevanceIndex(models.Model):
+    id = models.AutoField(primary_key=True)
+    showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+    date = models.DateField()
+
+
 class Media(models.Model):
     IMAGE = 'i'
     AUDIO = 'a'

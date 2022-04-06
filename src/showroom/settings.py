@@ -170,8 +170,12 @@ ACTIVE_SCHEMAS = env.list(
 SEARCH_LIMIT = env.int('SEARCH_LIMIT', default=100)
 
 # Time span (in days) into the future and past for the current_activities filter
+# TODO: deprecated - remove once old model search functions are removed
 CURRENT_ACTIVITIES_FUTURE = env.int('CURRENT_ACTIVITIES_FUTURE', default=90)
 CURRENT_ACTIVITIES_PAST = env.int('CURRENT_ACTIVITIES_PAST', default=365)
+
+# Factor by which past dates are multiplied for currentness search
+CURRENTNESS_PAST_WEIGHT = env.int('CURRENTNESS_PAST_WEIGHT', default=4)
 
 # The default showcase to be used for the initial endpoint, if the requested entity's
 # showcase is empty. Also check for syntactical validity.
