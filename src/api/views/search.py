@@ -87,7 +87,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 'date': get_date_filter,
                 'daterange': get_daterange_filter,
                 'keyword': get_keyword_filter,
-                'type': get_activity_type_filter,
+                'activity_type': get_activity_type_filter,
                 'institution': get_institution_filter,
             }
             filter_func = filter_function_map.get(flt['id'])
