@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed, NotFound
+from rest_framework.exceptions import MethodNotAllowed, NotFound, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -15,7 +15,6 @@ from django.utils.text import slugify
 
 from api.permissions import ActivityPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
-from api.repositories.portfolio.search import get_search_item
 from api.repositories.user_preferences import sync
 from api.serializers.autocomplete import (
     AutocompleteRequestSerializer,
@@ -32,15 +31,7 @@ from api.serializers.search import SearchRequestSerializer, SearchResultSerializ
 from api.serializers.showcase import ShowcaseSerializer
 from api.views.autocomplete import AutocompleteViewSet
 from api.views.filter import get_dynamic_entity_filters, static_entity_filters
-from api.views.search import (
-    CsrfExemptSessionAuthentication,
-    get_activity_type_filter,
-    get_date_filter,
-    get_daterange_filter,
-    get_fulltext_filter,
-    get_keyword_filter,
-    label_results_generic,
-)
+from api.views.search import CsrfExemptSessionAuthentication, get_search_results
 from core.models import ShowroomObject
 from core.validators import validate_showcase
 
@@ -377,67 +368,23 @@ class EntityViewSet(viewsets.GenericViewSet):
         filters = s.data.get('filters')
         limit = s.data.get('limit')
         offset = s.data.get('offset')
+        order_by = s.validated_data.get('order_by')
         lang = request.LANGUAGE_CODE
 
-        if offset is None:
-            offset = 0
-        elif offset < 0:
-            return Response({'detail': 'negative offset not allowed'}, status=400)
-        if limit is not None and limit < 1:
-            return Response(
-                {'detail': 'negative or zero limit not allowed'}, status=400
-            )
-        if limit is None:
-            limit = settings.SEARCH_LIMIT
+        # entity search allows for a reduced filter set, so we check this before calling
+        # the actual get_search_results function handling the rest
+        allowed = ['fulltext', 'date', 'daterange', 'keyword', 'activity_type']
+        for flt in filters:
+            if flt['id'] not in allowed:
+                raise ParseError(
+                    f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed}',
+                    400,
+                )
 
         queryset = ShowroomObject.objects.filter(belongs_to=instance)
 
-        q_filter = None
-        if filters:
-            allowed = ['fulltext', 'date', 'daterange', 'keyword', 'activity_type']
-            for flt in filters:
-                if flt['id'] not in allowed:
-                    return Response(
-                        f'{flt["id"]} not in allowed filters for entity search. allowed: {allowed}',
-                        400,
-                    )
-                append_filter = None
-                if flt['id'] == 'fulltext':
-                    append_filter = get_fulltext_filter(flt['filter_values'], lang)
-                elif flt['id'] == 'date':
-                    append_filter = get_date_filter(flt['filter_values'], lang)
-                elif flt['id'] == 'daterange':
-                    append_filter = get_daterange_filter(flt['filter_values'], lang)
-                elif flt['id'] == 'keyword':
-                    append_filter = get_keyword_filter(flt['filter_values'], lang)
-                elif flt['id'] == 'activity_type':
-                    append_filter = get_activity_type_filter(flt['filter_values'], lang)
-                # if a filter function does not return any filter, we ignore this but log
-                # a warning
-                if append_filter is None:
-                    logger.warning(
-                        f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
-                    )
-                    continue
-                if q_filter is None:
-                    q_filter = append_filter
-                else:
-                    q_filter = q_filter & append_filter
-
-        if q_filter:
-            queryset = queryset.filter(q_filter).distinct()
-        count = queryset.count()
-
-        results = [
-            get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
-        ]
-
         return Response(
-            {
-                'label': label_results_generic[lang],
-                'total': count,
-                'data': results,
-            },
+            get_search_results(queryset, filters, limit, offset, order_by, lang),
             status=200,
         )
 

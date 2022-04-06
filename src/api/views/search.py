@@ -67,91 +67,90 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         order_by = s.validated_data.get('order_by')
         lang = request.LANGUAGE_CODE
 
-        if offset is None:
-            offset = 0
-        elif offset < 0:
-            return Response({'detail': 'negative offset not allowed'}, status=400)
-        if limit is not None and limit < 1:
-            return Response(
-                {'detail': 'negative or zero limit not allowed'}, status=400
-            )
-        if limit is None:
-            limit = settings.SEARCH_LIMIT
-
         queryset = ShowroomObject.objects.all()
-        q_filter = None
-        for flt in filters:
-            filter_function_map = {
-                'fulltext': get_fulltext_filter,
-                'activity': get_activity_filter,
-                'person': get_person_filter,
-                'date': get_date_filter,
-                'daterange': get_daterange_filter,
-                'keyword': get_keyword_filter,
-                'activity_type': get_activity_type_filter,
-                'institution': get_institution_filter,
-            }
-            filter_func = filter_function_map.get(flt['id'])
-            if filter_func is None:
-                return Response(
-                    {'detail': f'filter id {flt["id"]} is not implemented'}, status=400
-                )
-            append_filter = filter_func(flt['filter_values'], lang)
-            # if a filter function does not return any filter, we ignore this but log
-            # a warning
-            if append_filter is None:
-                logger.warning(
-                    f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
-                )
-                continue
-            if q_filter is None:
-                q_filter = append_filter
-            else:
-                q_filter = q_filter & append_filter
-
-        if q_filter:
-            queryset = queryset.filter(q_filter).distinct()
-
-        if order_by:
-            if order_by in ['title', '-title', 'date_changed', '-date_changed']:
-                queryset = queryset.order_by(order_by)
-            elif order_by == 'currentness':
-                now = timezone.now().date()
-                zero = timedelta(days=0)
-                queryset = (
-                    queryset.annotate(
-                        date_timediff=Min(F('daterelevanceindex__date') - now)
-                    )
-                    .annotate(
-                        ranked_date_timediff=Case(
-                            When(date_timediff__gte=zero, then=F('date_timediff')),
-                            When(
-                                date_timediff__lt=zero,
-                                then=F('date_timediff')
-                                * -settings.CURRENTNESS_PAST_WEIGHT,
-                            ),
-                            output_field=DurationField(),
-                        )
-                    )
-                    .order_by('ranked_date_timediff')
-                )
-            elif order_by == 'rank':
-                # TODO: implement
-                pass
-
-        count = queryset.count()
-        results = [
-            get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
-        ]
 
         return Response(
-            {
-                'label': label_results_generic[lang],
-                'total': count,
-                'data': results,
-            },
+            get_search_results(queryset, filters, limit, offset, order_by, lang),
             status=200,
         )
+
+
+def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
+    if offset is None:
+        offset = 0
+    elif offset < 0:
+        raise ParseError('negative offset not allowed', 400)
+    if limit is not None and limit < 1:
+        raise ParseError('negative or zero limit not allowed', 400)
+    if limit is None:
+        limit = settings.SEARCH_LIMIT
+
+    queryset = base_queryset
+    q_filter = None
+    for flt in filters:
+        filter_function_map = {
+            'fulltext': get_fulltext_filter,
+            'activity': get_activity_filter,
+            'person': get_person_filter,
+            'date': get_date_filter,
+            'daterange': get_daterange_filter,
+            'keyword': get_keyword_filter,
+            'activity_type': get_activity_type_filter,
+            'institution': get_institution_filter,
+        }
+        filter_func = filter_function_map.get(flt['id'])
+        if filter_func is None:
+            raise ParseError(f'filter id {flt["id"]} is not implemented', 400)
+        append_filter = filter_func(flt['filter_values'], lang)
+        # if a filter function does not return any filter, we ignore this but log
+        # a warning
+        if append_filter is None:
+            logger.warning(
+                f'no filter was returned for {flt["id"]} filter with values: {flt["filter_values"]}'
+            )
+            continue
+        if q_filter is None:
+            q_filter = append_filter
+        else:
+            q_filter = q_filter & append_filter
+
+    if q_filter:
+        queryset = queryset.filter(q_filter).distinct()
+
+    if order_by:
+        if order_by in ['title', '-title', 'date_changed', '-date_changed']:
+            queryset = queryset.order_by(order_by)
+        elif order_by == 'currentness':
+            now = timezone.now().date()
+            zero = timedelta(days=0)
+            queryset = (
+                queryset.annotate(
+                    date_timediff=Min(F('daterelevanceindex__date') - now)
+                )
+                .annotate(
+                    ranked_date_timediff=Case(
+                        When(date_timediff__gte=zero, then=F('date_timediff')),
+                        When(
+                            date_timediff__lt=zero,
+                            then=F('date_timediff') * -settings.CURRENTNESS_PAST_WEIGHT,
+                        ),
+                        output_field=DurationField(),
+                    )
+                )
+                .order_by('ranked_date_timediff')
+            )
+        elif order_by == 'rank':
+            # TODO: implement
+            pass
+
+    count = queryset.count()
+    results = [get_search_item(obj, lang) for obj in queryset[offset : limit + offset]]
+
+    return {
+        'label': label_results_generic[lang],
+        'total': count,
+        'data': results,
+    }
 
 
 def get_fulltext_filter(values, lang):
