@@ -15,6 +15,7 @@ from .views.filter import FilterViewSet
 from .views.initial import InitialViewSet
 from .views.media import MediaViewSet
 from .views.search import SearchViewSet
+from .views.showcase_search import ShowcaseSearchViewSet
 from .views.user import get_user_data
 
 router = DefaultRouter()
@@ -26,6 +27,7 @@ router.register(r'search', SearchViewSet, basename='search')
 router.register(r'filters', FilterViewSet, basename='filters')
 router.register(r'autocomplete', AutocompleteViewSet, basename='autocomplete')
 router.register(r'initial', InitialViewSet, basename='initial')
+router.register(r'showcase_search', ShowcaseSearchViewSet, basename='showcase_search')
 
 urlpatterns = [
     path('', include(router.urls)),
