@@ -295,6 +295,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         detail=True,
         methods=['post'],
         permission_classes=[AllowAny],
+        authentication_classes=[CsrfExemptSessionAuthentication],
         serializer_class=AutocompleteRequestSerializer,
     )
     def autocomplete(self, request, *args, **kwargs):
@@ -388,7 +389,12 @@ class EntityViewSet(viewsets.GenericViewSet):
         },
         # TODO: change parameters
     )
-    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[AllowAny],
+        authentication_classes=[CsrfExemptSessionAuthentication],
+    )
     def search(self, request, *args, **kwargs):
         s = SearchRequestSerializer(data=request.data)
         s.is_valid(raise_exception=True)
