@@ -37,7 +37,7 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         limit = s.data.get('limit')
         lang = request.LANGUAGE_CODE
 
-        allowed_filters = ['default', 'activity', 'person']
+        allowed_filters = ['fulltext', 'activity', 'person']
         if filter_id not in allowed_filters:
             return Response(
                 {
@@ -48,7 +48,7 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         items = []
         q_filter = None
-        if filter_id == 'default':
+        if filter_id == 'fulltext':
             pass
         elif filter_id == 'activity':
             q_filter = Q(type=ShowroomObject.ACTIVITY)
