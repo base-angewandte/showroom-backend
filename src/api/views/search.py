@@ -60,10 +60,10 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         s = self.get_serializer(data=request.data)
         s.is_valid(raise_exception=True)
-        filters = s.data.get('filters')
-        limit = s.data.get('limit')
-        offset = s.data.get('offset')
-        order_by = s.data.get('order_by')
+        filters = s.validated_data.get('filters')
+        limit = s.validated_data.get('limit')
+        offset = s.validated_data.get('offset')
+        order_by = s.validated_data.get('order_by')
         lang = request.LANGUAGE_CODE
 
         if offset is None:
@@ -76,13 +76,6 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
         if limit is None:
             limit = settings.SEARCH_LIMIT
-
-        allowed_order_by = ['default', 'rank', 'currentness', None]
-        if order_by not in allowed_order_by:
-            return Response(
-                {'detail': f'invalid order_by parameter. allowed: {allowed_order_by}'},
-                status=400,
-            )
 
         queryset = ShowroomObject.objects.all()
         q_filter = None
@@ -117,8 +110,18 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         if q_filter:
             queryset = queryset.filter(q_filter).distinct()
-        count = queryset.count()
 
+        if order_by:
+            if order_by in ['title', '-title', 'date_changed', '-date_changed']:
+                queryset = queryset.order_by(order_by)
+            elif order_by == 'currentness':
+                # TODO: implement
+                pass
+            elif order_by == 'rank':
+                # TODO: implement
+                pass
+
+        count = queryset.count()
         results = [
             get_search_item(obj, lang) for obj in queryset[offset : limit + offset]
         ]

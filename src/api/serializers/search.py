@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from django.conf import settings
+
 
 class SearchFilterSerializer(serializers.Serializer):
     id = serializers.CharField(
@@ -25,8 +27,27 @@ class SearchRequestSerializer(serializers.Serializer):
         child=SearchFilterSerializer(),
         help_text='Array of logical AND filters that should be applied to the search.',
     )
-    limit = serializers.IntegerField(required=False)
-    offset = serializers.IntegerField(required=False)
+    limit = serializers.IntegerField(
+        required=False,
+        help_text=f'Limit the number of results. Default: {settings.SEARCH_LIMIT}',
+    )
+    offset = serializers.IntegerField(
+        required=False,
+        help_text='Offset for the first item in the results set.',
+    )
+    order_by = serializers.ChoiceField(
+        required=False,
+        default='default',
+        choices=[
+            'currentness',
+            'rank',
+            'default',
+            'title',
+            '-title',
+            'date_changed',
+            '-date_changed',
+        ],
+    )
 
 
 class SearchItemSourceInstitutionSerializer(serializers.Serializer):
