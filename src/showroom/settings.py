@@ -73,7 +73,7 @@ DISABLE_USER_REPO = env.bool('DISABLE_USER_REPO', default=False)
 
 CAS_API_BASE = env.str('CAS_API_BASE', default=None)
 
-DEFAULT_USER_REPO = env.str('DEFAULT_USER_REPO', default=None)
+DEFAULT_USER_REPO = env.int('DEFAULT_USER_REPO', default=None)
 
 USER_REPO_CACHE_TIME = env.int('USER_REPO_CACHE_TIME', default=15)
 
