@@ -276,6 +276,8 @@ def get_text_keywords(item, lang):
         # TODO: do we want to prepend the texts with the text type?
         # TODO: add character limit on overall text lenghts
         for text in texts:
+            if text.get('data') is None:
+                continue
             for section in text['data']:
                 if section['language']['source'].split('/')[-1] == lang:
                     ret.append(section['text'])
