@@ -18,6 +18,7 @@ class MediaSerializer(serializers.ModelSerializer):
             'license',
             'specifics',
             'featured',
+            'order',
             'source_repo_media_id',
         ]
 
@@ -74,6 +75,7 @@ class MediaSerializer(serializers.ModelSerializer):
         ret.pop('showroom_object')  # media are only read-accessible via an activity
         ret.pop('source_repo_media_id')
         ret.pop('exif')
+        ret.pop('order')
         # rename file to original and add repo_base
         ret['original'] = ret.pop('file')
         # flatten the specifics into the media dict
