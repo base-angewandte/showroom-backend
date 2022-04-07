@@ -70,6 +70,13 @@ class MediaViewSet(
             )
         serializer.save()
 
+        # in case featured was set, we have to clear it in any other media of the same
+        # showroom_object
+        if request.data.get('featured'):
+            Media.objects.filter(showroom_object=activity).exclude(
+                source_repo_media_id=serializer.validated_data['source_repo_media_id']
+            ).update(featured=False)
+
         response = {
             'created': [],
             'updated': [],

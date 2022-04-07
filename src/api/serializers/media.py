@@ -17,6 +17,7 @@ class MediaSerializer(serializers.ModelSerializer):
             'exif',
             'license',
             'specifics',
+            'featured',
             'source_repo_media_id',
         ]
 

@@ -330,9 +330,14 @@ class Media(models.Model):
     exif = models.JSONField(blank=True, null=True)
     license = models.JSONField(blank=True, null=True)
     specifics = models.JSONField(blank=True, null=True)
+    featured = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=2147483647)
     source_repo_media_id = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        ordering = ['order', '-created']
 
     def __str__(self):
         f_name = self.file.split('/')[-1]
