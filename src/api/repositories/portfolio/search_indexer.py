@@ -29,6 +29,9 @@ def index_activity(activity):
         if texts := data.get('texts'):
             for text in texts:
                 if type(text) is dict:
+                    text_data = text.get('data')
+                    if type(text_data) is not list:
+                        continue
                     for text_data in text.get('data'):
                         ln = text_data['language']['source'].split('/')[-1]
                         if ln == lang:
