@@ -133,10 +133,14 @@ def get_initial_response(request, pk):
             'label': label_current_activities[lang],
             'total': count,
             'data': [get_search_item(obj, lang) for obj in found],
-            'filters': {
-                'id': 'institution',
-                'filter_values': [settings.DEFAULT_USER_REPO],
+            'search': {
                 'order_by': 'currentness',
+                'filters': [
+                    {
+                        'id': 'institution',
+                        'filter_values': [settings.DEFAULT_USER_REPO],
+                    },
+                ],
             },
         }
     )
