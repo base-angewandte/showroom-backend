@@ -138,7 +138,9 @@ def get_initial_response(request, pk):
                 'filters': [
                     {
                         'id': 'institution',
-                        'filter_values': [settings.DEFAULT_USER_REPO],
+                        'filter_values': [
+                            {'id': settings.DEFAULT_USER_REPO},
+                        ],
                     },
                 ],
             },
