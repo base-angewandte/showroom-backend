@@ -117,9 +117,8 @@ class ActivitySerializer(serializers.ModelSerializer):
             'media': media_entries,
             'linked': relations,
         }
-        # featured_media currently cannot be set explicitly in portfolio
-        # therefore we just go through all available media and take the first
-        # image we can find
+        # in case a featured medium is set, we'll use this. if non is set explicitly
+        # we search if there is any image attached to the entry and take this one.
         ret['featured_media'] = None
         featured_medium = media.filter(featured=True)
         if featured_medium:
@@ -127,8 +126,6 @@ class ActivitySerializer(serializers.ModelSerializer):
                 featured_medium[0], context=context
             ).data
         else:
-            # TODO: discuss: do we want to try to search for another image if not
-            #       featured medium is set explicitly? or leave it as None?
             for medium in media:
                 if medium.type == 'i':
                     ret['featured_media'] = MediaSerializer(
