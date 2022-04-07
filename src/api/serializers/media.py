@@ -55,7 +55,7 @@ class MediaSerializer(serializers.ModelSerializer):
                 for preview in previews:
                     for key in preview.keys():
                         preview[key] = repo_base + preview[key]
-            if 'thumbnail' in data['specifics']:
+            if 'thumbnail' in data['specifics'] and data['specifics'].get('thumbnail'):
                 data['specifics']['thumbnail'] = (
                     repo_base + data['specifics']['thumbnail']
                 )
