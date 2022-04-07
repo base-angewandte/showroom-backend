@@ -121,10 +121,20 @@ class ActivitySerializer(serializers.ModelSerializer):
         # therefore we just go through all available media and take the first
         # image we can find
         ret['featured_media'] = None
-        for medium in media:
-            if medium.type == 'i':
-                ret['featured_media'] = MediaSerializer(medium, context=context).data
-                break
+        featured_medium = media.filter(featured=True)
+        if featured_medium:
+            ret['featured_media'] = MediaSerializer(
+                featured_medium[0], context=context
+            ).data
+        else:
+            # TODO: discuss: do we want to try to search for another image if not
+            #       featured medium is set explicitly? or leave it as None?
+            for medium in media:
+                if medium.type == 'i':
+                    ret['featured_media'] = MediaSerializer(
+                        medium, context=context
+                    ).data
+                    break
         # publisher currently is only the entity this activity belongs to
         ret.pop('belongs_to')
         ret['publisher'] = []
