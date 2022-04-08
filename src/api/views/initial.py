@@ -124,7 +124,10 @@ def get_initial_response(request, pk):
     if showcase_warnings:
         response['showcase_warnings'] = showcase_warnings
 
-    found = ShowroomObject.objects.filter(source_repo__id=settings.DEFAULT_USER_REPO)
+    found = ShowroomObject.objects.filter(
+        source_repo__id=settings.DEFAULT_USER_REPO,
+        type=ShowroomObject.ACTIVITY,
+    )
     count = found.count()
     # TODO: add currentness ordering
     found = found[0:limit]
@@ -140,6 +143,12 @@ def get_initial_response(request, pk):
                         'id': 'institution',
                         'filter_values': [
                             {'id': settings.DEFAULT_USER_REPO},
+                        ],
+                    },
+                    {
+                        'id': 'showroom_type',
+                        'filter_values': [
+                            {'id': ShowroomObject.ACTIVITY},
                         ],
                     },
                 ],
