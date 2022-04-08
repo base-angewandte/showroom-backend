@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import date, timedelta
 
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
@@ -45,6 +46,19 @@ text_search_vectors = (
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
+
+
+class CsrfExemptSessionScheme(OpenApiAuthenticationExtension):
+    target_class = CsrfExemptSessionAuthentication
+    name = 'cookieAuth'
+    priority = -1
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'apiKey',
+            'in': 'cookie',
+            'name': settings.SESSION_COOKIE_NAME,
+        }
 
 
 class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

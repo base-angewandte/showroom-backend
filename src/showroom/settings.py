@@ -506,6 +506,22 @@ SPECTACULAR_SETTINGS = {
     # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',  # default
     # "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png",  # default is swagger favicon
+    'ENUM_NAME_OVERRIDES': {
+        'ShowroomObjectTypeEnum': (
+            ('act', 'activity'),
+            ('alb', 'album'),
+            ('per', 'person'),
+            ('ins', 'institution'),
+            ('dep', 'department'),
+        ),
+        'MediaTypeEnum': (
+            ('i', 'Image'),
+            ('a', 'Audio'),
+            ('v', 'Video'),
+            ('d', 'Document'),
+            ('x', 'Undefined'),
+        ),
+    },
 }
 
 
