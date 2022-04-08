@@ -272,7 +272,7 @@ def get_project_lead_partners_funding(item, lang):
 
 def get_skills(item, lang):
     ret = []
-    if hasattr(item, 'entitydetail'):
+    if hasattr(item, 'entitydetail') and type(item.entitydetail) == dict:
         items = item.entitydetail.expertise.get(lang)
         if type(items) == list:
             ret.extend(items)
