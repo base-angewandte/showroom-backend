@@ -1,8 +1,12 @@
+import logging
+
 import requests
 
 from django.conf import settings
 
 from core.models import ShowroomObject, SourceRepository
+
+logger = logging.getLogger(__name__)
 
 
 class UserPrefError(Exception):
@@ -30,7 +34,11 @@ def pull_user_data(username, update_entry=True):
     if r.status_code == 403:
         raise UserPrefAuthenticationError(f'Authentication failed. 403: {r.text}')
     elif r.status_code == 404:
-        raise UserPrefNotFoundError(f'No user data found for {username}. 404: {r.text}')
+        # if users are not found, we just want to log a warning, but not raise an error
+        # users who exist in the auth backend but haven't logged in through CAS will
+        # also not be found
+        logger.warning(f'No user data found for {username}. 404: {r.text}')
+        return {}
     elif r.status_code == 400:
         raise UserPrefError(
             f'User preferences for user {username} could not be pulled: 400: {r.text}'
