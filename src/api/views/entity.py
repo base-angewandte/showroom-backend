@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timedelta
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers, viewsets
@@ -74,18 +73,38 @@ class EntityViewSet(viewsets.GenericViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
         if not settings.DISABLE_USER_REPO and instance.type == ShowroomObject.PERSON:
-            t_synced = instance.date_synced
-            t_cache = datetime.today() - timedelta(
-                minutes=settings.USER_REPO_CACHE_TIME
+            try:
+                sync.pull_user_data(instance.source_repo_object_id)
+            except sync.UserPrefError:
+                # TODO: discuss what to do if the sync fails but we already have some data
+                pass
+            # TODO: deactivated the code below for now, because we have to check user
+            #       settings on every request, to see if their user page is activiated.
+            #       this can be changed back, as soon as there is a push from UP to SR,
+            #       whenever the setting changes
+            # t_synced = instance.date_synced
+            # t_cache = datetime.today() - timedelta(
+            #     minutes=settings.USER_REPO_CACHE_TIME
+            # )
+            # if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
+            #     # TODO: discuss whether this should be executed directly or relegated to an async
+            #     #       job. in the latter case the current request would be served the cached data
+            #     try:
+            #         sync.pull_user_data(instance.source_repo_object_id)
+            #     except sync.UserPrefError:
+            #         # TODO: discuss what to do if the sync fails but we already have some data
+            #         pass
+        instance.refresh_from_db()
+        activate_profile = False
+        if user_settings := instance.source_repo_data.get('settings'):
+            if showroom := user_settings.get('showroom'):
+                if activate_profile := showroom.get('activate_profile'):
+                    activate_profile = True
+        if not activate_profile:
+            return Response(
+                {'detail': 'user has deactivated their profile page'}, status=404
             )
-            if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
-                # TODO: discuss whether this should be executed directly or relegated to an async
-                #       job. in the latter case the current request would be served the cached data
-                try:
-                    sync.pull_user_data(instance.source_repo_object_id)
-                except sync.UserPrefError:
-                    # TODO: discuss what to do if the sync fails but we already have some data
-                    pass
+
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
