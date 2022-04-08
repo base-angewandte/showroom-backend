@@ -115,7 +115,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         'organisers_artists_curators': get_organisers_artists_curators,
         'organisers_lecturers_contributors': get_organisers_lecturers_contributors,
         'project_lead_partners_funding': get_project_lead_partners_funding,
-        'skills': None,
+        'skills': get_skills,
         'text_keywords': get_text_keywords,
         'title_subtitle': get_title_subtitle,
         'university': get_university,
@@ -267,6 +267,15 @@ def get_project_lead_partners_funding(item, lang):
     ret.extend(gather_labels(item.source_repo_data['data'].get('project_lead')))
     ret.extend(gather_labels(item.source_repo_data['data'].get('project_partnership')))
     ret.extend(gather_labels(item.source_repo_data['data'].get('funding')))
+    return ret
+
+
+def get_skills(item, lang):
+    ret = []
+    if hasattr(item, 'entitydetail'):
+        items = item.entitydetail.expertise.get(lang)
+        if type(items) == list:
+            ret.extend(items)
     return ret
 
 
