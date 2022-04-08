@@ -39,7 +39,7 @@ class Command(BaseCommand):
             }
 
             r = requests.get(
-                settings.CAS_API_BASE + f'user-data-agent/{username}/', headers=headers
+                settings.CAS_API_BASE + f'users/{username}/', headers=headers
             )
 
             if r.status_code == 403:
