@@ -41,7 +41,7 @@ def update_entity_from_source_repo_data(entity):
     subtext = []
     # TODO: design says: add position, title here. but: where do we get that from?
     subtext.append(entity.source_repo.label_institution)
-    # TODO: design says: add department here. but: not yet implemented in UP
+    subtext.append(data['location']['office'])
     entity.subtext = subtext
 
     # add skills and expertise (if there are any set)
@@ -62,6 +62,7 @@ def update_entity_from_source_repo_data(entity):
             'en': get_preflabel('location', lang='en').capitalize(),
             'de': get_preflabel('location', lang='de').capitalize(),
         },
+        'place': {'en': 'Place', 'de': 'Ort'},
         'tel': {'en': 'Tel', 'de': 'Tel'},
         'mail': {'en': 'E-mail', 'de': 'E-Mail'},
         'website': {'en': 'Website', 'de': 'Website'},
@@ -79,8 +80,16 @@ def update_entity_from_source_repo_data(entity):
             'label': label,
             'data': [],
         }
+
+        loc = data['location']
         contact[lang]['data'].append(
-            {'label': contact_labels['location'][lang], 'value': data.get('location')},
+            {'label': contact_labels['location'][lang], 'value': loc['street_address']},
+        )
+        contact[lang]['data'].append(
+            {
+                'label': contact_labels['place'][lang],
+                'value': f'{loc["postal_code"]} {loc["place"]}, {loc["country_or_region"]}',
+            },
         )
         if email := data.get('contact_email'):
             contact[lang]['data'].append(
