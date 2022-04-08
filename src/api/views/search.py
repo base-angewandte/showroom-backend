@@ -115,6 +115,7 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
             'daterange': get_daterange_filter,
             'keyword': get_keyword_filter,
             'activity_type': get_activity_type_filter,
+            'showroom_type': get_showroom_type_filter,
             'institution': get_institution_filter,
         }
         filter_func = filter_function_map.get(flt['id'])
@@ -394,6 +395,27 @@ def get_activity_type_filter(values, lang):
         else:
             flt = flt | Q(activitydetail__activity_type__label__contains={'en': typ})
     return Q(type=ShowroomObject.ACTIVITY) & flt
+
+
+def get_showroom_type_filter(values, lang):
+    if not values:
+        raise ParseError('Type filter needs at least one value', 400)
+
+    flt = None
+    for value in values:
+        if type(value) is not dict:
+            raise ParseError('Malformed type filter', 400)
+        if not (typ := value.get('id')):
+            raise ParseError('Malformed type filter', 400)
+        if type(typ) is not str:
+            raise ParseError('Malformed type filter', 400)
+        if typ not in [ShowroomObject.ACTIVITY, ShowroomObject.PERSON]:
+            raise ParseError('Invalid showroom type', 400)
+        if not flt:
+            flt = Q(type=typ)
+        else:
+            flt = flt | Q(type=typ)
+    return flt
 
 
 def get_institution_filter(values, lang):
