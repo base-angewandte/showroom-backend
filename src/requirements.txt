@@ -22,12 +22,13 @@ concurrent-log-handler==0.9.17
     # via -r src/requirements.in
 deprecated==1.2.13
     # via redis
-django==3.2.12
+django==3.2.13
     # via
     #   -r src/requirements.in
     #   django-cas-ng
     #   django-cors-headers
     #   django-debug-toolbar
+    #   django-extensions
     #   django-filter
     #   django-redis
     #   django-rq
@@ -41,7 +42,7 @@ django-debug-toolbar==3.1.1
     # via -r src/requirements.in
 django-environ==0.4.5
     # via -r src/requirements.in
-django-extensions==3.0.9
+django-extensions==3.1.5
     # via -r src/requirements.in
 django-filter==2.4.0
     # via -r src/requirements.in
@@ -81,7 +82,7 @@ psutil==5.9.0
     # via rainbow-saddle
 psycopg2-binary==2.8.6
     # via -r src/requirements.in
-pyparsing==3.0.7
+pyparsing==3.0.8
     # via
     #   packaging
     #   rdflib
@@ -129,7 +130,7 @@ uritemplate==4.1.1
     # via drf-spectacular
 urllib3==1.26.9
     # via requests
-werkzeug==1.0.1
+werkzeug==2.1.1
     # via -r src/requirements.in
 wheel==0.37.1
     # via pip-tools

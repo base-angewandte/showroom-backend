@@ -8,7 +8,7 @@ django-cas-ng==4.1.1
 django-cors-headers==3.5.0
 django-debug-toolbar==3.1.1
 django-environ==0.4.5
-django-extensions==3.0.9
+django-extensions==3.1.5
 django-redis==4.12.1
 django-rq==2.5.1
 django-filter==2.4.0
@@ -19,7 +19,7 @@ psycopg2-binary==2.8.6
 rdflib==5.0.0  # TODO: needed by skosmos, but 6.1.1 would break concept retrieval
 shortuuid==1.0.1
 skosmos-client==0.3.0
-werkzeug==1.0.1  # for django-extensions
+werkzeug==2.1.1  # for django-extensions
 
 # Server
 gunicorn==20.0.4
