@@ -12,7 +12,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
-from api.permissions import ActivityPermission, EntityEditPermission
+from api.permissions import ApiKeyPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
 from api.repositories.user_preferences import sync
 from api.serializers.autocomplete import (
@@ -49,7 +49,7 @@ class EntityViewSet(viewsets.GenericViewSet):
     # Entities should be only manipulated by repositories, similar to Activities, so
     # we'll reuse ActivityPermission and use other permissions explicitly on all custom
     # actions, when needed
-    permission_classes = [ActivityPermission]
+    permission_classes = [ApiKeyPermission]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
     http_method_names = ['get', 'head', 'options', 'patch', 'post']

@@ -2,7 +2,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
-from api.permissions import ActivityPermission
+from api.permissions import ApiKeyPermission
 from api.serializers.generic import Responses
 from api.serializers.media import MediaSerializer
 from core.models import Media, ShowroomObject
@@ -15,7 +15,7 @@ class MediaViewSet(
 ):
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
-    permission_classes = [ActivityPermission]
+    permission_classes = [ApiKeyPermission]
 
     @extend_schema(
         tags=['repo'],

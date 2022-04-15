@@ -10,7 +10,7 @@ from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
 
-from api.permissions import ActivityPermission
+from api.permissions import ApiKeyPermission
 from api.repositories.portfolio.search_indexer import index_activity
 from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
@@ -30,7 +30,7 @@ from core.models import ShowroomObject
 class ActivityViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
-    permission_classes = [ActivityPermission]
+    permission_classes = [ApiKeyPermission]
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):

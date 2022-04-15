@@ -5,8 +5,8 @@ from django.conf import settings
 from core.models import ShowroomObject, SourceRepository
 
 
-class ActivityPermission(permissions.BasePermission):
-    """Checks that only source repos may create and modify activities."""
+class ApiKeyPermission(permissions.BasePermission):
+    """Checks that only source repos may create and modify showroom objects."""
 
     def has_permission(self, request, view):
         if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
