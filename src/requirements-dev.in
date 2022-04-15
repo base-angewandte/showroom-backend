@@ -4,4 +4,4 @@
 
 -r requirements.in
 
-pre-commit==2.7.1
+pre-commit
