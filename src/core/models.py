@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.text import slugify
 
 from api.repositories.portfolio import activity_lists
 from api.repositories.user_preferences.transform import (
@@ -105,6 +106,14 @@ class ShowroomObject(AbstractBaseModel):
         )
         ret = ', '.join(dates)
         return ret
+
+    @property
+    def showroom_id(self):
+        # TODO: check logic and use it in serializers
+        if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
+            return f'{slugify(self.title)}-{self.id}'
+        else:
+            return self.id
 
 
 @receiver(post_save, sender=ShowroomObject)
