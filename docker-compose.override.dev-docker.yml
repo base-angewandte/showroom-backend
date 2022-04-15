@@ -6,6 +6,6 @@ services:
       context: ./src
       target: dev
     image: showroom-django-dev
-    container_name: showroom-django-dev
+    container_name: showroom-django
     ports:
       - "127.0.0.1:8500:8500"

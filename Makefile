@@ -1,58 +1,32 @@
 include .env
 export
 
+PROJECT_NAME ?= showroom
 
-start:
-	docker-compose up -d --build
+include config/base.mk
 
-stop:
-	docker-compose down
+.PHONY: cleanup
+cleanup:  ## clear sessions
+	docker-compose exec ${PROJECT_NAME}-django bash -c "python manage.py clearsessions && python manage.py django_cas_ng_clean_sessions"
 
-restart:
-	docker-compose restart
+.PHONY: init-rq
+init-rq:  ## init rq containers
+	docker-compose exec ${PROJECT_NAME}-rq-worker-1 bash -c "pip-sync && python manage.py migrate"
+	docker-compose exec ${PROJECT_NAME}-rq-worker-2 bash -c "pip-sync && python manage.py migrate"
 
-git-update:
-	if [ "$(shell whoami)" != "base" ]; then sudo -u base git pull; else git pull; fi
+.PHONY: restart-rq
+restart-rq:  ## restart rq containers
+	docker-compose restart ${PROJECT_NAME}-rq-worker-1 ${PROJECT_NAME}-rq-worker-2
 
-init:
-	docker-compose exec showroom-django bash -c "pip-sync && python manage.py migrate"
+.PHONY: reload
+reload: restart-gunicorn restart-rq  ## restart django and rq workers
 
-init-static:
-	docker-compose exec showroom-django bash -c "python manage.py collectstatic --noinput"
+.PHONY: update
+update: git-update init init-static restart-gunicorn init-rq restart-rq  ## update project (runs git-update init init-static restart-gunicorn init-rq restart-rq)
 
-cleanup:
-	docker-compose exec showroom-django bash -c "python manage.py clearsessions && python manage.py django_cas_ng_clean_sessions"
-
-build-showroom:
-	docker-compose build showroom-django
-
-restart-gunicorn:
-	docker-compose exec showroom-django bash -c 'kill -HUP `cat /var/run/django.pid`'
-
-restart-rq:
-	docker-compose restart showroom-rq-worker-1 showroom-rq-worker-2
-
-reload: restart-gunicorn restart-rq
-
-update: git-update init init-static restart-gunicorn
-
-start-dev:
-	docker-compose up -d --build \
-		showroom-redis \
-		showroom-postgres
-
-start-dev-docker:
-	docker-compose up -d --build \
-		showroom-redis \
-		showroom-postgres \
-		showroom-django
-	docker exec showroom-django-dev python manage.py migrate
-	docker logs -f showroom-django-dev
-
-pip-compile:
-	pip-compile src/requirements.in
-	pip-compile src/requirements-dev.in
-
-pip-compile-upgrade:
-	pip-compile src/requirements.in --upgrade
-	pip-compile src/requirements-dev.in --upgrade
+.PHONY: start-dev
+start-dev:  ## start containers for local development
+	docker-compose pull
+	docker-compose up -d \
+		${PROJECT_NAME}-redis \
+		${PROJECT_NAME}-postgres
