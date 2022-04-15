@@ -37,11 +37,12 @@ def transform_data(data, schema):
 
 def update_entity_from_source_repo_data(entity):
     data = entity.source_repo_data
-    entity.title = data.get('display_name')
+    entity.title = data.get('name')
     subtext = []
     # TODO: design says: add position, title here. but: where do we get that from?
     subtext.append(entity.source_repo.label_institution)
-    subtext.append(data['location']['office'])
+    if data.get('location') and data['location'].get('office'):
+        subtext.append(data['location']['office'])
     entity.subtext = subtext
 
     # add skills and expertise (if there are any set)
@@ -81,16 +82,19 @@ def update_entity_from_source_repo_data(entity):
             'data': [],
         }
 
-        loc = data['location']
-        contact[lang]['data'].append(
-            {'label': contact_labels['location'][lang], 'value': loc['street_address']},
-        )
-        contact[lang]['data'].append(
-            {
-                'label': contact_labels['place'][lang],
-                'value': f'{loc["postal_code"]} {loc["place"]}, {loc["country_or_region"]}',
-            },
-        )
+        if loc := data['location']:
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['location'][lang],
+                    'value': loc['street_address'],
+                },
+            )
+            contact[lang]['data'].append(
+                {
+                    'label': contact_labels['place'][lang],
+                    'value': f'{loc["postal_code"]} {loc["place"]}, {loc["country_or_region"]}',
+                },
+            )
         if email := data.get('contact_email'):
             contact[lang]['data'].append(
                 {
