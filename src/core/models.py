@@ -47,6 +47,11 @@ class SourceRepository(models.Model):
     icon = models.CharField(max_length=255, blank=True)
     api_key = models.CharField(max_length=255, unique=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['api_key']),
+        ]
+
     def __str__(self):
         return f'[{self.id}] {self.label_institution} : {self.label_repository}'
 
