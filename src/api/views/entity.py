@@ -1,7 +1,8 @@
 import logging
 
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
-from rest_framework import serializers, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound, ParseError
 from rest_framework.generics import get_object_or_404
@@ -31,7 +32,7 @@ from api.serializers.showcase import ShowcaseSerializer
 from api.views.autocomplete import AutocompleteViewSet
 from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import CsrfExemptSessionAuthentication, get_search_results
-from core.models import ShowroomObject
+from core.models import ShowroomObject, SourceRepository
 from core.validators import validate_showcase
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class EntityViewSet(viewsets.GenericViewSet):
     permission_classes = [ApiKeyPermission]
     # we only want partial updates enabled, therefore removing put
     # from the allowed methods
-    http_method_names = ['get', 'head', 'options', 'patch', 'post']
+    http_method_names = ['get', 'head', 'options', 'patch', 'post', 'put']
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
@@ -110,14 +111,46 @@ class EntityViewSet(viewsets.GenericViewSet):
 
     @extend_schema(
         tags=['repo'],
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='The source repo\'s id for this entity',
+            ),
+        ],
+        request=OpenApiTypes.OBJECT,  # TODO: use PolymorphicProxySerializer to support different repositories
         responses={
-            201: EntitySerializer,
+            200: OpenApiResponse(
+                response=OpenApiTypes.STR, description='Showroom id of this entity'
+            ),
+            201: OpenApiResponse(
+                response=OpenApiTypes.STR, description='Showroom id of this entity'
+            ),
             400: Responses.Error400,
             403: Responses.Error403,
         },
     )
-    def create(self, request, *args, **kwargs):
-        return Response({'detail': 'not yet implemented'}, 500)
+    def update(self, request, pk, *args, **kwargs):
+        try:
+            source_repo = SourceRepository.objects.get(
+                api_key=request.META.get('HTTP_X_API_KEY')
+            )
+        except SourceRepository.DoesNotExist:
+            # this case should not be happening, as the key is already validated
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        entity, created = ShowroomObject.objects.get_or_create(
+            source_repo_object_id=pk,
+            source_repo=source_repo,
+            type=ShowroomObject.PERSON,
+        )
+        entity.source_repo_data = request.data
+        entity.save()
+        entity.entitydetail.update_from_repo_data()
+        entity.entitydetail.update_activities()
+
+        return Response(entity.showroom_id, status=201 if created else 200)
 
     @extend_schema(
         methods=['GET'],
