@@ -96,6 +96,8 @@ class ShowroomObject(AbstractBaseModel):
         'self', symmetrical=False, related_name='relations_from', blank=True
     )
 
+    active = models.BooleanField(default=True)
+
     # TODO: add gin indizes for those fields used for full text search
 
     def __str__(self):
