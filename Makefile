@@ -22,7 +22,7 @@ restart-rq:  ## restart rq containers
 reload: restart-gunicorn restart-rq  ## restart django and rq workers
 
 .PHONY: update
-update: git-update init init-static restart-gunicorn init-rq restart-rq  ## update project (runs git-update init init-static restart-gunicorn init-rq restart-rq)
+update: git-update init restart-gunicorn init-rq restart-rq  ## update project (runs git-update init restart-gunicorn init-rq restart-rq)
 
 .PHONY: start-dev
 start-dev:  ## start containers for local development
