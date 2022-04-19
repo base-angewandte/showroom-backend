@@ -68,7 +68,7 @@ class ActivitySerializer(serializers.ModelSerializer):
                     'server error': f'No mapping is available to transform entry of type: {e}'
                 },
                 code=500,
-            )
+            ) from e
         except FieldTransformerMissingError as e:
             # TODO: check why we the 500 response code is ignored and turned into a 400
             raise serializers.ValidationError(
@@ -76,7 +76,7 @@ class ActivitySerializer(serializers.ModelSerializer):
                     'server error': f'No transformation function is available for field: {e}'
                 },
                 code=500,
-            )
+            ) from e
         except Exception as e:
             logger.exception(
                 'Caught unexpected exception when trying to transform repo data'
@@ -85,7 +85,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'server error': f'An unexpected error happened: {e}'},
                 code=500,
-            )
+            ) from e
         new_data.update(transformed)
         return super().to_internal_value(new_data)
 
