@@ -38,6 +38,11 @@ def get_default_entity_secondary_details():
     ]
 
 
+class ShowroomObjectManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(active=True)
+
+
 class SourceRepository(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True)
     label_institution = models.CharField(max_length=255)
@@ -97,6 +102,8 @@ class ShowroomObject(AbstractBaseModel):
     )
 
     active = models.BooleanField(default=True)
+
+    objects = ShowroomObjectManager()
 
     # TODO: add gin indizes for those fields used for full text search
 
