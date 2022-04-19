@@ -160,9 +160,12 @@ class ActivitySerializer(serializers.ModelSerializer):
             'to': [],
             'from': [],
         }
-        for relation in self.instance.relations_to.all():
+        # filter out entities
+        for relation in self.instance.relations_to.filter(type=self.instance.ACTIVITY):
             data['to'].append(get_search_item(relation, lang))
-        for relation in self.instance.relations_from.all():
+        for relation in self.instance.relations_from.filter(
+            type=self.instance.ACTIVITY
+        ):
             data['from'].append(get_search_item(relation, lang))
 
         return data
