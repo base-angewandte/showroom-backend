@@ -130,5 +130,12 @@ def update_entity_from_source_repo_data(entity):
             )
     primary_details.append(contact)
     entity.primary_details = primary_details
+
+    entity.active = False
+    if user_settings := data.get('settings'):
+        if showroom := user_settings.get('showroom'):
+            if activate_profile := showroom.get('activate_profile'):
+                entity.active = activate_profile
+
     entity.date_synced = timezone.now()
     entity.save()
