@@ -96,12 +96,8 @@ class EntityViewSet(viewsets.GenericViewSet):
             #         # TODO: discuss what to do if the sync fails but we already have some data
             #         pass
         instance.refresh_from_db()
-        activate_profile = False
-        if user_settings := instance.source_repo_data.get('settings'):
-            if showroom := user_settings.get('showroom'):
-                if activate_profile := showroom.get('activate_profile'):
-                    activate_profile = True
-        if not activate_profile:
+
+        if not instance.active:
             return Response(
                 {'detail': 'user has deactivated their profile page'}, status=404
             )
