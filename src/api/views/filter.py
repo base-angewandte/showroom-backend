@@ -155,23 +155,21 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
 
     # this one is not strictly speaking a dynamic filter, but we have it here, to
     # render the option labels dynamically based on the request language
-    showroom_type_filter = (
-        {
-            'id': 'showroom_type',
-            'type': 'chips',
-            'freetext_allowed': False,
-            'label': 'Showroom type' if lang == 'en' else 'Showroom-Typ',
-            'hidden': False,
-            'options': [
-                {
-                    'id': ShowroomObject.ACTIVITY,
-                    'label': 'Activity' if lang == 'en' else 'Aktivität',
-                },
-                {'id': ShowroomObject.PERSON, 'label': 'Person'},
-                # TODO: add department, institution, album, once they are fully implemented
-            ],
-        },
-    )
+    showroom_type_filter = {
+        'id': 'showroom_type',
+        'type': 'chips',
+        'freetext_allowed': False,
+        'label': 'Showroom type' if lang == 'en' else 'Showroom-Typ',
+        'hidden': False,
+        'options': [
+            {
+                'id': ShowroomObject.ACTIVITY,
+                'label': 'Activity' if lang == 'en' else 'Aktivität',
+            },
+            {'id': ShowroomObject.PERSON, 'label': 'Person'},
+            # TODO: add department, institution, album, once they are fully implemented
+        ],
+    }
 
     return [
         keyword_filter,
