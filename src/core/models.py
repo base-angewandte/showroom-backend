@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 
 from api.repositories.portfolio import activity_lists
@@ -152,7 +153,7 @@ class EntityDetail(models.Model):
     )
     expertise = models.JSONField(blank=True, null=True)
     showcase = models.JSONField(blank=True, null=True, validators=[validate_showcase])
-    photo = models.CharField(max_length=255, blank=True)
+    photo = models.URLField(max_length=255, blank=True)
     # we have to use a redefined list property here, because validation works
     # different than for the more generic lists used in activities
     list = models.JSONField(default=dict, validators=[validate_entity_list])
@@ -161,6 +162,11 @@ class EntityDetail(models.Model):
         default=get_default_list_ordering,
         validators=[validate_list_ordering],
     )
+
+    @cached_property
+    def photo_id(self):
+        if self.photo:
+            return self.photo.split('/')[-1].split('.')[0]
 
     def __str__(self):
         return f'{self.showroom_object.title} (ID: {self.showroom_object.id})'

@@ -52,6 +52,8 @@ def update_entity_from_source_repo_data(entity):
             expertise[lang] = [skill['label'].get(lang) for skill in skills]
     entity.entitydetail.expertise = expertise
 
+    entity.entitydetail.photo = data.get('image')
+
     # now assemble und update the primary_details data
     primary_details = []
     # add contact data (includes, location, e-mail, URL, and GND/VIAF and ORCID links)

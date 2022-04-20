@@ -83,6 +83,19 @@ class EntitySerializer(serializers.ModelSerializer):
         # now filter out the requested languages for the detail fields and lists
         localise_detail_fields(ret, self.context['request'].LANGUAGE_CODE)
 
+        if photo := instance.entitydetail.photo:
+            ret['featured_media'] = {
+                'id': instance.entitydetail.photo_id,
+                'type': 'i',
+                'mime_type': 'image/jpeg',
+                'license': {
+                    'label': 'Copyright',
+                    'source': 'http://base.uni-ak.ac.at/portfolio/licenses/copyright',
+                },
+                'original': photo,
+                'thumbnail': photo,
+            }
+
         return ret
 
 
