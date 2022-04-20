@@ -75,15 +75,16 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
         if exclude:
             queryset = queryset.exclude(id__in=exclude)
 
-        q_filter = (
-            Q(title__icontains=q)
-            | Q(subtext__icontains=q)
-            | (
-                Q(textsearchindex__text__icontains=q)
-                & Q(textsearchindex__language=lang)
+        if q:
+            q_filter = (
+                Q(title__icontains=q)
+                | Q(subtext__icontains=q)
+                | (
+                    Q(textsearchindex__text__icontains=q)
+                    & Q(textsearchindex__language=lang)
+                )
             )
-        )
-        queryset = queryset.filter(q_filter).distinct().order_by(sort)
+            queryset = queryset.filter(q_filter).distinct().order_by(sort)
 
         count = queryset.count()
         queryset = queryset[offset : limit + offset]

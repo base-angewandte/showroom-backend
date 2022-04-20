@@ -5,7 +5,7 @@ from django.conf import settings
 
 class ShowcaseSearchSerializer(serializers.Serializer):
     q = serializers.CharField(
-        required=True,
+        required=False,
         help_text='Search string to look for in all showroom activities (or those limited by entity_id).',
     )
     entity_id = serializers.CharField(
