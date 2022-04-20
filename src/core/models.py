@@ -153,7 +153,7 @@ class EntityDetail(models.Model):
     )
     expertise = models.JSONField(blank=True, null=True)
     showcase = models.JSONField(blank=True, null=True, validators=[validate_showcase])
-    photo = models.URLField(max_length=255, blank=True)
+    photo = models.URLField(max_length=255, blank=True, null=True)
     # we have to use a redefined list property here, because validation works
     # different than for the more generic lists used in activities
     list = models.JSONField(default=dict, validators=[validate_entity_list])
