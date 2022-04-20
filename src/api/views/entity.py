@@ -353,7 +353,7 @@ class EntityViewSet(viewsets.GenericViewSet):
 
         return Response(
             AutocompleteViewSet.get_results(
-                ShowroomObject.objects.filter(belongs_to=instance),
+                ShowroomObject.active_objects.filter(belongs_to=instance),
                 q,
                 filter_id,
                 limit,
@@ -429,7 +429,7 @@ class EntityViewSet(viewsets.GenericViewSet):
                     400,
                 )
 
-        queryset = ShowroomObject.objects.filter(belongs_to=instance)
+        queryset = ShowroomObject.active_objects.filter(belongs_to=instance)
 
         return Response(
             get_search_results(queryset, filters, limit, offset, order_by, lang),

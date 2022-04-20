@@ -86,7 +86,7 @@ class SearchViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         order_by = s.validated_data.get('order_by')
         lang = request.LANGUAGE_CODE
 
-        queryset = ShowroomObject.objects.all()
+        queryset = ShowroomObject.active_objects.all()
 
         return Response(
             get_search_results(queryset, filters, limit, offset, order_by, lang),
@@ -485,7 +485,7 @@ def filter_activities(values, limit, offset, language):
             query = query | text_search_query(value)
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     activities_queryset = (
-        ShowroomObject.objects.filter(textsearchindex__language=language)
+        ShowroomObject.active_objects.filter(textsearchindex__language=language)
         .annotate(rank=rank)
         .exclude(rank=0)
         .distinct()
@@ -499,7 +499,7 @@ def filter_activities(values, limit, offset, language):
     vector = SearchVector('showroomobject__textsearchindex__text_vector')
     rank = SearchRank(vector, query, cover_density=True, normalization=Value(2))
     entities_queryset = (
-        ShowroomObject.objects.filter(
+        ShowroomObject.active_objects.filter(
             showroomobject__textsearchindex__language=language
         )
         .annotate(rank=Sum(rank))
@@ -550,7 +550,9 @@ def filter_current_activities(values, limit, offset, language):
     #       Case, When and annotations, to generate a more useful ranking.
     #       See: https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
 
-    activities_queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+    activities_queryset = ShowroomObject.active_objects.filter(
+        type=ShowroomObject.ACTIVITY
+    )
     today = date.today()
     future_limit = today + timedelta(days=settings.CURRENT_ACTIVITIES_FUTURE)
     past_limit = today - timedelta(days=settings.CURRENT_ACTIVITIES_PAST)

@@ -47,7 +47,9 @@ class AutocompleteViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
 
         return Response(
-            self.get_results(ShowroomObject.objects.all(), q, filter_id, limit, lang),
+            self.get_results(
+                ShowroomObject.active_objects.all(), q, filter_id, limit, lang
+            ),
             status=200,
         )
 

@@ -66,7 +66,7 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
             if entity.type not in [ShowroomObject.PERSON, ShowroomObject.INSTITUTION]:
                 return Response({'detail': 'entity is not of valid type'}, status=400)
 
-        queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+        queryset = ShowroomObject.active_objects.filter(type=ShowroomObject.ACTIVITY)
         if entity:
             if entity.type == ShowroomObject.PERSON:
                 queryset = queryset.filter(belongs_to=entity)

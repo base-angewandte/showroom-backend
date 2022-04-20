@@ -32,7 +32,7 @@ class EntityEditPermission(permissions.BasePermission):
         # TODO: discuss: theoretically there could be more than one entity
         #       associated to one user. also there could be users with the same
         #       ID from different repositories. how do we want to handle that?
-        entities = ShowroomObject.objects.filter(
+        entities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         if not entities:
