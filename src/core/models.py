@@ -39,7 +39,7 @@ def get_default_entity_secondary_details():
     ]
 
 
-class ShowroomObjectManager(models.Manager):
+class ActiveShowroomObjectManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(active=True)
 
@@ -104,7 +104,8 @@ class ShowroomObject(AbstractBaseModel):
 
     active = models.BooleanField(default=True)
 
-    objects = ShowroomObjectManager()
+    objects = models.Manager()
+    active_objects = ActiveShowroomObjectManager()
 
     # TODO: add gin indizes for those fields used for full text search
 
