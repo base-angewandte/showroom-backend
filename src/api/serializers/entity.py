@@ -93,6 +93,7 @@ class EntitySerializer(serializers.ModelSerializer):
                     'source': 'http://base.uni-ak.ac.at/portfolio/licenses/copyright',
                 },
                 'original': photo,
+                'previews': [{'625w': photo}],
                 'thumbnail': photo,
             }
 
