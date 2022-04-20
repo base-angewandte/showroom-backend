@@ -39,7 +39,7 @@ def get_user_data(request, *args, **kwargs):
         #       api.permissions.EntityEditPermission class
         #       For simplicity we'll currently just take the first found entity
         entities = ShowroomObject.objects.filter(
-            type=ShowroomObject.PERSON, source_repo_entry_id=request.user.username
+            type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         entity_id = entities[0].id
     ret = {
