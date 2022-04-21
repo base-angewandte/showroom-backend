@@ -1100,7 +1100,7 @@ def get_keywords(data):
     transformed = {}
     for lang in LANGUAGES:
         keyword_labels = [
-            label for kw in keywords if (label := kw.get('label').get(lang))
+            label for kw in keywords if (label := kw.get('label', {}).get(lang))
         ]
         transformed[lang] = {
             'label': get_preflabel('keywords', lang=lang),
