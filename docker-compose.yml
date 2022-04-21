@@ -1,6 +1,5 @@
-version: '2.3'
+version: "2.3"
 services:
-
   showroom-redis:
     image: redis:6.0-alpine
     container_name: showroom-redis
@@ -70,6 +69,20 @@ services:
     restart: always
     command: python manage.py rqworker --with-scheduler high default
 
+  showroom-rq-scheduler:
+    build: ./src
+    container_name: showroom-rq-scheduler
+    environment:
+      - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
+      - POSTGRES_USER=$SHOWROOM_DB_USER
+      - POSTGRES_DB=$SHOWROOM_DB_NAME
+    volumes_from:
+      - showroom-django
+    networks:
+      - showroomnet
+    restart: always
+    command: python manage.py rqscheduler
+
   showroom-cron:
     image: paradoxon/alpine-cron
     container_name: showroom-cron
@@ -78,7 +91,6 @@ services:
       - ./docker/cron/crontab:/tmp/crontab
     network_mode: "none"
     restart: always
-
 
 networks:
   showroomnet:
