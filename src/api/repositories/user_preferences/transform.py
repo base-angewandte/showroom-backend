@@ -2,7 +2,7 @@ import logging
 
 from django.utils import timezone
 
-from api.repositories.portfolio import LANGUAGES, get_preflabel
+from api.repositories.portfolio import LANGUAGES
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ def update_entity_from_source_repo_data(entity):
     subtext = []
     # TODO: design says: add position, title here. but: where do we get that from?
     subtext.append(entity.source_repo.label_institution)
-    if data.get('location') and data['location'].get('office'):
-        subtext.append(data['location']['office'])
+    if data.get('organisational_unit'):
+        subtext.append(data['organisational_unit'])
     entity.subtext = subtext
 
     # add skills and expertise (if there are any set)
@@ -56,60 +56,66 @@ def update_entity_from_source_repo_data(entity):
 
     # now assemble und update the primary_details data
     primary_details = []
-    # add contact data (includes, location, e-mail, URL, and GND/VIAF and ORCID links)
-    contact = {}
+
     # TODO: adapt after User Preferences labels are added to the vocabulary
-    contact_labels = {
+    labels = {
         'contact': {'en': 'Contact', 'de': 'Kontakt'},
-        'location': {
-            'en': get_preflabel('location', lang='en').capitalize(),
-            'de': get_preflabel('location', lang='de').capitalize(),
-        },
-        'place': {'en': 'Place', 'de': 'Ort'},
-        'tel': {'en': 'Tel', 'de': 'Tel'},
+        'location': {'en': 'Address', 'de': 'Adresse'},
+        'telephone': {'en': 'Telephone', 'de': 'Telefon'},
         'mail': {'en': 'E-mail', 'de': 'E-Mail'},
+        'complementary_email': {
+            'en': 'E-Mail (complementary)',
+            'de': 'E-Mail (ergänzend)',
+        },
         'website': {'en': 'Website', 'de': 'Website'},
-        'gnd_viaf': {'en': 'GND/VIAF', 'de': 'GND/VIAF'},
-        'orcid': {'en': 'ORCID', 'de': 'ORCID'},
     }
+
+    if loc := data['location']:
+        address = {}
+        for lang in LANGUAGES:
+            address[lang] = {
+                'label': labels['location'],
+                'data': [
+                    loc['street_address'],
+                    f'{loc["postal_code"]} {loc["place"]}'.strip(),
+                ],
+            }
+
+    contact = {}
+
     for lang in LANGUAGES:
-        # TODO: use contact concept as soon as it is implemented in the vocabulary
-        label = get_preflabel('location', lang=lang).capitalize()
-        if lang == 'en':
-            label = 'Contact'
-        elif lang == 'de':
-            label = 'Kontakt'
         contact[lang] = {
-            'label': label,
+            'label': labels['contact'],
             'data': [],
         }
 
-        if loc := data['location']:
+        if email := data.get('email'):
             contact[lang]['data'].append(
                 {
-                    'label': contact_labels['location'][lang],
-                    'value': loc['street_address'],
-                },
-            )
-            contact[lang]['data'].append(
-                {
-                    'label': contact_labels['place'][lang],
-                    'value': f'{loc["postal_code"]} {loc["place"]}, {loc["country_or_region"]}',
-                },
-            )
-        if email := data.get('contact_email'):
-            contact[lang]['data'].append(
-                {
-                    'label': contact_labels['mail'][lang],
+                    'label': labels['mail'][lang],
                     'value': email,
                     'url': f'mailto:{email}',
                 },
             )
-        # TODO: phone would be next in terms of design, but where does this come from?
+        if complementary_email := data.get('complementary_email'):
+            contact[lang]['data'].append(
+                {
+                    'label': labels['complementary_email'][lang],
+                    'value': complementary_email,
+                    'url': f'mailto:{complementary_email}',
+                },
+            )
+        if telephone := data.get('telephone'):
+            contact[lang]['data'].append(
+                {
+                    'label': labels['telephone'][lang],
+                    'value': telephone,
+                },
+            )
         if website := data.get('website'):
             contact[lang]['data'].append(
                 {
-                    'label': contact_labels['website'][lang],
+                    'label': labels['website'][lang],
                     'value': website,
                     'url': website,
                 },
@@ -117,7 +123,7 @@ def update_entity_from_source_repo_data(entity):
         if gnd_viaf := data.get('gnd_viaf'):
             contact[lang]['data'].append(
                 {
-                    'label': contact_labels['gnd_viaf'][lang],
+                    'label': labels['gnd_viaf'][lang],
                     'value': gnd_viaf,
                     'url': f'https://d-nb.info/gnd/{gnd_viaf}',
                 }
@@ -125,7 +131,7 @@ def update_entity_from_source_repo_data(entity):
         if orcid := data.get('orcid_pid'):
             contact[lang]['data'].append(
                 {
-                    'label': contact_labels['orcid'][lang],
+                    'label': labels['orcid'][lang],
                     'value': orcid,
                     'url': f'https://orcid.org/{orcid}',
                 },
