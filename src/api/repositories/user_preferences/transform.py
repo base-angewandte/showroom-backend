@@ -70,7 +70,7 @@ def update_entity_from_source_repo_data(entity):
         'website': {'en': 'Website', 'de': 'Website'},
     }
 
-    if loc := data['location']:
+    if loc := data.get('location'):
         address = {}
         for lang in LANGUAGES:
             address[lang] = {
