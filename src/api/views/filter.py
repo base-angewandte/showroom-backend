@@ -3,6 +3,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from django.conf import settings
+from django.core.cache import cache
 
 from api.serializers.filter import FilterSerializer
 from core.models import ShowroomObject, SourceRepository
@@ -106,77 +107,86 @@ def get_static_filter_label(filter_id, lang=settings.LANGUAGE_CODE):
 def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
     """Returns the filter definitions for keywords and activity type
     searches."""
-    # TODO: cache the dynamic filters for 30 min
-    # TODO: add entity keywords to the keywords filter
-    activities = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY).exclude(
-        source_repo_data__keywords=None
-    )
-    keywords = set()
-    for activity in activities:
-        for kw in activity.source_repo_data['keywords']:
-            # keywords should be sortable by localised value
-            keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
-    keyword_filter = {
-        'id': 'keyword',
-        'type': 'chips',
-        'label': label_keywords[lang],
-        'hidden': False,
-        'freetext_allowed': False,
-        'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
-    }
+    cache_key = f'get_dynamic_filters_{lang}'
+    ret = cache.get(cache_key)
+    if not ret:
+        # TODO: add entity keywords to the keywords filter
+        activities = ShowroomObject.objects.filter(
+            type=ShowroomObject.ACTIVITY
+        ).exclude(source_repo_data__keywords=None)
+        keywords = set()
+        for activity in activities:
+            for kw in activity.source_repo_data['keywords']:
+                # keywords should be sortable by localised value
+                if kw.get('label'):
+                    keywords.add(
+                        (kw['label'][lang], kw['label'][settings.LANGUAGE_CODE])
+                    )
+        keyword_filter = {
+            'id': 'keyword',
+            'type': 'chips',
+            'label': label_keywords[lang],
+            'hidden': False,
+            'freetext_allowed': False,
+            'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
+        }
 
-    activities = (
-        ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
-        .exclude(activitydetail__activity_type__isnull=True)
-        .exclude(activitydetail__activity_type={})
-    )
-    types = set()
-    for activity in activities:
-        typ = activity.activitydetail.activity_type
-        types.add((typ['label'][lang], typ['label'][settings.LANGUAGE_CODE]))
-    activity_types_filter = {
-        'id': 'activity_type',
-        'type': 'chips',
-        'label': label_activity_types[lang],
-        'hidden': False,
-        'freetext_allowed': False,
-        'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
-    }
+        activities = (
+            ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+            .exclude(activitydetail__activity_type__isnull=True)
+            .exclude(activitydetail__activity_type={})
+        )
+        types = set()
+        for activity in activities:
+            typ = activity.activitydetail.activity_type
+            types.add((typ['label'][lang], typ['label'][settings.LANGUAGE_CODE]))
+        activity_types_filter = {
+            'id': 'activity_type',
+            'type': 'chips',
+            'label': label_activity_types[lang],
+            'hidden': False,
+            'freetext_allowed': False,
+            'options': [{'id': typ[1], 'label': typ[0]} for typ in sorted(types)],
+        }
 
-    institutions = SourceRepository.objects.all()
-    institution_filter = {
-        'id': 'institution',
-        'type': 'chips',
-        'label': label_institutions[lang],
-        'hidden': True,
-        'freetext_allowed': False,
-        'options': [{'id': i.id, 'label': i.label_institution} for i in institutions],
-    }
+        institutions = SourceRepository.objects.all()
+        institution_filter = {
+            'id': 'institution',
+            'type': 'chips',
+            'label': label_institutions[lang],
+            'hidden': True,
+            'freetext_allowed': False,
+            'options': [
+                {'id': i.id, 'label': i.label_institution} for i in institutions
+            ],
+        }
 
-    # this one is not strictly speaking a dynamic filter, but we have it here, to
-    # render the option labels dynamically based on the request language
-    showroom_type_filter = {
-        'id': 'showroom_type',
-        'type': 'chips',
-        'freetext_allowed': False,
-        'label': 'Showroom type' if lang == 'en' else 'Showroom-Typ',
-        'hidden': False,
-        'options': [
-            {
-                'id': ShowroomObject.ACTIVITY,
-                'label': 'Activity' if lang == 'en' else 'Aktivität',
-            },
-            {'id': ShowroomObject.PERSON, 'label': 'Person'},
-            # TODO: add department, institution, album, once they are fully implemented
-        ],
-    }
+        # this one is not strictly speaking a dynamic filter, but we have it here, to
+        # render the option labels dynamically based on the request language
+        showroom_type_filter = {
+            'id': 'showroom_type',
+            'type': 'chips',
+            'freetext_allowed': False,
+            'label': 'Showroom type' if lang == 'en' else 'Showroom-Typ',
+            'hidden': False,
+            'options': [
+                {
+                    'id': ShowroomObject.ACTIVITY,
+                    'label': 'Activity' if lang == 'en' else 'Aktivität',
+                },
+                {'id': ShowroomObject.PERSON, 'label': 'Person'},
+                # TODO: add department, institution, album, once they are fully implemented
+            ],
+        }
 
-    return [
-        keyword_filter,
-        activity_types_filter,
-        showroom_type_filter,
-        institution_filter,
-    ]
+        ret = [
+            keyword_filter,
+            activity_types_filter,
+            showroom_type_filter,
+            institution_filter,
+        ]
+        cache.set(cache_key, ret, 60 * 30)
+    return ret
 
 
 def get_dynamic_entity_filters(entity, lang=settings.LANGUAGE_CODE):
