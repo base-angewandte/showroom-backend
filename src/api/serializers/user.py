@@ -44,7 +44,7 @@ class UserDataSerializer(serializers.Serializer):
     )
     showroom_id = serializers.CharField(
         help_text='The user\'s associated showroom id. Or null, if no '
-        + 'associated showroom entity can be found'
+        + 'associated showroom entity can be found or showroom page is deactivated'
     )
     entity_editing = serializers.ListSerializer(
         child=serializers.CharField(),

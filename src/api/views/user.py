@@ -31,7 +31,7 @@ def get_user_data(request, *args, **kwargs):
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         entity_id = entity.id
-        showroom_id = entity.showroom_id
+        showroom_id = entity.showroom_id if entity.active else None
     except ShowroomObject.DoesNotExist:
         entity_id = None
         showroom_id = None
@@ -44,7 +44,7 @@ def get_user_data(request, *args, **kwargs):
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         entity_id = entities[0].id
-        showroom_id = entities[0].showroom_id
+        showroom_id = entities[0].showroom_id if entities[0].active else None
     ret = {
         'id': request.user.username,
         'name': attributes.get('display_name'),
