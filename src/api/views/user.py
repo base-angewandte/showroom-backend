@@ -31,8 +31,10 @@ def get_user_data(request, *args, **kwargs):
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         entity_id = entity.id
+        showroom_id = entity.showroom_id
     except ShowroomObject.DoesNotExist:
         entity_id = None
+        showroom_id = None
     except ShowroomObject.MultipleObjectsReturned:
         # TODO: discuss: how do we want to handle multiple Entities with the same
         #       user set as source_repo_entry_id. See also the similar comment in the
@@ -42,11 +44,13 @@ def get_user_data(request, *args, **kwargs):
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
         entity_id = entities[0].id
+        showroom_id = entities[0].showroom_id
     ret = {
         'id': request.user.username,
         'name': attributes.get('display_name'),
         'email': attributes.get('email'),
         'entity_id': entity_id,
+        'showroom_id': showroom_id,
         'entity_editing': [entity_id] if entity_id else [],
         'groups': attributes.get('groups'),
         'permissions': attributes.get('permissions'),

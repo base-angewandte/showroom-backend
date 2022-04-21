@@ -11,6 +11,7 @@ from rest_framework import serializers
                 'name': 'Firstname Lastname',
                 'email': 'addy@example.org',
                 'entity_id': 'xZy2345aceg98QPT0246aC',
+                'showroom_id': 'firstname-lastname-xZy2345aceg98QPT0246aC',
                 'entity_editing': ['xZy2345aceg98QPT0246aC', 'MtEaiJ7ZgjhFBbTn6rBMTU'],
                 'groups': ['foo_users', 'bar_members'],
                 'permissions': ['view_foo', 'view_bar', 'edit_bar'],
@@ -23,6 +24,7 @@ from rest_framework import serializers
                 'name': 'Firstname Lastname',
                 'email': 'addy@example.org',
                 'entity_id': None,
+                'showroom_id': None,
                 'entity_editing': [],
                 'groups': ['foo_users', 'bar_members'],
                 'permissions': ['view_foo', 'view_bar', 'edit_bar'],
@@ -38,6 +40,10 @@ class UserDataSerializer(serializers.Serializer):
     email = serializers.CharField(help_text='The user\'s e-mail address')
     entity_id = serializers.CharField(
         help_text='The user\'s associated showroom entity id. Or null, if no '
+        + 'associated showroom entity can be found'
+    )
+    showroom_id = serializers.CharField(
+        help_text='The user\'s associated showroom id. Or null, if no '
         + 'associated showroom entity can be found'
     )
     entity_editing = serializers.ListSerializer(
