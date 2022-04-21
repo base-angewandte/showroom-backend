@@ -106,12 +106,12 @@ def get_static_filter_label(filter_id, lang=settings.LANGUAGE_CODE):
     )
 
 
-def get_dynamic_filters(lang=settings.LANGUAGE_CODE):
+def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
     """Returns the filter definitions for keywords and activity type
     searches."""
     cache_key = f'get_dynamic_filters_{lang}'
     ret = cache.get(cache_key)
-    if not ret:
+    if not use_cache or not ret:
         # TODO: add entity keywords to the keywords filter
         activities = ShowroomObject.objects.filter(
             type=ShowroomObject.ACTIVITY
