@@ -80,6 +80,7 @@ def update_entity_from_source_repo_data(entity):
                     f'{loc["postal_code"]} {loc["place"]}'.strip(),
                 ],
             }
+        primary_details.append(address)
 
     contact = {}
 
