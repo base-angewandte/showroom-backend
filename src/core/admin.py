@@ -37,6 +37,7 @@ class ShowroomObjectAdmin(admin.ModelAdmin):
         'source_repo_data',
         'id',
         'source_repo_object_id',
+        'source_repo_owner_id',
     )
 
 
