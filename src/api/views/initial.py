@@ -8,11 +8,10 @@ from rest_framework.response import Response
 
 from django.utils.text import slugify
 
-from api.repositories.portfolio.search import get_search_item
 from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
-from api.views.search import label_current_activities
+from api.views.search import get_search_results, label_current_activities
 from core.models import ShowroomObject
 from showroom import settings
 
@@ -124,18 +123,17 @@ def get_initial_response(request, pk):
     if showcase_warnings:
         response['showcase_warnings'] = showcase_warnings
 
-    found = ShowroomObject.objects.filter(
+    qs = ShowroomObject.objects.filter(
         source_repo__id=settings.DEFAULT_USER_REPO,
         type=ShowroomObject.ACTIVITY,
     )
-    count = found.count()
-    # TODO: add currentness ordering
-    found = found[0:limit]
+    count = qs.count()
+    results = get_search_results(qs, [], limit, 0, 'currentness', lang)
     response['results'].append(
         {
             'label': label_current_activities[lang],
             'total': count,
-            'data': [get_search_item(obj, lang) for obj in found],
+            'data': results['data'],
             'search': {
                 'order_by': 'currentness',
                 'filters': [
