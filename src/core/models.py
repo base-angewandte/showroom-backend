@@ -252,6 +252,10 @@ class EntityDetail(models.Model):
         job_id = f'entity_list_render_{self.showroom_object.id}'
         self.enqueue_delayed_job(job_id, self.render_list)
 
+    def enqueue_update_activities_job(self):
+        job_id = f'entity_update_activities_{self.showroom_object.id}'
+        self.enqueue_delayed_job(job_id, self.update_activities)
+
     def update_activities(self):
         """Associate all activities belonging to this entry.
 

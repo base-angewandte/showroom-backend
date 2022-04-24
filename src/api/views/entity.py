@@ -143,7 +143,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         entity.source_repo_data = request.data
         entity.save()
         entity.entitydetail.update_from_repo_data()
-        entity.entitydetail.update_activities()
+        entity.entitydetail.enqueue_update_activities_job()
 
         return Response(entity.showroom_id, status=201 if created else 200)
 
