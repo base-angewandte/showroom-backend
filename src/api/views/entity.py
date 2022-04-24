@@ -138,7 +138,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         entity, created = ShowroomObject.objects.get_or_create(
             source_repo_object_id=pk,
             source_repo=source_repo,
-            type=ShowroomObject.PERSON,
+            defaults={'type': ShowroomObject.PERSON},
         )
         entity.source_repo_data = request.data
         entity.save()
