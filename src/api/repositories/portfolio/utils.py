@@ -42,10 +42,12 @@ def get_year_list_from_activity(activity):
             years.append(year_from_date_string(data[fld]))
         elif fld in ['date_location', 'date_location_description']:
             for d in data[fld]:
-                years.append(year_from_date_string(d['date']))
+                if v := d.get('date'):
+                    years.append(year_from_date_string(v))
         elif fld == 'date_time_range_location':
             for d in data[fld]:
-                years.append(year_from_date_string(d['date']['date']))
+                if v := d.get('date', {}).get('date'):
+                    years.append(year_from_date_string(v))
         elif fld == 'date_range':
             years.extend(years_list_from_date_range(data[fld]))
         elif fld in [
@@ -54,7 +56,8 @@ def get_year_list_from_activity(activity):
             'date_range_time_range_location',
         ]:
             for d in data[fld]:
-                years.extend(years_list_from_date_range(d['date']))
+                if v := d.get('date'):
+                    years.extend(years_list_from_date_range(v))
     years = sorted(set(years), reverse=True)
     return years
 
