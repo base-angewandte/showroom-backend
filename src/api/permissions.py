@@ -13,9 +13,9 @@ class ApiKeyPermission(permissions.BasePermission):
             if not request.headers.get('X-Api-Key'):
                 return False
 
-            try:
-                SourceRepository.objects.get(api_key=request.headers['X-Api-Key'])
-            except SourceRepository.DoesNotExist:
+            if not SourceRepository.objects.filter(
+                api_key=request.headers['X-Api-Key']
+            ).exists():
                 return False
 
         return True

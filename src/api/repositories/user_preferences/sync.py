@@ -52,9 +52,7 @@ def pull_user_data(username, update_entry=True):
         )
 
     if update_entry:
-        try:
-            SourceRepository.objects.get(id=settings.DEFAULT_USER_REPO)
-        except SourceRepository.DoesNotExist:
+        if not SourceRepository.objects.filter(id=settings.DEFAULT_USER_REPO).exists():
             raise UserPrefError('Configured SourceRepository does not exist!') from None
 
         entity, created = ShowroomObject.objects.get_or_create(
