@@ -120,13 +120,18 @@ class ShowroomObject(AbstractBaseModel):
     def get_showcase_date_info(self):
         dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]
         for d in self.daterangesearchindex_set.order_by('date_from'):
-            if '01-01' in d.date_from and '12-31' in d.date_to:
-                d_from = d.date_from[:4]
-                d_to = d.date_to[:4]
-                if d_from == d_to:
-                    dates.append(d_from)
+            if (
+                d.date_from.day == 1
+                and d.date_from.month == 1
+                and d.date_to.day == 31
+                and d.date_to.month == 12
+            ):
+                d_from_year = d.date_from.year
+                d_to_year = d.date_to.year
+                if d_from_year == d_to_year:
+                    dates.append(f'{d_from_year}')
                 else:
-                    dates.append(f'{d_from} - {d_to}')
+                    dates.append(f'{d_from_year} - {d_to_year}')
             else:
                 dates.append(f'{d.date_from} - {d.date_to}')
         ret = ', '.join(dates)
