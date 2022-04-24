@@ -9,8 +9,7 @@
 SITE_URL=https://url/
 
 ## The generated OpenAPI 3.0 spec contains the URL and a description to the
-## server hosting the API. This is by default the local dev server on 127.0.0.1:8500
-## For any online or prod setting set the proper values here
+## server hosting the API. This is by default created from SITE_URL and FORCE_SCRIPT_NAME
 # OPENAPI_SERVER_URL=
 # OPENAPI_SERVER_DESCRIPTION=
 

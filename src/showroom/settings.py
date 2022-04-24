@@ -490,10 +490,11 @@ SPECTACULAR_SETTINGS = {
     'TAGS': ['public', 'auth', 'repo', 'api'],
     'SERVERS': [
         {
-            'url': env.str('OPENAPI_SERVER_URL', default='http://127.0.0.1:8500'),
-            'description': env.str(
-                'OPENAPI_SERVER_DESCRIPTION', default='Local Dev Server'
+            'url': env.str(
+                'OPENAPI_SERVER_URL',
+                default=f'{SITE_URL}{FORCE_SCRIPT_NAME}'.rstrip('/'),
             ),
+            'description': env.str('OPENAPI_SERVER_DESCRIPTION', default='Showroom'),
         },
     ],
     # available SwaggerUI configuration parameters
