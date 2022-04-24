@@ -110,6 +110,7 @@ class ShowroomObject(AbstractBaseModel):
     # TODO: add gin indizes for those fields used for full text search
     class Meta:
         indexes = [
+            GinIndex(fields=['title']),
             models.Index(fields=['source_repo_object_id']),
         ]
         unique_together = ('source_repo', 'source_repo_object_id')
@@ -322,7 +323,10 @@ class TextSearchIndex(models.Model):
     text_vector = SearchVectorField(null=True)
 
     class Meta:
-        indexes = (GinIndex(fields=['text_vector']),)
+        indexes = (
+            GinIndex(fields=['text']),
+            GinIndex(fields=['text_vector']),
+        )
 
 
 class DateSearchIndex(models.Model):
