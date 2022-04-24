@@ -491,7 +491,7 @@ SPECTACULAR_SETTINGS = {
         {
             'url': env.str(
                 'OPENAPI_SERVER_URL',
-                default=f'{SITE_URL}{FORCE_SCRIPT_NAME}'.rstrip('/'),
+                default=f'{SITE_URL.rstrip("/")}{FORCE_SCRIPT_NAME}',
             ),
             'description': env.str('OPENAPI_SERVER_DESCRIPTION', default='Showroom'),
         },
