@@ -28,7 +28,8 @@ auth_headers = {
 
 def pull_user_data(username, update_entry=True):
     r = requests.get(
-        settings.CAS_API_BASE + f'users/{username}/', headers=auth_headers
+        settings.CAS_API_BASE + f'users/{username}/',
+        headers=auth_headers,
     )
 
     if r.status_code == 403:
@@ -52,26 +53,17 @@ def pull_user_data(username, update_entry=True):
 
     if update_entry:
         try:
-            default_user_repo = SourceRepository.objects.get(
-                id=settings.DEFAULT_USER_REPO
-            )
+            SourceRepository.objects.get(id=settings.DEFAULT_USER_REPO)
         except SourceRepository.DoesNotExist:
-            raise UserPrefError('Configured SourceRepository does not exist!')
+            raise UserPrefError('Configured SourceRepository does not exist!') from None
 
-        try:
-            entity = ShowroomObject.objects.get(
-                source_repo_object_id=username,
-                source_repo_id=settings.DEFAULT_USER_REPO,
-            )
-            entity.source_repo_data = result
-            entity.save()
-        except ShowroomObject.DoesNotExist:
-            entity = ShowroomObject.objects.create(
-                source_repo_object_id=username,
-                source_repo=default_user_repo,
-                source_repo_data=result,
-                type=ShowroomObject.PERSON,
-            )
+        entity, created = ShowroomObject.objects.get_or_create(
+            source_repo_object_id=username,
+            source_repo_id=settings.DEFAULT_USER_REPO,
+            defaults={'type': ShowroomObject.PERSON},
+        )
+        entity.source_repo_data = result
+        entity.save()
         entity.entitydetail.update_from_repo_data()
         entity.entitydetail.update_activities()
 
