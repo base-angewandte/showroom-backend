@@ -274,6 +274,7 @@ class EntityDetail(models.Model):
         activities = ShowroomObject.objects.filter(
             type=ShowroomObject.ACTIVITY,
             source_repo_owner_id=self.showroom_object.source_repo_object_id,
+            belongs_to=None,
         )
         activities.update(belongs_to=self.showroom_object)
         self.enqueue_list_render_job()
