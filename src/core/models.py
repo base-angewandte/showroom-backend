@@ -323,10 +323,7 @@ class TextSearchIndex(models.Model):
     text_vector = SearchVectorField(null=True)
 
     class Meta:
-        indexes = (
-            GinIndex(fields=['text']),
-            GinIndex(fields=['text_vector']),
-        )
+        indexes = (GinIndex(fields=['text_vector']),)
 
 
 class DateSearchIndex(models.Model):

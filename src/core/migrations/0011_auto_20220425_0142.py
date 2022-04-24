@@ -18,8 +18,4 @@ class Migration(migrations.Migration):
             model_name='showroomobject',
             index=django.contrib.postgres.indexes.GinIndex(fields=['title'], name='core_showro_title_491ff7_gin'),
         ),
-        migrations.AddIndex(
-            model_name='textsearchindex',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['text'], name='core_textse_text_97f15d_gin'),
-        ),
     ]
