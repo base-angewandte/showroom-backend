@@ -25,6 +25,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = ShowroomObject
         fields = showroom_object_fields
 
+    def get_unique_together_validators(self):
+        # disable unique together checks
+        return []
+
     def to_internal_value(self, data):
         new_data = {
             'source_repo_object_id': data.get('source_repo_entry_id'),
