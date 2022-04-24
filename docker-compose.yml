@@ -26,6 +26,7 @@ services:
 
   showroom-django:
     build: ./src
+    image: showroom-django
     container_name: showroom-django
     environment:
       - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
@@ -43,6 +44,7 @@ services:
 
   showroom-rq-worker-1:
     build: ./src
+    image: showroom-django
     container_name: showroom-rq-worker-1
     environment:
       - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
@@ -57,6 +59,7 @@ services:
 
   showroom-rq-worker-2:
     build: ./src
+    image: showroom-django
     container_name: showroom-rq-worker-2
     environment:
       - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
@@ -71,6 +74,7 @@ services:
 
   showroom-rq-scheduler:
     build: ./src
+    image: showroom-django
     container_name: showroom-rq-scheduler
     environment:
       - POSTGRES_PASSWORD=$SHOWROOM_DB_PASSWORD
