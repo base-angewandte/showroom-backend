@@ -607,7 +607,7 @@ def get_date_range_time_range_location(data, data_field=None):
     if not daterange:
         return None
 
-    line = ''
+    # line = ''
 
     """
     The current rational for date_range_time_range_location transformations is as follows:
@@ -620,49 +620,70 @@ def get_date_range_time_range_location(data, data_field=None):
     Reference: https://basedev.uni-ak.ac.at/redmine/issues/1311
     """
 
+    # TODO: changed logic to display everything, because secondary field logic seems to be missing
+
     # in case of several fields, collect all dates and find the min and max dates
     # be aware that any field may or may not be set in any kind of combination
-    if len(daterange) > 1:
-        dates = []
-        for d in daterange:
-            date = d.get('date')
-            if date:
-                date_from = date.get('date_from')
-                if date_from:
-                    dates.append(date_from)
-                date_to = date.get('date_to')
-                if date_to:
-                    dates.append(date_to)
-        dates.sort()
-        year_start = dates[0][:4] if dates else None
-        year_end = dates[-1][:4] if dates else None
-        if year_start:
-            line += year_start
-            if year_end and year_end != year_start:
-                line += f'-{year_end} : '
-            else:
-                line += ' : '
+    # if len(daterange) > 1:
+    #     dates = []
+    #     for d in daterange:
+    #         date = d.get('date')
+    #         if date:
+    #             date_from = date.get('date_from')
+    #             if date_from:
+    #                 dates.append(date_from)
+    #             date_to = date.get('date_to')
+    #             if date_to:
+    #                 dates.append(date_to)
+    #     dates.sort()
+    #     year_start = dates[0][:4] if dates else None
+    #     year_end = dates[-1][:4] if dates else None
+    #     if year_start:
+    #         line += year_start
+    #         if year_end and year_end != year_start:
+    #             line += f'-{year_end} : '
+    #         else:
+    #             line += ' : '
 
     # now add the (first) event
-    d = daterange[0].get('date')
-    if d:
-        d_from = d.get('date_from')
-        d_to = d.get('date_to')
-        if d_from == d_to:
-            line += f'{d_from} '
-        else:
-            line += f'{d_from} - {d_to} '
-        # TODO: start and end times are deliberately left out for now, as their semantics is
-        #   is not clear (see #1311 for ongoing discussion)
+    # d = daterange[0].get('date')
+    # if d:
+    #     d_from = d.get('date_from')
+    #     d_to = d.get('date_to')
+    #     if d_from == d_to:
+    #         line += f'{d_from} '
+    #     else:
+    #         line += f'{d_from} - {d_to} '
+    #     # TODO: start and end times are deliberately left out for now, as their semantics is
+    #     #   is not clear (see #1311 for ongoing discussion)
+    #
+    # locations = daterange[0].get('location')
+    # if locations:
+    #     loc_labels = [loc.get('label') for loc in locations]
+    #     if loc_labels:
+    #         line += ', '.join(loc_labels)
+    # loc_desc = daterange[0].get('location_description')
+    # if loc_desc:
+    #     line += f' ({loc_desc})'
 
-    locations = daterange[0].get('location')
-    if locations:
-        loc_labels = [loc.get('label') for loc in locations]
-        if loc_labels:
-            line += ', '.join(loc_labels)
-    loc_desc = daterange[0].get('location_description')
-    if loc_desc:
-        line += f' ({loc_desc})'
+    lines = []
+
+    for dr in daterange:
+        line = ''
+        if d := dr.get('date'):
+            d_from = d.get('date_from')
+            d_to = d.get('date_to')
+            if d_from == d_to:
+                line += f'{d_from} '
+            else:
+                line += f'{d_from} - {d_to} '
+        if locations := dr.get('location'):
+            if loc_labels := [loc.get('label') for loc in locations]:
+                line += ', '.join(loc_labels)
+        if loc_desc := dr.get('location_description'):
+            line += f' ({loc_desc})'
+        if line:
+            lines.append(line.strip())
 
     transformed = {}
     for lang in LANGUAGES:
@@ -672,7 +693,8 @@ def get_date_range_time_range_location(data, data_field=None):
             label = get_preflabel('date', lang=lang)
         transformed[lang] = {
             'label': label,
-            'data': line,
+            # 'data': line,
+            'data': lines,
         }
 
     return transformed
