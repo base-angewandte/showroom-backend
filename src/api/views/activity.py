@@ -53,15 +53,14 @@ class ActivityViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            instance = ShowroomObject.objects.get(
+            instance, created = ShowroomObject.objects.get_or_create(
                 source_repo_object_id=serializer.validated_data[
                     'source_repo_object_id'
                 ],
                 source_repo=serializer.validated_data['source_repo'],
+                defaults={'type': ShowroomObject.ACTIVITY},
             )
             serializer.instance = instance
-        except ShowroomObject.DoesNotExist:
-            instance = False
         except ShowroomObject.MultipleObjectsReturned:
             return Response(
                 {
