@@ -31,7 +31,13 @@ class ShowroomObjectAdmin(admin.ModelAdmin):
         'date_synced',
     )
     list_filter = ('type', 'source_repo')
-    search_fields = ('title', 'subtext', 'source_repo_data')
+    search_fields = (
+        'title',
+        'subtext',
+        'source_repo_data',
+        'id',
+        'source_repo_object_id',
+    )
 
 
 admin.site.register(SourceRepository, SourceRepoAdmin)
