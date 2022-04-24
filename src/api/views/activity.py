@@ -116,7 +116,7 @@ class ActivityViewSet(
                 if job_id in registry:
                     registry.remove(job_id)
                 queue.enqueue_in(
-                    timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+                    timedelta(seconds=settings.WORKER_DELAY_ENTITY),
                     pull_user_data,
                     username=serializer.instance.source_repo_owner_id,
                     job_id=job_id,

@@ -101,7 +101,5 @@ POSTGRES_PASSWORD=password
 ## listed in the above SHOWCASE_DEMO_USERS
 # SHOWCASE_DEMO_ENTITY_EDITING=
 
-## Number of seconds after which a job should be scheduled to (re)render an
-## entities activities list. This will always be scheduled after an activity
-## is pushed to showroom.
-# WORKER_DELAY_ENTITY_LIST=10
+## Number of seconds after which entitiy jobs should be scheduled
+# WORKER_DELAY_ENTITY=10

@@ -239,7 +239,7 @@ class EntityDetail(models.Model):
         if job_id in registry:
             registry.remove(job_id)
         queue.enqueue_in(
-            timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+            timedelta(seconds=settings.WORKER_DELAY_ENTITY),
             self.create_relations_from_activities,
             job_id=job_id,
         )
@@ -256,7 +256,7 @@ class EntityDetail(models.Model):
         if job_id in registry:
             registry.remove(job_id)
         queue.enqueue_in(
-            timedelta(seconds=settings.WORKER_DELAY_ENTITY_LIST),
+            timedelta(seconds=settings.WORKER_DELAY_ENTITY),
             self.render_list,
             job_id=job_id,
         )

@@ -442,7 +442,7 @@ RQ_EXCEPTION_HANDLERS = ['general.rq.handlers.exception_handler']
 
 RQ_FAILURE_TTL = 2628288  # approx. 3 month
 
-WORKER_DELAY_ENTITY_LIST = env.int('WORKER_DELAY_ENTITY_LIST', default=10)
+WORKER_DELAY_ENTITY = env.int('WORKER_DELAY_ENTITY', default=10)
 
 
 """ Session settings """
