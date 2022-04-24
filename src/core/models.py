@@ -112,6 +112,7 @@ class ShowroomObject(AbstractBaseModel):
         indexes = [
             models.Index(fields=['source_repo_object_id']),
         ]
+        unique_together = ('source_repo', 'source_repo_object_id')
 
     def __str__(self):
         return f'{self.title} (ID: {self.id}, type: {self.type})'
