@@ -108,6 +108,10 @@ class ShowroomObject(AbstractBaseModel):
     active_objects = ActiveShowroomObjectManager()
 
     # TODO: add gin indizes for those fields used for full text search
+    class Meta:
+        indexes = [
+            models.Index(fields=['source_repo_object_id']),
+        ]
 
     def __str__(self):
         return f'{self.title} (ID: {self.id}, type: {self.type})'
