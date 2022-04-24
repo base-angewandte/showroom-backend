@@ -103,6 +103,8 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
         raise ParseError('negative or zero limit not allowed', 400)
     if limit is None:
         limit = settings.SEARCH_LIMIT
+    if order_by is None:
+        order_by = 'rank'
 
     queryset = base_queryset
     q_filter = None
