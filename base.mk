@@ -1,6 +1,6 @@
 .PHONY: start-default
 start-default:  ## start containers
-	docker-compose pull
+	docker-compose pull --ignore-pull-failures
 	docker-compose build --no-cache --pull ${PROJECT_NAME}-django
 	docker-compose up -d --build
 
