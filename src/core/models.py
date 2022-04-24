@@ -230,36 +230,27 @@ class EntityDetail(models.Model):
         )
         self.save()
 
-    def enqueue_create_relations_job(self):
-        job_id = f'entity_create_relations_from_activities_{self.showroom_object.id}'
-        queue = get_queue('default')
+    @staticmethod
+    def enqueue_delayed_job(job_id, function, queue='default'):
+        queue = get_queue(queue)
         registry = ScheduledJobRegistry(queue=queue)
-        # similar to enqueue_list_render_job we only want to enqueue a single job if
+        # we only want to enqueue a single job if
         # several are scheduled within a short period
         if job_id in registry:
             registry.remove(job_id)
         queue.enqueue_in(
             timedelta(seconds=settings.WORKER_DELAY_ENTITY),
-            self.create_relations_from_activities,
+            function,
             job_id=job_id,
         )
 
+    def enqueue_create_relations_job(self):
+        job_id = f'entity_create_relations_from_activities_{self.showroom_object.id}'
+        self.enqueue_delayed_job(job_id, self.create_relations_from_activities)
+
     def enqueue_list_render_job(self):
         job_id = f'entity_list_render_{self.showroom_object.id}'
-        queue = get_queue('default')
-        registry = ScheduledJobRegistry(queue=queue)
-        # in case this job gets scheduled several times before it is being executed
-        # (e.g. when several activities are pushed for one entity), we only want
-        # one single job scheduled after the last call to this function. so we'll
-        # delete an older job if there was already one scheduled, before we schedule
-        # a new job
-        if job_id in registry:
-            registry.remove(job_id)
-        queue.enqueue_in(
-            timedelta(seconds=settings.WORKER_DELAY_ENTITY),
-            self.render_list,
-            job_id=job_id,
-        )
+        self.enqueue_delayed_job(job_id, self.render_list)
 
     def update_activities(self):
         """Associate all activities belonging to this entry.
