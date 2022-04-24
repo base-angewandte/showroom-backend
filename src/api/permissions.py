@@ -35,8 +35,8 @@ class EntityEditPermission(permissions.BasePermission):
         entities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.PERSON, source_repo_object_id=request.user.username
         )
-        if not entities:
-            return False
+        # if not entities:
+        #     return False
         allowed = [entity.id for entity in entities]
         if request.user.username in settings.SHOWCASE_DEMO_USERS:
             allowed.extend(settings.SHOWCASE_DEMO_ENTITY_EDITING)
