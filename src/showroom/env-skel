@@ -71,7 +71,7 @@ POSTGRES_PASSWORD=password
 # DISABLE_USER_REPO=False
 
 ## User Preferences data config parameters, e.g. http://127.0.0.1:8000/api/v1/
-# CAS_API_BASE=
+# USER_PREFERENCES_API_BASE=
 # USER_PREFERENCES_API_KEY=
 ## Number of minutes until an entity will be resynced upon request
 # USER_REPO_CACHE_TIME=15

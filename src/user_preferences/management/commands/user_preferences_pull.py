@@ -18,7 +18,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if None in [settings.CAS_API_BASE, settings.USER_PREFERENCES_API_KEY]:
+        if None in [
+            settings.USER_PREFERENCES_API_BASE,
+            settings.USER_PREFERENCES_API_KEY,
+        ]:
             raise CommandError(
                 'A User Preferences config parameter is missing in .env! Cannot push anything.'
             )

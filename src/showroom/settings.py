@@ -69,16 +69,6 @@ DOCKER = env.bool('DOCKER', default=True)
 
 SITE_URL = env.str('SITE_URL')
 
-DISABLE_USER_REPO = env.bool('DISABLE_USER_REPO', default=False)
-
-CAS_API_BASE = env.str('CAS_API_BASE', default=None)
-
-DEFAULT_USER_REPO = env.int('DEFAULT_USER_REPO', default=None)
-
-USER_REPO_CACHE_TIME = env.int('USER_REPO_CACHE_TIME', default=15)
-
-USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY', default=None)
-
 FORCE_SCRIPT_NAME = env.str('FORCE_SCRIPT_NAME', default='/showroom')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[urlparse(SITE_URL).hostname])
@@ -134,6 +124,15 @@ CAS_RETRY_LOGIN = True
 CAS_VERSION = '3'
 CAS_APPLY_ATTRIBUTES_TO_USER = True
 CAS_REDIRECT_URL = env.str('CAS_REDIRECT_URL', default=FORCE_SCRIPT_NAME or '/')
+
+DISABLE_USER_REPO = env.bool('DISABLE_USER_REPO', default=False)
+DEFAULT_USER_REPO = env.int('DEFAULT_USER_REPO', default=None)
+
+USER_PREFERENCES_API_BASE = env.str(
+    'USER_PREFERENCES_API_BASE', default=f'{CAS_SERVER_URL}api/v1/'
+)
+USER_PREFERENCES_API_KEY = env.str('USER_PREFERENCES_API_KEY', default=None)
+USER_REPO_CACHE_TIME = env.int('USER_REPO_CACHE_TIME', default=15)
 
 SKOSMOS_API = env.str(
     'SKOSMOS_API', default='https://voc.uni-ak.ac.at/skosmos/rest/v1/'

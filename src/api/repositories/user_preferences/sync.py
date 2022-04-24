@@ -28,7 +28,7 @@ auth_headers = {
 
 def pull_user_data(username, update_entry=True):
     r = requests.get(
-        settings.CAS_API_BASE + f'users/{username}/',
+        settings.USER_PREFERENCES_API_BASE + f'users/{username}/',
         headers=auth_headers,
     )
 
