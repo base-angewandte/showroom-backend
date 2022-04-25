@@ -1857,10 +1857,10 @@ def transform_entity(entity):
             e = ShowroomObject.active_objects.get(
                 source_repo_object_id=source_repo_object_id
             )
-            return {
-                'value': e.title,
-                'source': f'{slugify(e.title)}-{e.id}',
-            }
+            ret = {'value': e.title}
+            if e.active:
+                ret['source'] = f'{slugify(e.title)}-{e.id}'
+            return ret
         except ShowroomObject.DoesNotExist:
             pass
     return {
