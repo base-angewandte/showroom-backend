@@ -54,6 +54,8 @@ def update_entity_from_source_repo_data(entity):
 
     entity.entitydetail.photo = data.get('image')
 
+    entity.entitydetail.save()
+
     # now assemble und update the primary_details data
     primary_details = []
 
