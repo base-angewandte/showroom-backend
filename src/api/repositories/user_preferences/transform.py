@@ -70,6 +70,8 @@ def update_entity_from_source_repo_data(entity):
             'de': 'E-Mail (ergänzend)',
         },
         'website': {'en': 'Website', 'de': 'Website'},
+        'gnd_viaf': {'en': 'GND/VIAF', 'de': 'GND/VIAF'},
+        'orcid': {'en': 'ORCID', 'de': 'ORCID'},
     }
 
     if loc := data.get('location'):
@@ -150,3 +152,6 @@ def update_entity_from_source_repo_data(entity):
 
     entity.date_synced = timezone.now()
     entity.save()
+
+    if not entity.active:
+        entity.deactivate()
