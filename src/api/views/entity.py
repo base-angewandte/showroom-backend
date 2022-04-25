@@ -420,7 +420,14 @@ class EntityViewSet(viewsets.GenericViewSet):
 
         # entity search allows for a reduced filter set, so we check this before calling
         # the actual get_search_results function handling the rest
-        allowed = ['fulltext', 'date', 'daterange', 'keyword', 'activity_type']
+        allowed = [
+            'fulltext',
+            'date',
+            'daterange',
+            'keyword',
+            'activity_type',
+            'activity',
+        ]
         for flt in filters:
             if flt['id'] not in allowed:
                 raise ParseError(

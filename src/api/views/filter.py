@@ -38,9 +38,6 @@ static_entity_filters = [
         },
         'hidden': False,
     },
-]
-
-static_filters = [
     {
         'id': 'activity',
         'type': 'chips',
@@ -51,6 +48,9 @@ static_filters = [
         },
         'hidden': False,
     },
+]
+
+static_filters = [
     {
         'id': 'person',
         'type': 'chips',
