@@ -182,9 +182,12 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
                 rank = trigram_similarity_title + search_rank
 
                 queryset = queryset.annotate(rank=rank).order_by('-rank')
+            else:
+                queryset.order_by()
 
     count = queryset.count()
-    results = [get_search_item(obj, lang) for obj in queryset[offset : limit + offset]]
+    queryset = queryset.select_related()[offset : limit + offset]
+    results = [get_search_item(obj, lang) for obj in queryset]
 
     return {
         'label': label_results_generic[lang],
