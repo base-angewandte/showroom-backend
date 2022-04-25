@@ -171,10 +171,16 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
             if words:
                 query = ' '.join(words)
                 trigram_similarity_title = TrigramSimilarity('title', query)
-                trigram_similarity_index = TrigramSimilarity(
-                    'textsearchindex__text', query
-                )
-                rank = trigram_similarity_title + trigram_similarity_index
+
+                # TODO exchanged trigram with search vector
+                # trigram_similarity_index = TrigramSimilarity(
+                #     'textsearchindex__text', query
+                # )
+                # rank = trigram_similarity_title + trigram_similarity_index
+                search_query = SearchQuery(query)
+                search_rank = SearchRank(text_search_vectors, search_query)
+                rank = trigram_similarity_title + search_rank
+
                 queryset = queryset.annotate(rank=rank).order_by('-rank')
 
     count = queryset.count()
