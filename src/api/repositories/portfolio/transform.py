@@ -1068,7 +1068,7 @@ def get_isbn_doi(data):
     for lang in LANGUAGES:
         label_isbn = get_preflabel('isbn', lang=lang)
         label_doi = get_preflabel('doi', lang=lang)
-        label = f'{label_isbn, label_doi}'
+        label = f'{label_isbn}, {label_doi}'
         transformed[lang] = {'label': label, 'data': []}
 
         if isbn:
