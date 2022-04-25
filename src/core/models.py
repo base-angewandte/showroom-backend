@@ -116,7 +116,10 @@ class ShowroomObject(AbstractBaseModel):
         unique_together = ('source_repo', 'source_repo_object_id')
 
     def __str__(self):
-        return f'{self.title} (ID: {self.id}, type: {self.type})'
+        label = f'{self.title} (ID: {self.id}, type: {self.type})'
+        if not self.active:
+            label = f'{label} (deactivated)'
+        return label
 
     def get_showcase_date_info(self):
         dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]
@@ -145,6 +148,35 @@ class ShowroomObject(AbstractBaseModel):
             return f'{slugify(self.title)}-{self.id}'
         else:
             return self.id
+
+    def deactivate(self):
+        """Deactivate an object instead of deletion, in order to preserve its
+        ID."""
+        self.active = False
+        self.subtext = []
+        self.primary_details = []
+        self.secondary_details = []
+        self.list = []
+        self.locations = []
+        self.source_repo_data = {}
+        self.belongs_to = None
+        self.save()
+
+        self.relations_to.clear()
+        self.relations_from.clear()
+
+        if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
+            self.entitydetail.deactivate()
+            ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
+            # TODO: find all activities in which the entity is mentioned as a
+            #       contributor and rerender them, so that the source link gets removed
+
+        self.textsearchindex_set.all().delete()
+        self.datesearchindex_set.all().delete()
+        self.daterangesearchindex_set.all().delete()
+        self.daterelevanceindex_set.all().delete()
+
+        self.media_set.all().delete()
 
 
 @receiver(post_save, sender=ShowroomObject)
@@ -185,7 +217,10 @@ class EntityDetail(models.Model):
             return self.photo.split('/')[-1].split('.')[0]
 
     def __str__(self):
-        return f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
+        label = f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
+        if not self.showroom_object.active:
+            label = f'{label} (deactivated)'
+        return label
 
     def get_editing_list(self, lang=settings.LANGUAGE_CODE):
         ret = []
@@ -296,6 +331,13 @@ class EntityDetail(models.Model):
         # transformation function
         update_entity_from_source_repo_data(self.showroom_object)
 
+    def deactivate(self):
+        """Reset all data, but preserve showcase and list_ordering."""
+        self.expertise = None
+        self.photo = None
+        self.list = {}
+        self.save()
+
 
 class ActivityDetail(models.Model):
     showroom_object = models.OneToOneField(
@@ -312,7 +354,17 @@ class ActivityDetail(models.Model):
     )
 
     def __str__(self):
-        return f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
+        label = f'{self.showroom_object.title} (ID: {self.showroom_object.id})'
+        if not self.showroom_object.active:
+            label = f'{label} (deactivated)'
+        return label
+
+    def deactivate(self):
+        """Reset all data, but preserve the object itself."""
+        self.activity_type = None
+        self.keywords = None
+        self.featured_medium = None
+        self.save()
 
 
 class TextSearchIndex(models.Model):

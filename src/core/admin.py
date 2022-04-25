@@ -29,8 +29,9 @@ class ShowroomObjectAdmin(admin.ModelAdmin):
         'date_created',
         'date_changed',
         'date_synced',
+        'active',
     )
-    list_filter = ('type', 'source_repo')
+    list_filter = ('type', 'source_repo', 'active')
     search_fields = (
         'title',
         'subtext',
