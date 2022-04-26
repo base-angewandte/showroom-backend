@@ -63,7 +63,7 @@ class ShowcaseSerializer(serializers.Serializer):
             ret['subtext'] = '. '.join(instance.subtext)
             ret['additional'] = instance.get_showcase_date_info()
             ret['type'] = instance.activitydetail.activity_type
-            media = instance.media_set.all()
+            media = instance.media_set.all().order_by('-featured')
             # Similar to search results we take the previews from the first image
             # we find in the activity. If there is no image, we'll use thumbnails of
             # a document or the cover of a video, if there are any.
