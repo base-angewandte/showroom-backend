@@ -1,4 +1,5 @@
 from datetime import timedelta
+from importlib import import_module
 
 from django_rq.queues import get_queue
 from rq.registry import ScheduledJobRegistry
@@ -13,7 +14,7 @@ from django.dispatch import receiver
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 
-from api.repositories.portfolio import activity_lists
+from api.repositories.portfolio import activity_lists, get_schema
 from api.repositories.user_preferences.transform import (
     update_entity_from_source_repo_data,
 )
@@ -162,14 +163,14 @@ class ShowroomObject(AbstractBaseModel):
         self.belongs_to = None
         self.save()
 
-        self.relations_to.clear()
-        self.relations_from.clear()
-
         if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
-            # TODO: find all activities in which the entity is mentioned as a
-            #       contributor and rerender them, so that the source link gets removed
+            for activity in self.relations_from.filter(type=ShowroomObject.ACTIVITY):
+                activity.unlink_entity(self)
+
+        self.relations_to.clear()
+        self.relations_from.clear()
 
         self.textsearchindex_set.all().delete()
         self.datesearchindex_set.all().delete()
@@ -177,6 +178,19 @@ class ShowroomObject(AbstractBaseModel):
         self.daterelevanceindex_set.all().delete()
 
         self.media_set.all().delete()
+
+    def unlink_entity(self, entity):
+        for detail_field in [self.primary_details, self.secondary_details, self.list]:
+            for common_text in detail_field:
+                for lang in common_text:
+                    if data := common_text[lang].get('data'):
+                        if type(data) is list:
+                            for item in data:
+                                if type(item) is dict:
+                                    if source := item.get('source'):
+                                        if source == entity.showroom_id:
+                                            item.pop('source')
+        self.save()
 
 
 @receiver(post_save, sender=ShowroomObject)
@@ -255,6 +269,22 @@ class EntityDetail(models.Model):
             for activity in activities
         ]
         relations_model.objects.bulk_create(relations, ignore_conflicts=True)
+
+        # Now we have to rerender the detail fields of those activities to add links
+        # wherever the entity is listed (eg. as a contributor)
+        for activity in activities:
+            schema = get_schema(activity.activitydetail.activity_type.get('source'))
+            if schema is None:
+                schema = '__none__'
+            # we have to import the transform module dynamically to not produce a
+            # circular import
+            transform = import_module('api.repositories.portfolio.transform')
+            # now transform the detail fields and store the activity with the new data
+            transformed = transform.transform_data(activity.source_repo_data, schema)
+            activity.primary_details = transformed.get('primary_details')
+            activity.secondary_details = transformed.get('secondary_details')
+            activity.list = transformed.get('list')
+            activity.save()
 
     def render_list(self):
         filters = activity_lists.get_data_contains_filters(

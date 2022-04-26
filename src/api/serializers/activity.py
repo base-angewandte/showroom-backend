@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from django.utils.text import slugify
-
 from api.repositories import portfolio
 from api.repositories.portfolio import (
     FieldTransformerMissingError,
@@ -140,12 +138,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.pop('belongs_to')
         ret['publisher'] = []
         if instance.belongs_to:
-            ret['publisher'].append(
-                {
-                    'name': instance.belongs_to.title,
-                    'source': f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}',
-                }
-            )
+            publisher = {'name': instance.belongs_to.title}
+            if instance.belongs_to.active:
+                publisher['source'] = instance.belongs_to.showroom_id
+            ret['publisher'].append(publisher)
         # include the source institutions details
         ret['source_institution'] = {
             'label': instance.source_repo.label_institution,
