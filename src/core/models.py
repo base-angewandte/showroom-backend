@@ -162,14 +162,14 @@ class ShowroomObject(AbstractBaseModel):
         self.belongs_to = None
         self.save()
 
-        self.relations_to.clear()
-        self.relations_from.clear()
-
         if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
-            # TODO: find all activities in which the entity is mentioned as a
-            #       contributor and rerender them, so that the source link gets removed
+            for activity in self.relations_from.filter(type=ShowroomObject.ACTIVITY):
+                activity.unlink_entity(self)
+
+        self.relations_to.clear()
+        self.relations_from.clear()
 
         self.textsearchindex_set.all().delete()
         self.datesearchindex_set.all().delete()
@@ -177,6 +177,19 @@ class ShowroomObject(AbstractBaseModel):
         self.daterelevanceindex_set.all().delete()
 
         self.media_set.all().delete()
+
+    def unlink_entity(self, entity):
+        for detail_field in [self.primary_details, self.secondary_details, self.list]:
+            for common_text in detail_field:
+                for lang in common_text:
+                    if data := common_text[lang].get('data'):
+                        if type(data) is list:
+                            for item in data:
+                                if type(item) is dict:
+                                    if source := item.get('source'):
+                                        if source == entity.showroom_id:
+                                            item.pop('source')
+        self.save()
 
 
 @receiver(post_save, sender=ShowroomObject)
