@@ -251,30 +251,22 @@ class EntityDetail(models.Model):
         return ret
 
     def create_relations_from_activities(self):
-        filters = activity_lists.get_data_contains_filters(
-            self.showroom_object.source_repo_object_id
+        contributor_relations = ContributorActivityRelations.objects.filter(
+            contributor_source_id=self.showroom_object.source_repo_object_id
         )
-        q_filter = None
-        for f in filters:
-            if not q_filter:
-                q_filter = Q(source_repo_data__data__contains=f)
-            else:
-                q_filter = q_filter | Q(source_repo_data__data__contains=f)
-        activities = ShowroomObject.objects.filter(
-            type=ShowroomObject.ACTIVITY,
-            activitydetail__activity_type__isnull=False,
-        )
+        activity_ids = [rel.activity.id for rel in contributor_relations]
         relations = [
             Relation(
-                from_object_id=activity.id,
+                from_object_id=id,
                 to_object_id=self.showroom_object.id,
             )
-            for activity in activities
+            for id in activity_ids
         ]
         Relation.objects.bulk_create(relations, ignore_conflicts=True)
 
         # Now we have to rerender the detail fields of those activities to add links
         # wherever the entity is listed (eg. as a contributor)
+        activities = ShowroomObject.objects.filter(id__in=activity_ids)
         for activity in activities:
             schema = get_schema(activity.activitydetail.activity_type.get('source'))
             if schema is None:
@@ -290,6 +282,8 @@ class EntityDetail(models.Model):
             activity.save()
 
     def render_list(self):
+        # TODO: check if here too the use of ContributorActivityRelations would be
+        #       preferable (similar to create_relations_from_activities)
         filters = activity_lists.get_data_contains_filters(
             self.showroom_object.source_repo_object_id
         )
