@@ -156,6 +156,7 @@ def get_index(indexer, data):
         'programming_language': get_programming_language,
         'software_developers': get_software_developers,
     }
+    # TODO: add remaining indexer functions
 
     indexer_fn = function_map.get(indexer)
     if settings.DEBUG and not indexer_fn:

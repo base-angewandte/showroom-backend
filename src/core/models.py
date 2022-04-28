@@ -471,11 +471,13 @@ class Media(models.Model):
 
 
 class Relation(AbstractBaseModel):
-    id = ShortUUIDField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     from_object = models.ForeignKey(
         ShowroomObject, related_name='rel_from_set', on_delete=models.CASCADE
     )
-    to_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+    to_object = models.ForeignKey(
+        ShowroomObject, related_name='rel_to_set', on_delete=models.CASCADE
+    )
 
     class Meta:
         indexes = [
