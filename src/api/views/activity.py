@@ -12,10 +12,11 @@ from django.conf import settings
 
 from api.permissions import ApiKeyPermission
 from api.repositories.portfolio.search_indexer import index_activity
+from api.repositories.portfolio.utils import get_usernames_from_roles
 from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
-from core.models import ShowroomObject
+from core.models import ContributorActivityRelations, ShowroomObject
 
 
 @extend_schema_view(
@@ -83,6 +84,23 @@ class ActivityViewSet(
             else {}
         )
         serializer.instance.activitydetail.save()
+
+        # (re)generate the contributor relations to this activity
+        contributor_names = get_usernames_from_roles(serializer.instance)
+        # TODO: check if we want to improve speed here by implementing a bulk delete
+        ContributorActivityRelations.objects.filter(
+            activity=serializer.instance
+        ).exclude(contributor_source_id__in=contributor_names).delete()
+        relations = [
+            ContributorActivityRelations(
+                contributor_source_id=contributor,
+                activity_id=serializer.instance.id,
+            )
+            for contributor in contributor_names
+        ]
+        ContributorActivityRelations.objects.bulk_create(
+            relations, ignore_conflicts=True
+        )
 
         # as soon as the serializer is saved we want the full text search index to be
         # built. TODO: refactor this to an async worker

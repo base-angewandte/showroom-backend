@@ -111,6 +111,17 @@ def get_user_role_dicts(activity, username):
     return roles
 
 
+def get_usernames_from_roles(activity):
+    data = activity.source_repo_data['data']
+    usernames = set()
+    for role_field in role_fields:
+        if role_field in data:
+            for contributor in data[role_field]:
+                if 'source' in contributor:
+                    usernames.add(contributor['source'])
+    return usernames
+
+
 def year_from_date_string(dt: str) -> str:
     return str(datetime.strptime(dt[:4], '%Y').year)
 

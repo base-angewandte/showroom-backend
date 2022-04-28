@@ -484,3 +484,18 @@ class Relation(AbstractBaseModel):
             models.Index(fields=['from_object']),
             models.Index(fields=['to_object']),
         ]
+
+
+class ContributorActivityRelations(AbstractBaseModel):
+    id = models.AutoField(primary_key=True)
+    contributor_source_id = models.CharField(max_length=255)
+    activity = models.ForeignKey(
+        ShowroomObject, related_name='related_usernames', on_delete=models.CASCADE
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['contributor_source_id']),
+        ]
+
+        unique_together = ('contributor_source_id', 'activity')
