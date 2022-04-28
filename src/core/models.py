@@ -100,7 +100,11 @@ class ShowroomObject(AbstractBaseModel):
         'self', on_delete=models.SET_NULL, null=True, blank=True
     )
     relations_to = models.ManyToManyField(
-        'self', symmetrical=False, related_name='relations_from', blank=True
+        'self',
+        through='Relation',
+        symmetrical=False,
+        related_name='relations_from',
+        blank=True,
     )
 
     active = models.BooleanField(default=True)
@@ -465,3 +469,17 @@ class Media(models.Model):
     def __str__(self):
         f_name = self.file.split('/')[-1]
         return f'[{self.id}] {self.type}: {f_name} (belongs to: {self.showroom_object})'
+
+
+class Relation(AbstractBaseModel):
+    id = ShortUUIDField(primary_key=True)
+    from_object = models.ForeignKey(
+        ShowroomObject, related_name='rel_from_set', on_delete=models.CASCADE
+    )
+    to_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['from_object']),
+            models.Index(fields=['to_object']),
+        ]
