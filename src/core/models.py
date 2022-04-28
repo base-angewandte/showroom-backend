@@ -264,15 +264,14 @@ class EntityDetail(models.Model):
             type=ShowroomObject.ACTIVITY,
             activitydetail__activity_type__isnull=False,
         )
-        relations_model = ShowroomObject.relations_to.through
         relations = [
-            relations_model(
-                from_showroomobject_id=activity.id,
-                to_showroomobject_id=self.showroom_object.id,
+            Relation(
+                from_object_id=activity.id,
+                to_object_id=self.showroom_object.id,
             )
             for activity in activities
         ]
-        relations_model.objects.bulk_create(relations, ignore_conflicts=True)
+        Relation.objects.bulk_create(relations, ignore_conflicts=True)
 
         # Now we have to rerender the detail fields of those activities to add links
         # wherever the entity is listed (eg. as a contributor)
