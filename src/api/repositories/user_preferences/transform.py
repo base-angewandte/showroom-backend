@@ -38,6 +38,18 @@ def transform_data(data, schema):
 def update_entity_from_source_repo_data(entity):
     data = entity.source_repo_data
     entity.title = data.get('name')
+
+    entity.active = False
+    if user_settings := data.get('settings'):
+        if showroom := user_settings.get('showroom'):
+            if activate_profile := showroom.get('activate_profile'):
+                entity.active = activate_profile
+
+    if not entity.active:
+        entity.date_synced = timezone.now()
+        entity.deactivate()
+        return
+
     subtext = []
     # TODO: design says: add position, title here. but: where do we get that from?
     subtext.append(entity.source_repo.label_institution)
@@ -144,14 +156,5 @@ def update_entity_from_source_repo_data(entity):
     primary_details.append(contact)
     entity.primary_details = primary_details
 
-    entity.active = False
-    if user_settings := data.get('settings'):
-        if showroom := user_settings.get('showroom'):
-            if activate_profile := showroom.get('activate_profile'):
-                entity.active = activate_profile
-
     entity.date_synced = timezone.now()
     entity.save()
-
-    if not entity.active:
-        entity.deactivate()
