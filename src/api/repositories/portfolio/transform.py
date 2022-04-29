@@ -7,6 +7,7 @@ from django.utils.text import slugify
 from core.models import ShowroomObject
 from general.datetime.utils import (
     format_datetime_range_string,
+    format_datetime_string,
     format_time_range_string,
 )
 
@@ -478,7 +479,7 @@ def get_date(data):
     for lang in LANGUAGES:
         transformed[lang] = {
             'label': get_preflabel('date', lang=lang),
-            'data': date,
+            'data': format_datetime_string(date, lang),
         }
     return transformed
 
