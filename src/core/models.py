@@ -349,14 +349,19 @@ class EntityDetail(models.Model):
             belongs_to=None,
         )
         activities.update(belongs_to=self.showroom_object)
-        self.enqueue_list_render_job()
-        self.enqueue_create_relations_job()
 
     def update_from_repo_data(self):
         # this functionality is located in the api.repositories.user_preferences module
         # so we could later allow for different backends providing their own
         # transformation function
         update_entity_from_source_repo_data(self.showroom_object)
+
+    def run_updates(self):
+        self.update_from_repo_data()
+        if self.showroom_object.active:
+            self.update_activities()
+            self.enqueue_list_render_job()
+            self.enqueue_create_relations_job()
 
     def deactivate(self):
         """Reset all data, but preserve showcase and list_ordering."""
