@@ -5,6 +5,10 @@ from django.conf import settings
 from django.utils.text import slugify
 
 from core.models import ShowroomObject
+from general.datetime.utils import (
+    format_datetime_range_string,
+    format_time_range_string,
+)
 
 from . import (
     LANGUAGES,
@@ -607,83 +611,38 @@ def get_date_range_time_range_location(data, data_field=None):
     if not daterange:
         return None
 
-    # line = ''
-
     """
-    The current rational for date_range_time_range_location transformations is as follows:
+    The currently implemented rational for date_range_time_range_location transformations is as follows:
 
-    * in case of serial events the mapped data from PF to SR shall be displayed the following way:
-      - primary field: time-span of the series, plus the first event with date with location
-      - secondary field: dates, locations, and location descriptions of every event of the series.
-    * in case of single event: put everything into the primary field (except if otherwise noted in the Showroom API Definition spreadsheet)
+    * display information as it has been entered in Portfolio in primary details
 
-    Reference: https://basedev.uni-ak.ac.at/redmine/issues/1311
+    further discussion as it should be in https://basedev.uni-ak.ac.at/redmine/issues/1311
     """
 
-    # TODO: changed logic to display everything, because secondary field logic seems to be missing
-
-    # in case of several fields, collect all dates and find the min and max dates
-    # be aware that any field may or may not be set in any kind of combination
-    # if len(daterange) > 1:
-    #     dates = []
-    #     for d in daterange:
-    #         date = d.get('date')
-    #         if date:
-    #             date_from = date.get('date_from')
-    #             if date_from:
-    #                 dates.append(date_from)
-    #             date_to = date.get('date_to')
-    #             if date_to:
-    #                 dates.append(date_to)
-    #     dates.sort()
-    #     year_start = dates[0][:4] if dates else None
-    #     year_end = dates[-1][:4] if dates else None
-    #     if year_start:
-    #         line += year_start
-    #         if year_end and year_end != year_start:
-    #             line += f'-{year_end} : '
-    #         else:
-    #             line += ' : '
-
-    # now add the (first) event
-    # d = daterange[0].get('date')
-    # if d:
-    #     d_from = d.get('date_from')
-    #     d_to = d.get('date_to')
-    #     if d_from == d_to:
-    #         line += f'{d_from} '
-    #     else:
-    #         line += f'{d_from} - {d_to} '
-    #     # TODO: start and end times are deliberately left out for now, as their semantics is
-    #     #   is not clear (see #1311 for ongoing discussion)
-    #
-    # locations = daterange[0].get('location')
-    # if locations:
-    #     loc_labels = [loc.get('label') for loc in locations]
-    #     if loc_labels:
-    #         line += ', '.join(loc_labels)
-    # loc_desc = daterange[0].get('location_description')
-    # if loc_desc:
-    #     line += f' ({loc_desc})'
-
-    lines = []
+    lines = {lang: [] for lang in LANGUAGES}
 
     for dr in daterange:
-        line = ''
+        line = {lang: '' for lang in LANGUAGES}
         if d := dr.get('date'):
             d_from = d.get('date_from')
             d_to = d.get('date_to')
-            if d_from == d_to:
-                line += f'{d_from} '
-            else:
-                line += f'{d_from} - {d_to} '
+            t_from = d.get('time_from')
+            t_to = d.get('time_to')
+            for lang in LANGUAGES:
+                if d_from or d_to:
+                    line[lang] += f'{format_datetime_range_string(d_from, d_to, lang)} '
+                if t_from or t_to:
+                    line[lang] += f'{format_time_range_string(t_from, t_to, lang)} '
         if locations := dr.get('location'):
             if loc_labels := [loc.get('label') for loc in locations]:
-                line += ', '.join(loc_labels)
+                for lang in LANGUAGES:
+                    line[lang] += ', '.join(loc_labels)
         if loc_desc := dr.get('location_description'):
-            line += f' ({loc_desc})'
-        if line:
-            lines.append(line.strip())
+            for lang in LANGUAGES:
+                line[lang] += f' ({loc_desc})'
+        for lang in LANGUAGES:
+            if line[lang]:
+                lines[lang].append(line[lang].strip())
 
     transformed = {}
     for lang in LANGUAGES:
@@ -693,8 +652,7 @@ def get_date_range_time_range_location(data, data_field=None):
             label = get_preflabel('date', lang=lang)
         transformed[lang] = {
             'label': label,
-            # 'data': line,
-            'data': lines,
+            'data': lines[lang],
         }
 
     return transformed
