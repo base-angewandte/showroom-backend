@@ -2,6 +2,7 @@
 # sync environment with 'pip-sync'
 # to update all packages run 'pip-compile --upgrade'
 
+Babel==2.10.1
 concurrent-log-handler==0.9.17
 django~=3.2
 django-cas-ng==4.1.1
