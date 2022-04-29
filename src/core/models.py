@@ -484,6 +484,8 @@ class Relation(AbstractBaseModel):
             models.Index(fields=['to_object']),
         ]
 
+        unique_together = ('from_object', 'to_object')
+
 
 class ContributorActivityRelations(AbstractBaseModel):
     id = models.AutoField(primary_key=True)
