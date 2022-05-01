@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Dict, List, Union
 
 from django.conf import settings
@@ -1416,7 +1415,7 @@ def get_publisher_place_date(data):
     transformed = {}
     for lang in LANGUAGES:
         if date:
-            value = ', '.join(value_parts + [transform_api_date(date, lang)])
+            value = ', '.join(value_parts + [format_datetime_string(date, lang)])
         else:
             value = ', '.join(value_parts)
 
@@ -1719,15 +1718,6 @@ def list_published_in(data):
             transformed[lang] = {'label': label, 'data': lines}
 
     return transformed
-
-
-def transform_api_date(date, lang):
-    if re.match(r'^[0-9]{4}$', date):
-        return date
-    if re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', date):
-        # TODO: tbd: display localised date version
-        return f'{date[8:]}.{date[5:7]}.{date[0:4]}'
-    return date
 
 
 def transform_entity(entity):
