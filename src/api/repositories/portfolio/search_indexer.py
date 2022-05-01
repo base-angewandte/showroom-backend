@@ -52,20 +52,11 @@ def index_activity(activity):
                             indexed[lang].append(res)
 
     for lang, values in indexed.items():
-        try:
-            search_index = TextSearchIndex.objects.get(
-                showroom_object=activity, language=lang
-            )
-        except TextSearchIndex.DoesNotExist:
-            search_index = False
-
-        if not search_index:
-            TextSearchIndex.objects.create(
-                showroom_object=activity, language=lang, text='; '.join(values)
-            )
-        else:
-            search_index.text = '; '.join(values)
-            search_index.save()
+        search_index, created = TextSearchIndex.objects.get_or_create(
+            showroom_object=activity, language=lang
+        )
+        search_index.text = '; '.join(values)
+        search_index.save()
 
     # now do the date related indexing
     if inner_data and type(inner_data) == dict:
