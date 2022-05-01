@@ -62,7 +62,6 @@ def pull_user_data(username, update_entry=True):
         )
         entity.source_repo_data = result
         entity.save()
-        entity.entitydetail.update_from_repo_data()
-        entity.entitydetail.update_activities()
+        entity.entitydetail.run_updates()
 
     return result
