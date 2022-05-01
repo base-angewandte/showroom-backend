@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Dict, List, Union
 
 from django.conf import settings
 from django.utils.text import slugify
@@ -467,6 +468,88 @@ def get_curators(data):
     return transformed
 
 
+def get_localized_line(data):
+    """Helper function to get localized line."""
+    ret = {lang: '' for lang in LANGUAGES}
+
+    location_string = ''
+    if locations := data.get('location'):
+        if loc_labels := [loc.get('label') for loc in locations]:
+            location_string += ', '.join(loc_labels)
+    if loc_desc := data.get('location_description'):
+        location_string += f' ({loc_desc})'
+
+    for lang in LANGUAGES:
+        line = ''
+        if date := data.get('date'):
+            if isinstance(date, str):
+                line += f'{format_datetime_string(date, lang)}, '
+            elif isinstance(date, dict):
+                d_from = date.get('date_from')
+                d_to = date.get('date_to')
+                t_from = date.get('time_from')
+                t_to = date.get('time_to')
+                if d_from or d_to:
+                    line += f'{format_datetime_range_string(d_from, d_to, lang)} '
+                if t_from or t_to:
+                    line += f'{format_time_range_string(t_from, t_to, lang)} '
+        if location_string:
+            line += location_string
+        if line:
+            ret[lang] = line.strip(', ')
+
+    return ret
+
+
+def get_transformed_date_field(
+    data: Dict, data_field: str, label: Union[str, List[str]]
+):
+    """Helper function to transform date fields.
+
+    The following date fields are supported:
+
+    * date_location
+    * date_location_description
+    * date_opening_location
+    * date_range_location
+    * date_range_time_range_location
+    * date_time_range_location
+    """
+    if d := data.get(data_field):
+
+        lines = {lang: [] for lang in LANGUAGES}
+
+        for i in d:
+            localized_lines = get_localized_line(i)
+
+            for lang in LANGUAGES:
+                if line := localized_lines[lang]:
+                    lines[lang].append(line[lang])
+
+        transformed = {}
+        for lang in LANGUAGES:
+            if len(d) > 1:
+                if isinstance(label, list):
+                    label_string = ', '.join(
+                        [get_altlabel(lbl, lang=lang) for lbl in label]
+                    )
+                else:
+                    label_string = get_altlabel(label, lang=lang)
+            else:
+                if isinstance(label, list):
+                    label_string = ', '.join(
+                        [get_preflabel(lbl, lang=lang) for lbl in label]
+                    )
+                else:
+                    label_string = get_preflabel(label, lang=lang)
+            transformed[lang] = {
+                'label': label_string,
+                'data': lines[lang],
+            }
+
+        return transformed
+
+
 def get_date(data):
     try:
         date = data.get('data').get('date')
@@ -484,91 +567,20 @@ def get_date(data):
     return transformed
 
 
-def get_date_location(data, with_description=False):
-    try:
-        date_loc = data.get('data').get('date_location')
-    except AttributeError:
-        return None
-    if not date_loc:
-        return None
-
-    line = ''
-    for dl in date_loc:
-        if date := dl.get('date'):
-            line += date + ', '
-        if locations := dl.get('location'):
-            for location in locations:
-                if loc_label := location.get('label'):
-                    line += loc_label + ', '
-        if with_description and (loc_desc := dl.get('location_description')):
-            line += loc_desc + ', '
-    if line:
-        line = line[:-2]  # remove trailing ', '
-
-    transformed = {}
-    for lang in LANGUAGES:
-        if len(date_loc) > 1:
-            label_date = get_altlabel('date', lang=lang)
-            label_loc = get_altlabel('location', lang=lang)
-        else:
-            label_date = get_preflabel('date', lang=lang)
-            label_loc = get_preflabel('location', lang=lang)
-        transformed[lang] = {
-            'label': f'{label_date}, {label_loc}',
-            'data': line,
-        }
-
-    return transformed
+def get_date_location(data):
+    if d := data.get('data'):
+        return get_transformed_date_field(d, 'date_location', ['date', 'location'])
 
 
 def get_date_location_description(data):
-    return get_date_location(data, with_description=True)
+    return get_date_location(data)
 
 
 def get_date_opening_location(data):
-    try:
-        date_loc = data.get('data').get('date_opening_location')
-    except AttributeError:
-        return None
-    if not date_loc:
-        return None
-
-    transformed = []
-    for dl in date_loc:
-        line = ''
-        if date := dl.get('date'):
-            date_from = date.get('date_from')
-            date_to = date.get('date_to')
-            if date_from:
-                line += date_from
-            if date_from and date_to:
-                line += ' - '
-            if date_to:
-                line += date_to
-
-        if loc := dl.get('location'):
-            if line:
-                line += ', '
-            locations = [location.get('label') for location in loc]
-            line += ', '.join(locations)
-
-        if loc_desc := dl.get('location_description'):
-            if line:
-                line += ', '
-            line += loc_desc
-
-        tr = {}
-        for lang in LANGUAGES:
-            label_date = get_preflabel('date', lang='lang')
-            label_loc = get_preflabel('location', lang=lang)
-            label = f'{label_date}, {label_loc}'
-            tr[lang] = {
-                'label': label,
-                'data': line,
-            }
-        transformed.append(tr)
-
-    return transformed
+    if d := data.get('data'):
+        return get_transformed_date_field(
+            d, 'date_opening_location', ['date', 'location']
+        )
 
 
 def get_date_range(data):
@@ -579,129 +591,34 @@ def get_date_range(data):
     if not daterange:
         return None
 
-    # TODO: discuss: should duration only be shown if date_from is set. if not,
-    #       how should it be displayed? something like "Until {date_to}"?
-    if not (date_from := daterange.get('date_from')):
-        return None
-    line = date_from
-    if date_to := daterange.get('date_to'):
-        line += f' - {date_to}'
+    d_from = daterange.get('date_from')
+    d_to = daterange.get('date_to')
+    if d_from or d_to:
+        transformed = {}
+        for lang in LANGUAGES:
+            transformed[lang] = {
+                'label': get_preflabel('duration', lang=lang),
+                'data': f'{format_datetime_range_string(d_from, d_to, lang)}',
+            }
 
-    transformed = {}
-    for lang in LANGUAGES:
-        transformed[lang] = {
-            'label': get_preflabel('duration', lang=lang),
-            'data': line,
-        }
-
-    return transformed
+        return transformed
 
 
 def get_date_range_location(data):
-    return get_date_range_time_range_location(data, data_field='date_range_location')
+    if d := data.get('data'):
+        return get_transformed_date_field(d, 'date_range_location', 'date')
 
 
-def get_date_range_time_range_location(data, data_field=None):
-    try:
-        if data_field:
-            daterange = data.get('data').get(data_field)
-        else:
-            daterange = data.get('data').get('date_range_time_range_location')
-    except AttributeError:
-        return None
-    if not daterange:
-        return None
-
-    """
-    The currently implemented rational for date_range_time_range_location transformations is as follows:
-
-    * display information as it has been entered in Portfolio in primary details
-
-    further discussion as it should be in https://basedev.uni-ak.ac.at/redmine/issues/1311
-    """
-
-    lines = {lang: [] for lang in LANGUAGES}
-
-    for dr in daterange:
-        line = {lang: '' for lang in LANGUAGES}
-        if d := dr.get('date'):
-            d_from = d.get('date_from')
-            d_to = d.get('date_to')
-            t_from = d.get('time_from')
-            t_to = d.get('time_to')
-            for lang in LANGUAGES:
-                if d_from or d_to:
-                    line[lang] += f'{format_datetime_range_string(d_from, d_to, lang)} '
-                if t_from or t_to:
-                    line[lang] += f'{format_time_range_string(t_from, t_to, lang)} '
-        if locations := dr.get('location'):
-            if loc_labels := [loc.get('label') for loc in locations]:
-                for lang in LANGUAGES:
-                    line[lang] += ', '.join(loc_labels)
-        if loc_desc := dr.get('location_description'):
-            for lang in LANGUAGES:
-                line[lang] += f' ({loc_desc})'
-        for lang in LANGUAGES:
-            if line[lang]:
-                lines[lang].append(line[lang].strip())
-
-    transformed = {}
-    for lang in LANGUAGES:
-        if len(daterange) > 1:
-            label = get_altlabel('date', lang=lang)
-        else:
-            label = get_preflabel('date', lang=lang)
-        transformed[lang] = {
-            'label': label,
-            'data': lines[lang],
-        }
-
-    return transformed
+def get_date_range_time_range_location(data):
+    if d := data.get('data'):
+        return get_transformed_date_field(d, 'date_range_time_range_location', 'date')
 
 
 def get_date_time_range_location(data):
-    try:
-        date_loc = data.get('data').get('date_time_range_location')
-    except AttributeError:
-        return None
-    if not date_loc:
-        return None
-
-    transformed = []
-    for dl in date_loc:
-        line = ''
-        if date := dl.get('date'):
-            if date_string := date.get('date'):
-                line += date_string
-                if time_from := date.get('time_from'):
-                    line += f' {time_from}'
-                    if time_to := date.get('time_to'):
-                        line += f'-{time_to}'
-
-        if loc := dl.get('location'):
-            if line:
-                line += ', '
-            locations = [location.get('label') for location in loc]
-            line += ', '.join(locations)
-
-        if loc_desc := dl.get('location_description'):
-            if line:
-                line += ', '
-            line += loc_desc
-
-        tr = {}
-        for lang in LANGUAGES:
-            label_date = get_preflabel('date', lang=lang)
-            label_loc = get_preflabel('location', lang=lang)
-            label_desc = get_preflabel('location_description', lang=lang)
-            label = f'{label_date}, {label_loc}, {label_desc}'
-            tr[lang] = {
-                'label': label,
-                'data': line,
-            }
-        transformed.append(tr)
-
-    return transformed
+    if d := data.get('data'):
+        return get_transformed_date_field(
+            d, 'date_time_range_location', ['date', 'location']
+        )
 
 
 def get_design(data):
