@@ -524,7 +524,7 @@ def get_transformed_date_field(
 
             for lang in LANGUAGES:
                 if line := localized_lines[lang]:
-                    lines[lang].append(line[lang])
+                    lines[lang].append(line)
 
         transformed = {}
         for lang in LANGUAGES:
