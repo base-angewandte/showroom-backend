@@ -485,10 +485,13 @@ def get_localized_line(data):
             if isinstance(date, str):
                 line += f'{format_datetime_string(date, lang)}, '
             elif isinstance(date, dict):
+                d = date.get('date')
                 d_from = date.get('date_from')
                 d_to = date.get('date_to')
                 t_from = date.get('time_from')
                 t_to = date.get('time_to')
+                if d:
+                    line += f'{format_datetime_string(d, lang)} '
                 if d_from or d_to:
                     line += f'{format_datetime_range_string(d_from, d_to, lang)} '
                 if t_from or t_to:
