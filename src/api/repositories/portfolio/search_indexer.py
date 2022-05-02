@@ -147,20 +147,32 @@ def append_date_range(date_range, dates, date_ranges):
 
 
 def get_index(indexer, data):
+    simple_labels = [
+        'category',
+        'documentation_url',
+        'doi',
+        'format',
+        'funding_category',
+        'git_url',
+        'isan',
+        'isbn',
+        'material',
+        'programming_language',
+        'title_of_event',
+        'url',
+    ]
     function_map = {
-        'documentation_url': get_documentation_url,
-        'git_url': get_git_url,
-        'license': get_license,
-        'programming_language': get_programming_language,
-        'software_developers': get_software_developers,
-        'url': get_url,
+        'open_source_license': get_open_source_license,
     }
-    # TODO: add remaining indexer functions
 
-    indexer_fn = function_map.get(indexer)
-    if settings.DEBUG and not indexer_fn:
-        logger.error(f'No indexer function is available for field: {indexer}')
-    return indexer_fn(data) if indexer_fn else {}
+    if indexer in simple_labels:
+        indexed = get_simple_label(data, indexer)
+    else:
+        indexer_fn = function_map.get(indexer)
+        if settings.DEBUG and not indexer_fn:
+            logger.error(f'No indexer function is available for field: {indexer}')
+        indexed = indexer_fn(data) if indexer_fn else {}
+    return indexed
 
 
 def get_contributors(data):
@@ -177,31 +189,20 @@ def get_contributors(data):
     return {}
 
 
-def get_documentation_url(data):
-    if url := data.get('documentation_url'):
-        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
-    return {}
-
-
-def get_git_url(data):
-    if url := data.get('git_url'):
-        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
-    return {}
-
-
-def get_license(data):
-    license = data.get('open_source_license')
-    if type(license) is not dict:
+def get_open_source_license(data):
+    os_license = data.get('open_source_license')
+    if type(os_license) is not dict:
         return {}
-    label = license.get('label')
+    label = os_license.get('label')
     if type(label) is not dict:
         return {}
     return {lang: label.get(lang) for (lang, _lang_label) in settings.LANGUAGES}
 
 
-def get_programming_language(data):
-    prog_lang = data.get('programming_language')
-    return {lang: prog_lang for (lang, _lang_label) in settings.LANGUAGES}
+def get_simple_label(data, indexing_item):
+    if label := data.get(indexing_item):
+        return {lang: label for (lang, _lang_label) in settings.LANGUAGES}
+    return {}
 
 
 def get_software_developers(data):
@@ -211,9 +212,3 @@ def get_software_developers(data):
     else:
         return {}
     return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
-
-
-def get_url(data):
-    if url := data.get('url'):
-        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
-    return {}
