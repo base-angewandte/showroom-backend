@@ -8,7 +8,6 @@ from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.functional import cached_property
@@ -170,7 +169,11 @@ class ShowroomObject(AbstractBaseModel):
         if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
-            for activity in self.relations_from.filter(type=ShowroomObject.ACTIVITY):
+            activities = ShowroomObject.objects.filter(
+                type=ShowroomObject.ACTIVITY,
+                related_usernames__contributor_source_id=self.source_repo_object_id,
+            )
+            for activity in activities:
                 activity.unlink_entity(self)
 
         self.relations_to.clear()
@@ -250,23 +253,10 @@ class EntityDetail(models.Model):
                 ret.append(loc_list)
         return ret
 
-    def create_relations_from_activities(self):
-        contributor_relations = ContributorActivityRelations.objects.filter(
-            contributor_source_id=self.showroom_object.source_repo_object_id
+    def render_contributor_activities(self):
+        activities = ShowroomObject.objects.filter(
+            related_usernames__contributor_source_id=self.showroom_object.source_repo_object_id
         )
-        activity_ids = [rel.activity.id for rel in contributor_relations]
-        relations = [
-            Relation(
-                from_object_id=id,
-                to_object_id=self.showroom_object.id,
-            )
-            for id in activity_ids
-        ]
-        Relation.objects.bulk_create(relations, ignore_conflicts=True)
-
-        # Now we have to rerender the detail fields of those activities to add links
-        # wherever the entity is listed (eg. as a contributor)
-        activities = ShowroomObject.objects.filter(id__in=activity_ids)
         for activity in activities:
             schema = get_schema(activity.activitydetail.activity_type.get('source'))
             if schema is None:
@@ -282,22 +272,12 @@ class EntityDetail(models.Model):
             activity.save()
 
     def render_list(self):
-        # TODO: check if here too the use of ContributorActivityRelations would be
-        #       preferable (similar to create_relations_from_activities)
-        filters = activity_lists.get_data_contains_filters(
-            self.showroom_object.source_repo_object_id
-        )
-        q_filter = None
-        for f in filters:
-            if not q_filter:
-                q_filter = Q(source_repo_data__data__contains=f)
-            else:
-                q_filter = q_filter | Q(source_repo_data__data__contains=f)
         activities = ShowroomObject.objects.filter(
             type=ShowroomObject.ACTIVITY,
             belongs_to=self.showroom_object,
             activitydetail__activity_type__isnull=False,
-        ).filter(q_filter)
+            related_usernames__contributor_source_id=self.showroom_object.source_repo_object_id,
+        )
         self.list = activity_lists.render_list_from_activities(
             activities, self.showroom_object.source_repo_object_id
         )
@@ -317,9 +297,9 @@ class EntityDetail(models.Model):
             job_id=job_id,
         )
 
-    def enqueue_create_relations_job(self):
-        job_id = f'entity_create_relations_from_activities_{self.showroom_object.id}'
-        self.enqueue_delayed_job(job_id, self.create_relations_from_activities)
+    def enqueue_render_contributor_activities_job(self):
+        job_id = f'entity_render_contributor_activities_{self.showroom_object.id}'
+        self.enqueue_delayed_job(job_id, self.render_contributor_activities)
 
     def enqueue_list_render_job(self):
         job_id = f'entity_list_render_{self.showroom_object.id}'
@@ -361,7 +341,7 @@ class EntityDetail(models.Model):
         if self.showroom_object.active:
             self.update_activities()
             self.enqueue_list_render_job()
-            self.enqueue_create_relations_job()
+            self.enqueue_render_contributor_activities_job()
 
     def deactivate(self):
         """Reset all data, but preserve showcase and list_ordering."""
