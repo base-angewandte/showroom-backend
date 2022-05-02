@@ -363,7 +363,6 @@ def map_search(schema, activity_schema=None):
 
 indexer_mapping = {
     'default': [
-        'award_ceremony',
         'category',
         'doi',
         'format',

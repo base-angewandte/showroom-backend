@@ -72,6 +72,9 @@ def index_activity(activity):
         # collect all possible dates and date locations
         if date := inner_data.get('date'):
             append_date(date, dates, date_ranges)
+        if award_ceremony := inner_data.get('award_ceremony'):
+            if date := award_ceremony.get('date'):
+                append_date(date, dates, date_ranges)
         if d := inner_data.get('date_location'):
             for dl in d:
                 if date := dl.get('date'):
