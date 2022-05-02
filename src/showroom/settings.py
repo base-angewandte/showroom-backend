@@ -315,6 +315,26 @@ LANGUAGES = (
 
 LANGUAGES_DICT = dict(LANGUAGES)
 
+LOCALES = {
+    'de': 'de_DE',
+    'en': 'en_GB',
+}
+
+DATETIME_FORMATS = {
+    'de': 'dd. MMMM y, HH:mm',
+    'en': 'dd MMMM y, HH:mm',
+}
+
+DATE_FORMATS = {
+    'de': 'dd.MM.y',
+    'en': 'dd/MM/y',
+}
+
+TIME_FORMATS = {
+    'de': 'HH:mm',
+    'en': 'HH:mm',
+}
+
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]

@@ -10,6 +10,8 @@ async-timeout==4.0.2
     # via redis
 attrs==21.4.0
     # via jsonschema
+babel==2.10.1
+    # via -r src/requirements.in
 certifi==2021.10.8
     # via requests
 cfgv==3.3.1
@@ -111,7 +113,9 @@ python-dateutil==2.8.2
     #   croniter
     #   rq-scheduler
 pytz==2022.1
-    # via django
+    # via
+    #   babel
+    #   django
 pyyaml==6.0
     # via
     #   drf-spectacular

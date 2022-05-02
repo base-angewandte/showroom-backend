@@ -7,6 +7,7 @@ from api.repositories.portfolio import (
     transform,
 )
 from core.models import ShowroomObject
+from general.datetime.utils import format_datetime
 
 from ..repositories.portfolio.search import get_search_item
 from . import logger, showroom_object_fields
@@ -142,6 +143,10 @@ class ActivitySerializer(serializers.ModelSerializer):
             if instance.belongs_to.active:
                 publisher['source'] = instance.belongs_to.showroom_id
             ret['publisher'].append(publisher)
+        ret['publishing_info'] = {
+            'date_published': format_datetime(instance.date_created),
+            'date_updated': format_datetime(instance.date_synced),
+        }
         # include the source institutions details
         ret['source_institution'] = {
             'label': instance.source_repo.label_institution,

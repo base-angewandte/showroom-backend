@@ -70,7 +70,7 @@ class ActivityViewSet(
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        serializer.save()
+        serializer.save(date_synced=datetime.now())
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
