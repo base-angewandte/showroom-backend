@@ -137,22 +137,24 @@ class ActivitySerializer(serializers.ModelSerializer):
                     break
         # publisher currently is only the entity this activity belongs to
         ret.pop('belongs_to')
+        # TODO remove publisher and source_institution as soon as FE has been adapted
+        #      to use publishing_info
         ret['publisher'] = []
         if instance.belongs_to:
             publisher = {'name': instance.belongs_to.title}
             if instance.belongs_to.active:
                 publisher['source'] = instance.belongs_to.showroom_id
             ret['publisher'].append(publisher)
-        ret['publishing_info'] = {
-            'publisher': ret['publisher'],
-            'date_published': format_datetime(instance.date_created),
-            'date_updated': format_datetime(instance.date_synced),
-        }
-        # include the source institutions details
         ret['source_institution'] = {
             'label': instance.source_repo.label_institution,
             'url': instance.source_repo.url_institution,
             'icon': instance.source_repo.icon,
+        }
+        ret['publishing_info'] = {
+            'publisher': ret['publisher'],
+            'date_published': format_datetime(instance.date_created),
+            'date_updated': format_datetime(instance.date_synced),
+            'source_institution': ret['source_institution'],
         }
 
         # now filter out the requested languages for the detail fields and lists
