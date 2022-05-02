@@ -144,6 +144,7 @@ class ActivitySerializer(serializers.ModelSerializer):
                 publisher['source'] = instance.belongs_to.showroom_id
             ret['publisher'].append(publisher)
         ret['publishing_info'] = {
+            'publisher': ret['publisher'],
             'date_published': format_datetime(instance.date_created),
             'date_updated': format_datetime(instance.date_synced),
         }
