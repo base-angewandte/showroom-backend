@@ -154,17 +154,20 @@ def get_index(indexer, data):
         'category',
         'documentation_url',
         'doi',
-        'format',
         'funding_category',
         'git_url',
         'isan',
         'isbn',
-        'material',
         'programming_language',
+        'software_version',
         'title_of_event',
         'url',
     ]
     function_map = {
+        'format': get_format,
+        'language': get_language,
+        'material': get_material,
+        'published_in': None,
         'open_source_license': get_open_source_license,
     }
 
@@ -192,6 +195,18 @@ def get_contributors(data):
     return {}
 
 
+def get_format(data):
+    return get_vocabulary_list_labels(data, 'format')
+
+
+def get_language(data):
+    return get_vocabulary_list_labels(data, 'language')
+
+
+def get_material(data):
+    return get_vocabulary_list_labels(data, 'material')
+
+
 def get_open_source_license(data):
     os_license = data.get('open_source_license')
     if type(os_license) is not dict:
@@ -215,3 +230,22 @@ def get_software_developers(data):
     else:
         return {}
     return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_vocabulary_list_labels(data, field):
+    indexed = {}
+    if item_list := data.get(field):
+        if type(item_list) is not list:
+            return indexed
+        for item in item_list:
+            if type(item) is not dict:
+                continue
+            if 'label' in item and type(item['label']) == dict:
+                for lang in item['label']:
+                    if lang not in indexed:
+                        indexed[lang] = []
+                    indexed[lang].append(item['label'][lang])
+    if indexed:
+        for lang in indexed:
+            indexed[lang] = ', '.join(indexed[lang])
+    return indexed
