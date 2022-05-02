@@ -290,7 +290,13 @@ def get_person_filter(values, lang):
                     400,
                 )
             obj_id = obj_id.split('-')[-1]
-            add_filter = Q(pk=obj_id) | Q(relations_to__id=obj_id)
+            try:
+                person = ShowroomObject.objects.get(pk=obj_id)
+            except ShowroomObject.DoesNotExist as err:
+                raise ParseError('requested person does not exist', 400) from err
+            add_filter = Q(pk=obj_id) | Q(
+                related_usernames__contributor_source_id=person.source_repo_object_id
+            )
         if filters is None:
             filters = add_filter
         else:
