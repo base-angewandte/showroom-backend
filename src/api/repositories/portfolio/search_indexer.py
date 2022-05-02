@@ -167,7 +167,7 @@ def get_index(indexer, data):
         'format': get_format,
         'language': get_language,
         'material': get_material,
-        'published_in': None,
+        'published_in': get_published_in,
         'open_source_license': get_open_source_license,
     }
 
@@ -215,6 +215,35 @@ def get_open_source_license(data):
     if type(label) is not dict:
         return {}
     return {lang: label.get(lang) for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_published_in(data):
+    indexed = {}
+    labels = []
+    published_in = data.get('published_in')
+    if type(published_in) is str:
+        labels.append(published_in)
+    elif type(published_in) is list:
+        for pub in published_in:
+            if type(pub) is not dict:
+                continue
+            if title := pub.get('title'):
+                labels.append(title)
+            if subtitle := pub.get('subtitle'):
+                labels.append(subtitle)
+            for role in ['editor', 'publisher']:
+                if contributors := pub.get(role):
+                    if type(contributors) is not list:
+                        continue
+                    for contributor in contributors:
+                        if type(contributor) is not dict:
+                            continue
+                        if 'label' in contributor and type(contributor['label']) is str:
+                            labels.append(contributor['label'])
+    if labels:
+        text_index = ', '.join(labels)
+        indexed = {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+    return indexed
 
 
 def get_simple_label(data, indexing_item):
