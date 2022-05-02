@@ -20,6 +20,7 @@ from django.db.models import Case, DurationField, F, Min, Q, Sum, Value, When
 from django.utils import timezone
 
 from api.repositories.portfolio.search import get_search_item
+from api.repositories.portfolio.utils import get_usernames_from_roles
 from api.serializers.generic import Responses
 from api.serializers.search import SearchRequestSerializer, SearchResultSerializer
 from core.models import ShowroomObject
@@ -239,7 +240,19 @@ def get_activity_filter(values, lang):
                     'dict values in activity filter have to contain an id of type str',
                     400,
                 )
-            add_filter = Q(pk=obj_id) | Q(relations_to__id=obj_id)
+            try:
+                activity = ShowroomObject.objects.get(pk=obj_id)
+            except ShowroomObject.DoesNotExist as err:
+                raise ParseError('requested activity does not exist', 400) from err
+            contributor_ids = get_usernames_from_roles(activity)
+            add_filter = (
+                Q(pk=obj_id)
+                | Q(relations_to__id=obj_id)
+                | Q(
+                    type=ShowroomObject.PERSON,
+                    source_repo_object_id__in=contributor_ids,
+                )
+            )
         if filters is None:
             filters = add_filter
         else:
@@ -277,7 +290,13 @@ def get_person_filter(values, lang):
                     400,
                 )
             obj_id = obj_id.split('-')[-1]
-            add_filter = Q(pk=obj_id) | Q(relations_to__id=obj_id)
+            try:
+                person = ShowroomObject.objects.get(pk=obj_id)
+            except ShowroomObject.DoesNotExist as err:
+                raise ParseError('requested person does not exist', 400) from err
+            add_filter = Q(pk=obj_id) | Q(
+                related_usernames__contributor_source_id=person.source_repo_object_id
+            )
         if filters is None:
             filters = add_filter
         else:
