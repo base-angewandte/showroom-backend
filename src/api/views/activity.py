@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
+from django.utils import timezone
 
 from api.permissions import ApiKeyPermission
 from api.repositories.portfolio.search_indexer import index_activity
@@ -70,7 +71,7 @@ class ActivityViewSet(
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        serializer.save(date_synced=datetime.now())
+        serializer.save(date_synced=timezone.now())
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
