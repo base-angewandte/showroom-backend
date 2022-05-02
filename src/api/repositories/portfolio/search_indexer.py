@@ -12,6 +12,7 @@ from core.models import (
 
 from . import get_schema
 from .mapping import map_indexer
+from .utils import role_fields
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,12 @@ def index_activity(activity):
 
     # Now run type/category-specific indexing functions, in case the data key is set
     if (inner_data := data.get('data')) and type(inner_data) == dict:
+        # Index all role-based fields for names/labels
+        contributors = get_contributors(inner_data)
+        if contributors:
+            for lang in contributors:
+                indexed[lang].append(contributors[lang])
+        # Index all other inner data based on defined mapping
         if entry_type := activity.source_repo_data.get('type'):
             if collection := get_schema(entry_type.get('source')):
                 indexers = map_indexer(collection)
@@ -141,11 +148,12 @@ def append_date_range(date_range, dates, date_ranges):
 
 def get_index(indexer, data):
     function_map = {
-        'contributors': get_contributors,
         'documentation_url': get_documentation_url,
+        'git_url': get_git_url,
         'license': get_license,
         'programming_language': get_programming_language,
         'software_developers': get_software_developers,
+        'url': get_url,
     }
     # TODO: add remaining indexer functions
 
@@ -156,17 +164,29 @@ def get_index(indexer, data):
 
 
 def get_contributors(data):
-    contributors = data.get('contributors')
-    if contributors and type(contributors) == list:
-        text_index = ', '.join([c.get('label') for c in contributors])
-    else:
-        return {}
-    return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+    labels = []
+    for role in role_fields:
+        if role_data := data.get(role):
+            if type(role_data) == list:
+                for r in role_data:
+                    if type(r) == dict and 'label' in r:
+                        labels.append(r.get('label'))
+    if labels:
+        text_index = ', '.join(labels)
+        return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+    return {}
 
 
 def get_documentation_url(data):
-    url = data.get('documentation_url')
-    return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
+    if url := data.get('documentation_url'):
+        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
+    return {}
+
+
+def get_git_url(data):
+    if url := data.get('git_url'):
+        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
+    return {}
 
 
 def get_license(data):
@@ -191,3 +211,9 @@ def get_software_developers(data):
     else:
         return {}
     return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
+
+
+def get_url(data):
+    if url := data.get('url'):
+        return {lang: url for (lang, _lang_label) in settings.LANGUAGES}
+    return {}

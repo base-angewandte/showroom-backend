@@ -362,12 +362,27 @@ def map_search(schema, activity_schema=None):
 
 
 indexer_mapping = {
-    'default': ['contributors'],
-    'software': [
-        'contributors',
+    'default': [
+        'award_ceremony',
+        'category',
+        'doi',
+        'format',
+        'funding_category',
+        'isan',
+        'isbn',
+        'language',
         'license',
+        'material',
+        'published_in',
+        'title_of_event',
+        'url',
+    ],
+    'software': [
         'documentation_url',
+        'git_url',
+        'license',
         'software_developers',
+        'software_version',
         'programming_language',
     ],
 }
