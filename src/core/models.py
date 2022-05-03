@@ -192,6 +192,8 @@ class ShowroomObject(AbstractBaseModel):
             )
             for activity in activities:
                 activity.unlink_entity(self)
+        if self.type == ShowroomObject.ACTIVITY:
+            self.related_usernames.all().delete()
 
         self.relations_to.clear()
         self.relations_from.clear()
