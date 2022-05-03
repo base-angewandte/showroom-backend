@@ -71,7 +71,7 @@ class ActivityViewSet(
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        serializer.save(date_synced=timezone.now())
+        serializer.save(date_synced=timezone.now(), active=True)
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
@@ -192,10 +192,15 @@ class ActivityViewSet(
             )
         except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        rerender_list = True if activity.belongs_to else False
-        self.perform_destroy(activity)
-        if rerender_list:
-            activity.belongs_to.entitydetail.enqueue_list_render_job()
+        if not activity.active:
+            return Response(
+                {'detail': 'Activity already deactivated.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        entity = activity.belongs_to
+        activity.deactivate()
+        if entity and entity.active:
+            entity.entitydetail.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
