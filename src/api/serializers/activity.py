@@ -50,7 +50,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         new_data['type'] = ShowroomObject.ACTIVITY
 
         try:
-            new_data['belongs_to'] = ShowroomObject.objects.get(
+            new_data['belongs_to'] = ShowroomObject.active_objects.get(
                 source_repo_object_id=data.get('source_repo_owner_id')
             ).id
         except ShowroomObject.DoesNotExist:

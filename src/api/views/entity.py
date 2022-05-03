@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class EntityViewSet(viewsets.GenericViewSet):
-    queryset = ShowroomObject.objects.filter(
+    queryset = ShowroomObject.active_objects.filter(
         type__in=[
             ShowroomObject.PERSON,
             ShowroomObject.DEPARTMENT,
@@ -461,7 +461,7 @@ def get_rendered_edit_showcase(showcase, include_details=False):
                 sc_item['details'] = {}
                 item = None
                 try:
-                    item = ShowroomObject.objects.get(pk=sc_id)
+                    item = ShowroomObject.active_objects.get(pk=sc_id)
                 except ShowroomObject.DoesNotExist:
                     pass
                 if item:

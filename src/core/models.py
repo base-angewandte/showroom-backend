@@ -186,12 +186,14 @@ class ShowroomObject(AbstractBaseModel):
         if self.type in entity_types:
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
-            activities = ShowroomObject.objects.filter(
+            activities = ShowroomObject.active_objects.filter(
                 type=ShowroomObject.ACTIVITY,
                 related_usernames__contributor_source_id=self.source_repo_object_id,
             )
             for activity in activities:
                 activity.unlink_entity(self)
+        if self.type == ShowroomObject.ACTIVITY:
+            self.related_usernames.all().delete()
 
         self.relations_to.clear()
         self.relations_from.clear()
@@ -271,7 +273,7 @@ class EntityDetail(models.Model):
         return ret
 
     def render_contributor_activities(self):
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             related_usernames__contributor_source_id=self.showroom_object.source_repo_object_id
         )
         for activity in activities:
@@ -289,7 +291,7 @@ class EntityDetail(models.Model):
             activity.save()
 
     def render_list(self):
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY,
             belongs_to=self.showroom_object,
             activitydetail__activity_type__isnull=False,
@@ -340,7 +342,7 @@ class EntityDetail(models.Model):
         """
         # TODO: discuss: should we generally update all activities or check for those
         #       where belongs_to is not yet set?
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY,
             source_repo_owner_id=self.showroom_object.source_repo_object_id,
             belongs_to=None,

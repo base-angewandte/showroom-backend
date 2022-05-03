@@ -113,7 +113,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
     ret = cache.get(cache_key)
     if not use_cache or not ret:
         # TODO: add entity keywords to the keywords filter
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY
         ).exclude(source_repo_data__keywords=None)
         keywords = set()
@@ -131,7 +131,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
         }
 
         activities = (
-            ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+            ShowroomObject.active_objects.filter(type=ShowroomObject.ACTIVITY)
             .exclude(activitydetail__activity_type__isnull=True)
             .exclude(activitydetail__activity_type={})
         )
@@ -194,7 +194,7 @@ def get_dynamic_entity_filters(entity, lang=settings.LANGUAGE_CODE):
     cache_key = f'get_dynamic_entity_filters_{lang}'
     ret = cache.get(cache_key)
     if not ret:
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             belongs_to=entity,
             type=ShowroomObject.ACTIVITY,
         ).exclude(source_repo_data__keywords=None)
@@ -213,7 +213,7 @@ def get_dynamic_entity_filters(entity, lang=settings.LANGUAGE_CODE):
         }
 
         activities = (
-            ShowroomObject.objects.filter(
+            ShowroomObject.active_objects.filter(
                 belongs_to=entity,
                 type=ShowroomObject.ACTIVITY,
             )
