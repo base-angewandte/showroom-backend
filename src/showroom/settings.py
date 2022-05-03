@@ -326,6 +326,11 @@ DATETIME_FORMATS = {
 }
 
 DATE_FORMATS = {
+    'de': 'dd. MMMM y',
+    'en': 'dd MMMM y',
+}
+
+DATE_FORMATS_SHORT = {
     'de': 'dd.MM.y',
     'en': 'dd/MM/y',
 }

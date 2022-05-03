@@ -12,12 +12,14 @@ TIME_FORMAT_JS = '%H:%M'
 DATETIME_FORMAT_JS = f'{DATE_FORMAT_JS}T{TIME_FORMAT_JS}:%S.%fZ'
 
 
-def format_date(datetime, lang=None):
+def format_date(datetime, lang=None, short=False):
     if lang is None:
         lang = get_language() or DEFAULT_LANG
     return fd(
         datetime,
-        format=settings.DATE_FORMATS[lang],
+        format=settings.DATE_FORMATS[lang]
+        if not short
+        else settings.DATE_FORMATS_SHORT[lang],
         locale=settings.LOCALES[lang],
     )
 
