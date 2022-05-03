@@ -60,7 +60,7 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
         entity = None
         if entity_id is not None:
             try:
-                entity = ShowroomObject.objects.get(pk=entity_id)
+                entity = ShowroomObject.active_objects.get(pk=entity_id)
             except ShowroomObject.DoesNotExist:
                 return Response({'detail': 'entity_id is not valid'}, status=400)
             if entity.type not in [ShowroomObject.PERSON, ShowroomObject.INSTITUTION]:

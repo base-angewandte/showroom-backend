@@ -36,7 +36,7 @@ class MediaViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            activity = ShowroomObject.objects.get(
+            activity = ShowroomObject.active_objects.get(
                 source_repo_object_id=source_repo_entry_id
             )
         except ShowroomObject.DoesNotExist:

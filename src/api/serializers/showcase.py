@@ -12,7 +12,7 @@ def get_serialized_showcase_and_warnings(showcase):
     warnings = []
     for id, showcase_type in showcase:
         try:
-            item = ShowroomObject.objects.get(pk=id)
+            item = ShowroomObject.active_objects.get(pk=id)
         except ShowroomObject.DoesNotExist:
             warnings.append(f'{showcase_type} {id} does not exist.')
             continue

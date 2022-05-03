@@ -36,10 +36,10 @@ class MediaSerializer(serializers.ModelSerializer):
             # activity also has to be set to an existing activity, so we can get
             # the repos base url
             try:
-                activity = ShowroomObject.objects.get(
+                activity = ShowroomObject.active_objects.get(
                     source_repo_object_id=data.get('source_repo_entry_id')
                 )
-            except ShowroomObject.DoesNotExist:
+            except ShowroomObject.DoesNotExist as err:
                 raise serializers.ValidationError(
                     {
                         'source_repo_entry_id': [
@@ -47,7 +47,7 @@ class MediaSerializer(serializers.ModelSerializer):
                             + ' activity by its original source repo\'s entry id.'
                         ]
                     }
-                )
+                ) from err
             repo_base = activity.source_repo.url_repository
             # now check for links and add the repo_base url
             data['file'] = repo_base + data['file']

@@ -34,7 +34,7 @@ class ActivityViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+    queryset = ShowroomObject.active_objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
     permission_classes = [ApiKeyPermission]
 
@@ -223,7 +223,7 @@ class ActivityViewSet(
     @action(detail=True, methods=['post'])
     def relations(self, request, *args, **kwargs):
         try:
-            activity = ShowroomObject.objects.get(
+            activity = ShowroomObject.active_objects.get(
                 source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
@@ -257,7 +257,7 @@ class ActivityViewSet(
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                related_activity = ShowroomObject.objects.get(
+                related_activity = ShowroomObject.active_objects.get(
                     source_repo_object_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )
