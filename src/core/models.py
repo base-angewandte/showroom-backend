@@ -156,6 +156,20 @@ class ShowroomObject(AbstractBaseModel):
     def deactivate(self):
         """Deactivate an object instead of deletion, in order to preserve its
         ID."""
+        entity_types = (self.PERSON, self.DEPARTMENT, self.INSTITUTION)
+        # check if there are any render jobs scheduled in case of an entity and
+        # cancel them before updating any data
+        if self.type in entity_types:
+            job_ids = [
+                f'entity_list_render_{self.id}',
+                f'entity_render_contributor_activities_{self.id}',
+            ]
+            queue = get_queue('default')
+            registry = ScheduledJobRegistry(queue=queue)
+            for job_id in job_ids:
+                if job_id in registry:
+                    registry.remove(job_id)
+
         self.active = False
         self.subtext = []
         self.primary_details = []
@@ -166,7 +180,7 @@ class ShowroomObject(AbstractBaseModel):
         self.belongs_to = None
         self.save()
 
-        if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
+        if self.type in entity_types:
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
             activities = ShowroomObject.objects.filter(
