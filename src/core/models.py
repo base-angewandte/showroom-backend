@@ -173,7 +173,10 @@ class ShowroomObject(AbstractBaseModel):
         self.active = False
         self.subtext = []
         self.primary_details = []
-        self.secondary_details = []
+        # secondary_details will be kept, in case the entity page is activated again
+        # similar to list ordering and showcase in the EntityDetail
+        if self.type not in entity_types:
+            self.secondary_details = []
         self.list = []
         self.locations = []
         self.source_repo_data = {}
