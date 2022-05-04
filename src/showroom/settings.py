@@ -557,6 +557,7 @@ SENTRY_ENVIRONMENT = env.str(
     if any([i in SITE_URL for i in ['dev', 'localhost', '127.0.0.1']])
     else 'production',
 )
+SENTRY_TRACES_SAMPLE_RATE = env.float('SENTRY_TRACES_SAMPLE_RATE', default=0.2)
 
 if SENTRY_DSN:
     import sentry_sdk
@@ -569,7 +570,7 @@ if SENTRY_DSN:
             sentry_sdk.integrations.redis.RedisIntegration(),
             sentry_sdk.integrations.rq.RqIntegration(),
         ],
-        traces_sample_rate=1.0,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=True,
     )
 
