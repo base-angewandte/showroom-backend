@@ -168,7 +168,7 @@ class ShowroomObject(AbstractBaseModel):
             registry = ScheduledJobRegistry(queue=queue)
             for job_id in job_ids:
                 if job_id in registry:
-                    registry.remove(job_id)
+                    registry.remove(job_id, delete_job=True)
 
         self.active = False
         self.subtext = []
@@ -309,7 +309,7 @@ class EntityDetail(models.Model):
         # we only want to enqueue a single job if
         # several are scheduled within a short period
         if job_id in registry:
-            registry.remove(job_id)
+            registry.remove(job_id, delete_job=True)
         queue.enqueue_in(
             timedelta(seconds=settings.WORKER_DELAY_ENTITY),
             function,

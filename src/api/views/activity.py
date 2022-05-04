@@ -132,7 +132,7 @@ class ActivityViewSet(
                 queue = get_queue('default')
                 registry = ScheduledJobRegistry(queue=queue)
                 if job_id in registry:
-                    registry.remove(job_id)
+                    registry.remove(job_id, delete_job=True)
                 queue.enqueue_in(
                     timedelta(seconds=settings.WORKER_DELAY_ENTITY),
                     pull_user_data,
