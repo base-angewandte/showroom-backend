@@ -219,7 +219,11 @@ class ShowroomObject(AbstractBaseModel):
         self.save()
 
 
-@receiver(post_save, sender=ShowroomObject)
+@receiver(
+    post_save,
+    sender=ShowroomObject,
+    dispatch_uid='post_save_create_object_details',
+)
 def create_object_details(sender, instance, created, raw, *args, **kwargs):
     if not created or raw:
         return
