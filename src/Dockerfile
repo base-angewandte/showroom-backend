@@ -27,7 +27,7 @@ EXPOSE 8500
 FROM base as dev
 
 COPY requirements-dev.txt .
-RUN pip install --disable-pip-version-check --no-cache-dir -r requirements-dev.txt
+RUN pip install -r requirements-dev.txt
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8500"]
 
