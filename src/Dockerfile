@@ -17,9 +17,9 @@ VOLUME /logs
 
 WORKDIR /django
 
-RUN pip install --disable-pip-version-check --upgrade --no-cache-dir pip==20.2.3
+RUN pip install pip==22.0.4
 COPY requirements.txt .
-RUN pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 EXPOSE 8500
 
