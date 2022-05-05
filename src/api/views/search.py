@@ -241,7 +241,7 @@ def get_activity_filter(values, lang):
                     400,
                 )
             try:
-                activity = ShowroomObject.objects.get(pk=obj_id)
+                activity = ShowroomObject.active_objects.get(pk=obj_id)
             except ShowroomObject.DoesNotExist as err:
                 raise ParseError('requested activity does not exist', 400) from err
             contributor_ids = get_usernames_from_roles(activity)
@@ -291,7 +291,7 @@ def get_person_filter(values, lang):
                 )
             obj_id = obj_id.split('-')[-1]
             try:
-                person = ShowroomObject.objects.get(pk=obj_id)
+                person = ShowroomObject.active_objects.get(pk=obj_id)
             except ShowroomObject.DoesNotExist as err:
                 raise ParseError('requested person does not exist', 400) from err
             add_filter = Q(pk=obj_id) | Q(

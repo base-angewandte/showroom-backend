@@ -6,6 +6,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
+from rq.exceptions import NoSuchJobError
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
@@ -34,7 +35,7 @@ class ActivityViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ACTIVITY)
+    queryset = ShowroomObject.active_objects.filter(type=ShowroomObject.ACTIVITY)
     serializer_class = ActivitySerializer
     permission_classes = [ApiKeyPermission]
 
@@ -71,7 +72,7 @@ class ActivityViewSet(
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        serializer.save(date_synced=timezone.now())
+        serializer.save(date_synced=timezone.now(), active=True)
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
@@ -132,7 +133,10 @@ class ActivityViewSet(
                 queue = get_queue('default')
                 registry = ScheduledJobRegistry(queue=queue)
                 if job_id in registry:
-                    registry.remove(job_id)
+                    try:
+                        registry.remove(job_id, delete_job=True)
+                    except NoSuchJobError:
+                        pass
                 queue.enqueue_in(
                     timedelta(seconds=settings.WORKER_DELAY_ENTITY),
                     pull_user_data,
@@ -192,10 +196,15 @@ class ActivityViewSet(
             )
         except ShowroomObject.DoesNotExist:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        rerender_list = True if activity.belongs_to else False
-        self.perform_destroy(activity)
-        if rerender_list:
-            activity.belongs_to.entitydetail.enqueue_list_render_job()
+        if not activity.active:
+            return Response(
+                {'detail': 'Activity already deactivated.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        entity = activity.belongs_to
+        activity.deactivate()
+        if entity and entity.active:
+            entity.entitydetail.enqueue_list_render_job()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
@@ -218,7 +227,7 @@ class ActivityViewSet(
     @action(detail=True, methods=['post'])
     def relations(self, request, *args, **kwargs):
         try:
-            activity = ShowroomObject.objects.get(
+            activity = ShowroomObject.active_objects.get(
                 source_repo_object_id=kwargs['pk'],
                 source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
             )
@@ -252,7 +261,7 @@ class ActivityViewSet(
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                related_activity = ShowroomObject.objects.get(
+                related_activity = ShowroomObject.active_objects.get(
                     source_repo_object_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )

@@ -10,7 +10,7 @@ from core.models import ShowroomObject
 
 
 class AlbumViewSet(viewsets.GenericViewSet):
-    queryset = ShowroomObject.objects.filter(type=ShowroomObject.ALBUM)
+    queryset = ShowroomObject.active_objects.filter(type=ShowroomObject.ALBUM)
     serializer_class = AlbumSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 

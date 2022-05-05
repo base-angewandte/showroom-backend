@@ -2,6 +2,7 @@ from datetime import timedelta
 from importlib import import_module
 
 from django_rq.queues import get_queue
+from rq.exceptions import NoSuchJobError
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
@@ -168,7 +169,10 @@ class ShowroomObject(AbstractBaseModel):
             registry = ScheduledJobRegistry(queue=queue)
             for job_id in job_ids:
                 if job_id in registry:
-                    registry.remove(job_id)
+                    try:
+                        registry.remove(job_id, delete_job=True)
+                    except NoSuchJobError:
+                        pass
 
         self.active = False
         self.subtext = []
@@ -186,12 +190,14 @@ class ShowroomObject(AbstractBaseModel):
         if self.type in entity_types:
             self.entitydetail.deactivate()
             ShowroomObject.objects.filter(belongs_to=self).update(belongs_to=None)
-            activities = ShowroomObject.objects.filter(
+            activities = ShowroomObject.active_objects.filter(
                 type=ShowroomObject.ACTIVITY,
                 related_usernames__contributor_source_id=self.source_repo_object_id,
             )
             for activity in activities:
                 activity.unlink_entity(self)
+        if self.type == ShowroomObject.ACTIVITY:
+            self.related_usernames.all().delete()
 
         self.relations_to.clear()
         self.relations_from.clear()
@@ -217,7 +223,11 @@ class ShowroomObject(AbstractBaseModel):
         self.save()
 
 
-@receiver(post_save, sender=ShowroomObject)
+@receiver(
+    post_save,
+    sender=ShowroomObject,
+    dispatch_uid='post_save_create_object_details',
+)
 def create_object_details(sender, instance, created, raw, *args, **kwargs):
     if not created or raw:
         return
@@ -271,7 +281,7 @@ class EntityDetail(models.Model):
         return ret
 
     def render_contributor_activities(self):
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             related_usernames__contributor_source_id=self.showroom_object.source_repo_object_id
         )
         for activity in activities:
@@ -289,7 +299,7 @@ class EntityDetail(models.Model):
             activity.save()
 
     def render_list(self):
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY,
             belongs_to=self.showroom_object,
             activitydetail__activity_type__isnull=False,
@@ -307,7 +317,10 @@ class EntityDetail(models.Model):
         # we only want to enqueue a single job if
         # several are scheduled within a short period
         if job_id in registry:
-            registry.remove(job_id)
+            try:
+                registry.remove(job_id, delete_job=True)
+            except NoSuchJobError:
+                pass
         queue.enqueue_in(
             timedelta(seconds=settings.WORKER_DELAY_ENTITY),
             function,
@@ -340,7 +353,7 @@ class EntityDetail(models.Model):
         """
         # TODO: discuss: should we generally update all activities or check for those
         #       where belongs_to is not yet set?
-        activities = ShowroomObject.objects.filter(
+        activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY,
             source_repo_owner_id=self.showroom_object.source_repo_object_id,
             belongs_to=None,

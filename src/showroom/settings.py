@@ -549,6 +549,34 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+# Sentry
+SENTRY_DSN = env.str('SENTRY_DSN', default=None)
+SENTRY_ENVIRONMENT = env.str(
+    'SENTRY_ENVIRONMENT',
+    default='development'
+    if any([i in SITE_URL for i in ['dev', 'localhost', '127.0.0.1']])
+    else 'production',
+)
+SENTRY_TRACES_SAMPLE_RATE = env.float('SENTRY_TRACES_SAMPLE_RATE', default=0.2)
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    from sentry_sdk.integrations.rq import RqIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=SENTRY_ENVIRONMENT,
+        integrations=[
+            DjangoIntegration(),
+            RedisIntegration(),
+            RqIntegration(),
+        ],
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        send_default_pii=True,
+    )
+
 
 if DEBUG:
     INSTALLED_APPS += ['debug_toolbar']

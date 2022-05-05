@@ -81,7 +81,7 @@ class InitialViewSet(viewsets.GenericViewSet):
 
 def get_initial_response(request, pk):
     try:
-        entity = ShowroomObject.objects.get(pk=pk)
+        entity = ShowroomObject.active_objects.get(pk=pk)
     except ShowroomObject.DoesNotExist:
         return Response(
             {'detail': 'No entity found with this id.'},
@@ -123,7 +123,7 @@ def get_initial_response(request, pk):
     if showcase_warnings:
         response['showcase_warnings'] = showcase_warnings
 
-    qs = ShowroomObject.objects.filter(
+    qs = ShowroomObject.active_objects.filter(
         source_repo__id=settings.DEFAULT_USER_REPO,
         type=ShowroomObject.ACTIVITY,
     )
