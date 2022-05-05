@@ -157,7 +157,7 @@ subsections.
 * Use `Makefile` to initialize and run project:
 
     ```bash
-    make start init init-static restart-gunicorn
+    make start init restart-gunicorn
     ```
 
 * Install nginx and configure it accordingly (clone the `nginx` repo to `/opt/base/nginx` and follow the setup docs there)
@@ -209,6 +209,9 @@ These might help you debug and not stumble across the same obstacles over and ov
     ```
 * When everything is running you still have to make sure to generate the static files for showroom by doing
   `sudo docker exec showroom-django python manage.py collectstatic` on your deploy node.
+  In some cases there might be an issue, e.g. when you completely redeploy showroom and
+  delete its folders, while nginx is still up. Then the collectstatic will not work.
+  In that case stop nginx first and and do the collectstatic before you start it again.
 * When you restart the Showroom services after the nginx services are already up, and afterwards the proxy does not
   work anymore, try restarting the nginx services as well. Because it might happen sometimes that the showroom-django
   service receives a new IP, but the nginx service still uses the old IP for the showroom-django upstream.
