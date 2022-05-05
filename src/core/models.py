@@ -2,6 +2,7 @@ from datetime import timedelta
 from importlib import import_module
 
 from django_rq.queues import get_queue
+from rq.exceptions import NoSuchJobError
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
@@ -168,7 +169,10 @@ class ShowroomObject(AbstractBaseModel):
             registry = ScheduledJobRegistry(queue=queue)
             for job_id in job_ids:
                 if job_id in registry:
-                    registry.remove(job_id, delete_job=True)
+                    try:
+                        registry.remove(job_id, delete_job=True)
+                    except NoSuchJobError:
+                        pass
 
         self.active = False
         self.subtext = []
@@ -313,7 +317,10 @@ class EntityDetail(models.Model):
         # we only want to enqueue a single job if
         # several are scheduled within a short period
         if job_id in registry:
-            registry.remove(job_id, delete_job=True)
+            try:
+                registry.remove(job_id, delete_job=True)
+            except NoSuchJobError:
+                pass
         queue.enqueue_in(
             timedelta(seconds=settings.WORKER_DELAY_ENTITY),
             function,

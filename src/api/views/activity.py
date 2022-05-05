@@ -6,6 +6,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
+from rq.exceptions import NoSuchJobError
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
@@ -132,7 +133,10 @@ class ActivityViewSet(
                 queue = get_queue('default')
                 registry = ScheduledJobRegistry(queue=queue)
                 if job_id in registry:
-                    registry.remove(job_id, delete_job=True)
+                    try:
+                        registry.remove(job_id, delete_job=True)
+                    except NoSuchJobError:
+                        pass
                 queue.enqueue_in(
                     timedelta(seconds=settings.WORKER_DELAY_ENTITY),
                     pull_user_data,
