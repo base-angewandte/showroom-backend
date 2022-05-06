@@ -11,7 +11,6 @@ from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.utils.text import slugify
 
 from api.permissions import ApiKeyPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
@@ -33,6 +32,7 @@ from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import CsrfExemptSessionAuthentication, get_search_results
 from core.models import ShowroomObject, SourceRepository
 from core.validators import validate_showcase
+from general.utils import slugify
 
 logger = logging.getLogger(__name__)
 

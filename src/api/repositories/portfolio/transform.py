@@ -2,7 +2,6 @@ import logging
 from typing import Dict, List, Union
 
 from django.conf import settings
-from django.utils.text import slugify
 
 from core.models import ShowroomObject
 from general.datetime.utils import (
@@ -10,6 +9,7 @@ from general.datetime.utils import (
     format_datetime_string,
     format_time_range_string,
 )
+from general.utils import slugify
 
 from . import (
     LANGUAGES,

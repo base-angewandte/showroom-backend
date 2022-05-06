@@ -6,13 +6,12 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from django.utils.text import slugify
-
 from api.serializers.generic import Responses
 from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import get_search_results, label_current_activities
 from core.models import ShowroomObject
+from general.utils import slugify
 from showroom import settings
 
 logger = logging.getLogger(__name__)

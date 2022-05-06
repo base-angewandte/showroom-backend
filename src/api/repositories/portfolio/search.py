@@ -2,9 +2,9 @@ import logging
 
 from django.conf import settings
 from django.core.cache import cache
-from django.utils.text import slugify
 
 from core.models import ShowroomObject
+from general.utils import slugify
 
 from . import get_schema
 from .mapping import map_search

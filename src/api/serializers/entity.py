@@ -1,8 +1,7 @@
 from rest_framework import serializers
 
-from django.utils.text import slugify
-
 from core.models import ShowroomObject
+from general.utils import slugify
 
 from ..repositories.portfolio import activity_lists
 from . import showroom_object_fields

@@ -12,7 +12,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.functional import cached_property
-from django.utils.text import slugify
 
 from api.repositories.portfolio import activity_lists, get_schema
 from api.repositories.user_preferences.transform import (
@@ -24,6 +23,7 @@ from core.validators import (
     validate_showcase,
 )
 from general.models import AbstractBaseModel, ShortUUIDField
+from general.utils import slugify
 
 
 def get_default_list_ordering():
