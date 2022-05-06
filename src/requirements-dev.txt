@@ -114,6 +114,8 @@ python-dateutil==2.8.2
     # via
     #   croniter
     #   rq-scheduler
+python-slugify==6.1.2
+    # via -r src/requirements.in
 pytz==2022.1
     # via
     #   babel
@@ -160,10 +162,14 @@ sqlparse==0.4.2
     # via
     #   django
     #   django-debug-toolbar
+text-unidecode==1.3
+    # via python-slugify
 toml==0.10.2
     # via pre-commit
 tomli==2.0.1
     # via pep517
+translitcodec==0.7.0
+    # via -r src/requirements.in
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==1.26.9
