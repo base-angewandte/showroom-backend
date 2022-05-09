@@ -549,7 +549,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-DEFAULT_SLUGIFY_STYLE = env.str('DEFAULT_SLUGIFY_STYLE', default=None)
+DEFAULT_SLUGIFY_STYLE = env.str('DEFAULT_SLUGIFY_STYLE', default='translit')
 
 # Sentry
 SENTRY_DSN = env.str('SENTRY_DSN', default=None)
