@@ -99,6 +99,7 @@ def transform_field(field, data):
         'publisher_place_date': get_publisher_place_date,
         'software_developers': get_software_developers,
         'software_version': get_software_version,
+        'status': get_status,
         'texts_with_types': get_texts_with_types,
         'title_of_event': get_title_of_event,
         'type': get_type,
@@ -1479,6 +1480,26 @@ def get_software_version(data):
             'data': version,
         }
 
+    return transformed
+
+
+def get_status(data):
+    try:
+        status = data.get('data').get('status')
+    except AttributeError:
+        return None
+    if not status or type(status) is not dict:
+        return None
+    status_labels = status.get('label')
+    if not status_labels or type(status_labels) is not dict:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('status', lang=lang).capitalize(),
+            'data': status_labels.get(lang),
+        }
     return transformed
 
 
