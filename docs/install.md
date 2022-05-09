@@ -154,6 +154,12 @@ subsections.
     vi ./src/showroom/.env
     ```
 
+    If you want to use the user repository as well, you need an API key from your
+    CAS / User Preferences instance. If you have not set this up yet, now is a good time
+    to do so. Make sure to update the _src/showroom/.env_ file for the new API key then,
+    and that DISABLE_USER_REPO is set to false (which is the default, if you did not
+    remove the comment in the corresponding line).
+
 * Use `Makefile` to initialize and run project:
 
     ```bash
@@ -170,6 +176,55 @@ subsections.
     ```bash
     sudo docker-compose stop cas-django && sudo docker-compose up --build -d cas-django
     ```
+
+* Set up a source repository and the default institution:
+  - Create a SourceRepository with an API key by using the management command:
+    ```bash
+    sudo docker-compose exec showroom-django python manage.py create_source_repository -h  
+    ```
+    This gives you some context info on what we can feed this command with. We need at
+    least a repo id (which is a self-chose integer), a URL where to reach the repo
+    and an API key (which should be some generated password with a good strength, e.g.
+    what you get from `pwgen -s 32 1`). Important for the repo url: this has to be the
+    base URL to which the media paths are added. In the Angewandte's base setup this
+    is https://base.uni-ak.ac.at instead of https://base.uni-ak.ac.at/portfolio (which
+    one might think more accurate of the place where the actual repository lives).
+    Additionally, it also would be nice to provide labels for the institution and the
+    repository by using the `-l` and `-p` options, as well a URL to the institutions'
+    website itself with the `-u` option. Those things can still be later changed through
+    the Django admin interface. They are used for pre-rendering content, as soon
+    as activities or entities are pushed from one of the repositories. Therefore, it is
+    a good idea to make sure this is all set up beforehand.
+    
+    So the following would be a full-fledged command to set up a SourceRepository:
+    ```bash
+    sudo docker-compose exec showroom-django python manage.py create_source_repository -u https://www.dieangewandte.at -l "Universität für Angewandte Kunst Wien" -p "Portfolio" 1 https://base.uni-ak.ac.at GOy4Dq1f0Yftxr3r3G8Twr11K172Krzn  
+    ```
+    
+    Now we can use the new repo id to also create a first institution entity:
+    ```bash
+    sudo docker-compose exec showroom-django python manage.py create_institution 1 "Universität für Angewandte Kunst Wien"  
+    ```
+    
+    The repository ID now has to be set in the _src/showroom/.env_ file as the
+    `DEFAULT_USER_REPO` setting. Also use the returned entity ID to set the
+    `DEFAULT_ENTITY`. If you want several users to be able to edit this entity's
+    showcase, then also set the `SHOWCASE_DEMO_ENTITY_EDITING` to this ID. Additionally,
+    you have to also set the `SHOWCASE_DEMO_USERS` to a list of showcase entity IDs,
+    which are allowed not only to edit their own page but also this one. This should
+    be done as soon as you have your users synced from the repository.
+    
+    Afterwards do a `sudo make reload` to let the new settings become effective
+
+* Adopt your repositories to use the new source repository API key:
+  - in CAS / User Preferences you should set the `SHOWROOM_API_KEY` and the
+    `SHOWROOM_BASE_URL` accordingly. Also set `SYNC_TO_SHOWROOM` to `True`.
+  - in Portfolio there are: 
+    - `SYNC_TO_SHOWROOM` which should be `True`
+    - `SHOWROOM_API_BASE` point to showrooms API root (e.g. https://base.uni-ak.ac.at/showroom/api/v1/ )
+    - `SHOWROOM_API_KEY` with the key from above
+    - `SHOWROOM_REPO_ID` with the repo ID from above
+
 
 
 ### Notes and disclaimers on prod deployments 🚧🤔🤬💡
