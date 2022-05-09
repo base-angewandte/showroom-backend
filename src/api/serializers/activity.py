@@ -98,7 +98,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret.pop('source_repo')
         ret.pop('source_repo_data')
         ret.pop('source_repo_object_id')
-        ret.pop('source_repo_owner_id')
+        source_repo_owner_id = ret.pop('source_repo_owner_id')
         ret.pop('relations_to')
         # set type to activity type (instead of showroom object type) and add keywords
         ret['type'] = instance.activitydetail.activity_type
@@ -141,10 +141,20 @@ class ActivitySerializer(serializers.ModelSerializer):
         #      to use publishing_info
         ret['publisher'] = []
         if instance.belongs_to:
-            publisher = {'name': instance.belongs_to.title}
-            if instance.belongs_to.active:
-                publisher['source'] = instance.belongs_to.showroom_id
-            ret['publisher'].append(publisher)
+            ret['publisher'].append(
+                {
+                    'name': instance.belongs_to.title,
+                    'source': instance.belongs_to.showroom_id,
+                }
+            )
+        else:
+            try:
+                entity = ShowroomObject.objects.get(
+                    source_repo_object_id=source_repo_owner_id
+                )
+                ret['publisher'].append({'name': entity.title})
+            except ShowroomObject.DoesNotExist:
+                pass
         ret['source_institution'] = {
             'label': instance.source_repo.label_institution,
             'url': instance.source_repo.url_institution,
