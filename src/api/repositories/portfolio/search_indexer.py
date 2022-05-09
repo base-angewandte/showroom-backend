@@ -145,7 +145,7 @@ def append_date_range(date_range, dates, date_ranges):
         date_ranges.append((date_from, date_to))
     elif date_from:
         append_date(date_from, dates, date_ranges)
-    else:
+    elif date_to:
         append_date(date_to, dates, date_ranges)
 
 
