@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.db.models import F
+from django.db.models.functions import Least
 
 from api.repositories.portfolio import get_altlabel_collection, get_collection_members
 from api.repositories.portfolio.utils import (
@@ -127,7 +129,26 @@ def render_list_from_activities(activities, username):
         )
         for collection in list_collections
     }
+
+    # order activities by date, but creates duplicates
+    activities = activities.annotate(
+        order_date=Least(
+            'datesearchindex__date',
+            'daterangesearchindex__date_from',
+            'daterangesearchindex__date_to',
+        )
+    ).order_by(F('order_date').desc(nulls_last=True))
+
+    # because of duplictes, we need to keep track if we already
+    # processed an activity
+    done = []
+
     for activity in activities:
+        if activity.id in done:
+            continue
+        else:
+            done.append(activity.id)
+
         typ = activity.activitydetail.activity_type.get('source')
         typ_short = typ.split('/')[-1]
         roles = get_user_roles(activity, username)
