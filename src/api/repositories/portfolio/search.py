@@ -139,7 +139,10 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                         f'Missing search mapping function: {{"{field}": "{map_function}"}}'
                     )
                 continue
-            if type(item.source_repo_data.get('data')) is not dict:
+            if (
+                item.type == ShowroomObject.ACTIVITY
+                and type(item.source_repo_data.get('data')) is not dict
+            ):
                 logger.warning(f'source_repo_date[\'data\'] is not a dict for {item}')
                 continue
             transformed = transform_func(item, lang)
