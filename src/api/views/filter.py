@@ -95,8 +95,8 @@ label_activity_types = {
 }
 
 label_institutions = {
-    'en': 'Institution',
-    'de': 'Institution',
+    'en': 'Institutions',
+    'de': 'Institutionen',
 }
 
 
@@ -166,7 +166,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
             'id': 'showroom_type',
             'type': 'chips',
             'freetext_allowed': False,
-            'label': 'Showroom type' if lang == 'en' else 'Showroom-Typ',
+            'label': 'Showroom types' if lang == 'en' else 'Showroom-Typ',
             'hidden': False,
             'options': [
                 {
