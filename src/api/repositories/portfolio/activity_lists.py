@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.db.models import F
+from django.db.models.functions import Greatest
 
 from api.repositories.portfolio import get_altlabel_collection, get_collection_members
 from api.repositories.portfolio.utils import (
@@ -18,7 +20,8 @@ list_collections = [
     'fellowship_visiting_affiliation',
     'exhibition',
     'teaching',
-    'conference_symposium',
+    'conference',  # used for logic, while next collection ...
+    'conference_symposium',  # ... is only used for the label
     'conference_contribution',
     'architecture',
     'audio',
@@ -127,7 +130,26 @@ def render_list_from_activities(activities, username):
         )
         for collection in list_collections
     }
+
+    # order activities by date, but creates duplicates
+    activities = activities.annotate(
+        order_date=Greatest(
+            'datesearchindex__date',
+            'daterangesearchindex__date_from',
+            'daterangesearchindex__date_to',
+        )
+    ).order_by(F('order_date').desc(nulls_last=True))
+
+    # because of duplictes, we need to keep track if we already
+    # processed an activity
+    done = []
+
     for activity in activities:
+        if activity.id in done:
+            continue
+        else:
+            done.append(activity.id)
+
         typ = activity.activitydetail.activity_type.get('source')
         typ_short = typ.split('/')[-1]
         roles = get_user_roles(activity, username)
@@ -213,7 +235,7 @@ def render_list_from_activities(activities, username):
             activity_list['teaching']['teaching'].append(activity)
         # 7. conferences & symposia
         if (
-            typ in types['conference_symposium']
+            typ in types['conference']
             and len(roles) > 0
             and (
                 typ not in types['science_to_public']

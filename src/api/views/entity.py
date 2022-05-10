@@ -192,7 +192,7 @@ class EntityViewSet(viewsets.GenericViewSet):
 
             # update entity
             instance.entitydetail.list_ordering = data
-            instance.save()
+            instance.entitydetail.save()
             instance.entitydetail.render_list()
 
             return Response(
