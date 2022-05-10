@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db.models import F
-from django.db.models.functions import Least
+from django.db.models.functions import Greatest
 
 from api.repositories.portfolio import get_altlabel_collection, get_collection_members
 from api.repositories.portfolio.utils import (
@@ -132,7 +132,7 @@ def render_list_from_activities(activities, username):
 
     # order activities by date, but creates duplicates
     activities = activities.annotate(
-        order_date=Least(
+        order_date=Greatest(
             'datesearchindex__date',
             'daterangesearchindex__date_from',
             'daterangesearchindex__date_to',
