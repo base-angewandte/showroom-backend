@@ -106,6 +106,37 @@ def get_static_filter_label(filter_id, lang=settings.LANGUAGE_CODE):
     )
 
 
+def get_keyword_filter_from_activities(activities, lang):
+    # TODO: keyword filter and search should be generally reworked to account for
+    #       custom keywords vs vocabulary based keywords (i.e. use the source as id)
+    keyword_ids = set()
+    keyword_labels = {}
+    for activity in activities.iterator(chunk_size=500):
+        for kw in activity.source_repo_data['keywords']:
+            # so far we use the default language for the keyword IDs (see TODO above)
+            kw_id = kw['label'][settings.LANGUAGE_CODE]
+            keyword_ids.add(kw_id)
+            if kw_id not in keyword_labels:
+                keyword_labels[kw_id] = kw['label'][lang]
+            elif keyword_labels[kw_id] != kw['label'][lang]:
+                # in case of duplicated keywords with different labels
+                # keywords from the controlled vocabulary always have precedence
+                if 'source' in kw:
+                    keyword_labels[kw_id] = kw['label'][lang]
+
+    # keywords should be sortable by localised value
+    keywords = sorted((keyword_labels[kw_id], kw_id) for kw_id in keyword_ids)
+
+    return {
+        'id': 'keyword',
+        'type': 'chips',
+        'label': label_keywords[lang],
+        'hidden': False,
+        'freetext_allowed': False,
+        'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
+    }
+
+
 def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
     """Returns the filter definitions for keywords and activity type
     searches."""
@@ -116,19 +147,7 @@ def get_dynamic_filters(lang=settings.LANGUAGE_CODE, use_cache=True):
         activities = ShowroomObject.active_objects.filter(
             type=ShowroomObject.ACTIVITY
         ).exclude(source_repo_data__keywords=None)
-        keywords = set()
-        for activity in activities.iterator(chunk_size=500):
-            for kw in activity.source_repo_data['keywords']:
-                # keywords should be sortable by localised value
-                keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
-        keyword_filter = {
-            'id': 'keyword',
-            'type': 'chips',
-            'label': label_keywords[lang],
-            'hidden': False,
-            'freetext_allowed': False,
-            'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
-        }
+        keyword_filter = get_keyword_filter_from_activities(activities, lang)
 
         activities = (
             ShowroomObject.active_objects.filter(type=ShowroomObject.ACTIVITY)
@@ -198,19 +217,7 @@ def get_dynamic_entity_filters(entity, lang=settings.LANGUAGE_CODE):
             belongs_to=entity,
             type=ShowroomObject.ACTIVITY,
         ).exclude(source_repo_data__keywords=None)
-        keywords = set()
-        for activity in activities.iterator(chunk_size=500):
-            for kw in activity.source_repo_data['keywords']:
-                # keywords should be sortable by localised value
-                keywords.add((kw['label'][lang], kw['label'][settings.LANGUAGE_CODE]))
-        keyword_filter = {
-            'id': 'keyword',
-            'type': 'chips',
-            'label': label_keywords[lang],
-            'hidden': False,
-            'freetext_allowed': False,
-            'options': [{'id': kw[1], 'label': kw[0]} for kw in sorted(keywords)],
-        }
+        keyword_filter = get_keyword_filter_from_activities(activities, lang)
 
         activities = (
             ShowroomObject.active_objects.filter(

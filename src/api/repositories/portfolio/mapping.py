@@ -264,6 +264,7 @@ mapping = {
             'texts_with_types',
             'funding',
             'funding_category',
+            'status',
         ],
         'list': ['list_contributors'],
         # for entries of category research project no location map should be shown

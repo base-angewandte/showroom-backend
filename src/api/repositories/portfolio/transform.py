@@ -99,6 +99,7 @@ def transform_field(field, data):
         'publisher_place_date': get_publisher_place_date,
         'software_developers': get_software_developers,
         'software_version': get_software_version,
+        'status': get_status,
         'texts_with_types': get_texts_with_types,
         'title_of_event': get_title_of_event,
         'type': get_type,
@@ -1193,15 +1194,28 @@ def get_open_source_license(data):
         sw_license = data.get('data').get('open_source_license')
     except AttributeError:
         return None
-    if not sw_license:
+    if not sw_license or type(sw_license) is not dict:
+        return None
+    license_labels = sw_license.get('label')
+    if not license_labels or type(license_labels) is not dict:
         return None
 
     transformed = {}
     for lang in LANGUAGES:
         transformed[lang] = {
-            'label': get_preflabel('open_source_license', lang=lang),
-            'data': sw_license,
+            'label': get_preflabel('open_source_license', lang=lang).title(),
+            'data': license_labels.get(lang),
         }
+        # if there was no translation we take the english default. if there is none,
+        # we omit the whole info, but log a warning
+        if not transformed[lang]['data']:
+            if default_label := license_labels.get('en'):
+                transformed[lang]['data'] = default_label
+            else:
+                logger.warning(
+                    f'No english default available for open source license: {sw_license}'
+                )
+                return None
     return transformed
 
 
@@ -1479,6 +1493,26 @@ def get_software_version(data):
             'data': version,
         }
 
+    return transformed
+
+
+def get_status(data):
+    try:
+        status = data.get('data').get('status')
+    except AttributeError:
+        return None
+    if not status or type(status) is not dict:
+        return None
+    status_labels = status.get('label')
+    if not status_labels or type(status_labels) is not dict:
+        return None
+
+    transformed = {}
+    for lang in LANGUAGES:
+        transformed[lang] = {
+            'label': get_preflabel('status', lang=lang).capitalize(),
+            'data': status_labels.get(lang),
+        }
     return transformed
 
 

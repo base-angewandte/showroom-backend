@@ -81,6 +81,10 @@ SITE_URL=https://url/
 ## Default repository id that users will be associated with
 # DEFAULT_USER_REPO=
 
+## Style to slugify entity names into prefixes for IDs, using python_slugify.
+## Supported types: default, unicode, translit  (  default setting: translit)
+# DEFAULT_SLUGIFY_STYLE=translit
+
 ## The default limit for a search, if now explicit limit parameter is set
 # SEARCH_LIMIT=100
 
@@ -109,4 +113,4 @@ SITE_URL=https://url/
 ## If you have Sentry configured for this instance, set the following parameters
 # SENTRY_DSN=
 # SENTRY_ENVIRONMENT=development
-# SENTRY_TRACES_SAMPLE_RATE=1.0
+# SENTRY_TRACES_SAMPLE_RATE=0.2
