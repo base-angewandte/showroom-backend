@@ -20,7 +20,8 @@ list_collections = [
     'fellowship_visiting_affiliation',
     'exhibition',
     'teaching',
-    'conference_symposium',
+    'conference',  # used for logic, while next collection ...
+    'conference_symposium',  # ... is only used for the label
     'conference_contribution',
     'architecture',
     'audio',
@@ -234,7 +235,7 @@ def render_list_from_activities(activities, username):
             activity_list['teaching']['teaching'].append(activity)
         # 7. conferences & symposia
         if (
-            typ in types['conference_symposium']
+            typ in types['conference']
             and len(roles) > 0
             and (
                 typ not in types['science_to_public']
