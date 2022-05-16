@@ -1,0 +1,5 @@
+# compile this file with 'pip-compile requirements.in'
+myst-parser
+sphinx
+sphinx-rtd-theme
+sphinx-rtd-dark-mode

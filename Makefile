@@ -31,3 +31,8 @@ start-dev:  ## start containers for local development
 	docker-compose up -d \
 		${PROJECT_NAME}-redis \
 		${PROJECT_NAME}-postgres
+
+.PHONY: build-docs
+build-docs:  ## build documentation with sphinx to docs/build folder
+	docker build -t showroom-docs ./docker/docs
+	docker run -it --rm -v `pwd`/docs:/docs -v `pwd`/src:/src showroom-docs bash -c "make clean html"
