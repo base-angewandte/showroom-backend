@@ -368,6 +368,8 @@ LOG_DIR = os.path.join(BASE_DIR, '..', 'logs')
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
+PUBLISHING_LOG_ROTATION_DAYS = env.int('PUBLISHING_LOG_ROTATION_DAYS', default=7)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -379,6 +381,7 @@ LOGGING = {
         'simple_with_time': {
             'format': '%(levelname)s %(asctime)s %(message)s',
         },
+        'publishing_info': {'format': '%(asctime)s %(message)s'},
     },
     'handlers': {
         'null': {
@@ -413,6 +416,14 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple_with_time',
         },
+        'publishing_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'publishing.log'),
+            'formatter': 'publishing_info',
+            'when': 'D',
+            'interval': PUBLISHING_LOG_ROTATION_DAYS,
+        },
     },
     'loggers': {
         '': {
@@ -433,6 +444,11 @@ LOGGING = {
         'rq.worker': {
             'handlers': ['rq_console', 'mail_admins'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'publishing_log': {
+            'handlers': ['publishing_log'],
+            'level': 'INFO',
             'propagate': False,
         },
     },

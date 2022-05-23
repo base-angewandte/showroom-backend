@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from django_rq import get_queue
@@ -19,6 +20,8 @@ from api.repositories.user_preferences.sync import pull_user_data
 from api.serializers.activity import ActivityRelationSerializer, ActivitySerializer
 from api.serializers.generic import Responses
 from core.models import ContributorActivityRelations, ShowroomObject
+
+publishing_log = logging.getLogger('publishing_log')
 
 
 @extend_schema_view(
@@ -55,6 +58,7 @@ class ActivityViewSet(
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        already_published = False
         try:
             instance, created = ShowroomObject.objects.get_or_create(
                 source_repo_object_id=serializer.validated_data[
@@ -64,6 +68,8 @@ class ActivityViewSet(
                 defaults={'type': ShowroomObject.ACTIVITY},
             )
             serializer.instance = instance
+            if not created and instance.active:
+                already_published = True
         except ShowroomObject.MultipleObjectsReturned:
             return Response(
                 {
@@ -73,6 +79,11 @@ class ActivityViewSet(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer.save(date_synced=timezone.now(), active=True)
+
+        if not already_published:
+            publishing_log.info(
+                f'{serializer.instance.id} published by {serializer.validated_data.get("source_repo_owner_id")}'
+            )
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
@@ -205,6 +216,8 @@ class ActivityViewSet(
         activity.deactivate()
         if entity and entity.active:
             entity.entitydetail.enqueue_list_render_job()
+
+        publishing_log.info(f'{activity.id} unpublished')
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
