@@ -167,7 +167,7 @@ class ActivityViewSet(
             'updated': [],
             'errors': [],
         }
-        if instance:
+        if not created and already_published:
             response['updated'].append(
                 {
                     'id': serializer.validated_data['source_repo_object_id'],
