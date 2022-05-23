@@ -80,10 +80,12 @@ class ActivityViewSet(
             )
         serializer.save(date_synced=timezone.now(), active=True)
 
+        # log the publication activity in our separate publishing.log
+        pub_user = serializer.validated_data.get('source_repo_owner_id')
         if not already_published:
-            publishing_log.info(
-                f'{serializer.instance.id} published by {serializer.validated_data.get("source_repo_owner_id")}'
-            )
+            publishing_log.info(f'{serializer.instance.id} published by {pub_user}')
+        else:
+            publishing_log.info(f'{serializer.instance.id} updated by {pub_user}')
 
         # now fill the ActivityDetail belonging to this ShowroomObject
         repo_data = serializer.instance.source_repo_data
