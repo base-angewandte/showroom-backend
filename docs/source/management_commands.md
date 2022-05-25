@@ -1,7 +1,7 @@
 # Management commands
 
 Each command can be executed by running
-`docker-compose exec portfolio-django python manage.py <command>`
+`docker-compose exec showroom-django python manage.py <command>`
 or if running the project locally by executing `python manage.py <command>` in `src`.
 
 To get some quick usage info on the shell, use `python manage.py help <command>`.
