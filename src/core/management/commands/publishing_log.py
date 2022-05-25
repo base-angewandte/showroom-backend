@@ -32,6 +32,12 @@ def get_compressed_logfiles():
     return [f for f in get_logfiles() if f.endswith('.gz')]
 
 
+def get_files_to_compress():
+    return [
+        f for f in get_logfiles() if not f.endswith('.gz') and f != 'publishing.log'
+    ]
+
+
 class Command(BaseCommand):
     help = 'View and maintain the publishing log'
 
@@ -113,7 +119,15 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('No files past retention date'))
 
         elif mode == 'compress':
-            print('not yet implemented')  # TODO
+            files = get_files_to_compress()
+            files.sort()
+            for file in files:
+                path = f'{settings.LOG_DIR}/{file}'
+                subprocess.run(['gzip', path])  # nosec: only using filenames to gzip
+            if files:
+                self.stdout.write(f'compressed {len(files)} files')
+            else:
+                self.stdout.write('no uncompressed rotated log files found')
 
         elif mode == 'retention':
             files_past_retention = get_files_past_retention()
