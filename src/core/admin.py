@@ -20,7 +20,7 @@ class SourceRepoAdmin(admin.ModelAdmin):
 
 class ShowroomObjectAdmin(admin.ModelAdmin):
     list_display = (
-        'id',
+        'showroom_id',
         'type',
         'title',
         'subtext',
@@ -42,8 +42,59 @@ class ShowroomObjectAdmin(admin.ModelAdmin):
     )
 
 
+class ActivityDetailAdmin(admin.ModelAdmin):
+    list_display = (
+        'showroom_id',
+        'title',
+        'activity_type_label',
+        'keywords',
+        'has_featured_medium',
+    )
+    search_fields = (
+        'showroom_object__id',
+        'showroom_object__title',
+        'activity_type',
+        'keywords',
+    )
+
+    def showroom_id(self, obj):
+        return obj.showroom_object.showroom_id
+
+    def title(self, obj):
+        return obj.showroom_object.title
+
+    def activity_type_label(self, obj):
+        if not obj.activity_type or type(obj.activity_type) is not dict:
+            return None
+        label = obj.activity_type.get('label')
+        return label
+
+    def has_featured_medium(self, obj):
+        return True if obj.featured_medium else False
+
+
+class EntityDetailAdmin(admin.ModelAdmin):
+    list_display = (
+        'showroom_id',
+        'title',
+        'expertise',
+        'photo',
+    )
+    search_fields = (
+        'showroom_object__id',
+        'showroom_object__title',
+        'expertise',
+    )
+
+    def showroom_id(self, obj):
+        return obj.showroom_object.showroom_id
+
+    def title(self, obj):
+        return obj.showroom_object.title
+
+
 admin.site.register(SourceRepository, SourceRepoAdmin)
 admin.site.register(ShowroomObject, ShowroomObjectAdmin)
-admin.site.register(ActivityDetail)
-admin.site.register(EntityDetail)
+admin.site.register(ActivityDetail, ActivityDetailAdmin)
+admin.site.register(EntityDetail, EntityDetailAdmin)
 admin.site.register(Media)
