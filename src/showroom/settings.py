@@ -369,7 +369,7 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 PUBLISHING_LOG_ROTATION_DAYS = env.int('PUBLISHING_LOG_ROTATION_DAYS', default=30)
-PUBLISHING_LOG_RETENTION = env.int('PUBLISHING_LOG_RETENTION', default=2492)  # 365 * 7
+PUBLISHING_LOG_RETENTION = env.int('PUBLISHING_LOG_RETENTION', default=2555)  # 365 * 7
 
 LOGGING = {
     'version': 1,

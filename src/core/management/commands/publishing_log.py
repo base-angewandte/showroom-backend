@@ -19,10 +19,11 @@ def get_files_past_retention():
     rotation = settings.PUBLISHING_LOG_ROTATION_DAYS
     retention = settings.PUBLISHING_LOG_RETENTION
     files_past_retention = []
+    threshold = time.time() - (rotation + retention) * 24 * 3600
     for file in get_logfiles():
         path = f'{settings.LOG_DIR}/{file}'
         mtime = os.path.getmtime(path)
-        if mtime < time.time() - (rotation + retention) * 24 * 3600:
+        if mtime < threshold:
             files_past_retention.append(file)
     return files_past_retention
 
