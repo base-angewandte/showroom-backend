@@ -7,6 +7,30 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 
+def get_logfiles():
+    return [
+        file
+        for file in os.listdir(settings.LOG_DIR)
+        if file.startswith('publishing.log')
+    ]
+
+
+def get_files_past_retention():
+    rotation = settings.PUBLISHING_LOG_ROTATION_DAYS
+    retention = settings.PUBLISHING_LOG_RETENTION
+    files_past_retention = []
+    for file in get_logfiles():
+        path = f'{settings.LOG_DIR}/{file}'
+        mtime = os.path.getmtime(path)
+        if mtime < time.time() - (rotation + retention) * 24 * 3600:
+            files_past_retention.append(file)
+    return files_past_retention
+
+
+def get_compressed_logfiles():
+    return [f for f in get_logfiles() if f.endswith('.gz')]
+
+
 class Command(BaseCommand):
     help = 'View and maintain the publishing log'
 
@@ -63,14 +87,10 @@ class Command(BaseCommand):
                 self.stdout.write(f'No publishing activity logged for {activity}.')
 
         elif mode == 'stats':
-            logfiles = [
-                file
-                for file in os.listdir(settings.LOG_DIR)
-                if file.startswith('publishing.log')
-            ]
+            logfiles = get_logfiles()
             logfiles_count = len(logfiles)
             current_logfile_found = 'publishing.log' in logfiles
-            compressed_logfiles_count = len([f for f in logfiles if f.endswith('.gz')])
+            compressed_logfiles_count = len(get_compressed_logfiles())
             uncompressed_count = logfiles_count - compressed_logfiles_count
             if current_logfile_found:
                 uncompressed_count -= 1
@@ -81,14 +101,7 @@ class Command(BaseCommand):
             self.stdout.write(f'Compressed logfiles: {compressed_logfiles_count}')
             self.stdout.write(f'Rotated uncompressed logfiles: {uncompressed_count}')
 
-            rotation = settings.PUBLISHING_LOG_ROTATION_DAYS
-            retention = settings.PUBLISHING_LOG_RETENTION
-            files_past_retention = []
-            for file in logfiles:
-                path = f'{settings.LOG_DIR}/{file}'
-                mtime = os.path.getmtime(path)
-                if mtime < time.time() - (rotation + retention) * 24 * 3600:
-                    files_past_retention.append(file)
+            files_past_retention = get_files_past_retention()
             if files_past_retention:
                 self.stdout.write(
                     self.style.WARNING('There are files past the retention date')
