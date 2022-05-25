@@ -1,5 +1,6 @@
 import os
 import subprocess  # nosec: needed to run zgrep
+import time
 from re import match
 
 from django.conf import settings
@@ -62,7 +63,40 @@ class Command(BaseCommand):
                 self.stdout.write(f'No publishing activity logged for {activity}.')
 
         elif mode == 'stats':
-            print('not yet implemented')  # TODO
+            logfiles = [
+                file
+                for file in os.listdir(settings.LOG_DIR)
+                if file.startswith('publishing.log')
+            ]
+            logfiles_count = len(logfiles)
+            current_logfile_found = 'publishing.log' in logfiles
+            compressed_logfiles_count = len([f for f in logfiles if f.endswith('.gz')])
+            uncompressed_count = logfiles_count - compressed_logfiles_count
+            if current_logfile_found:
+                uncompressed_count -= 1
+
+            self.stdout.write(f'Logfiles: {logfiles_count}')
+            if not current_logfile_found:
+                self.stdout.write(self.style.WARNING('No current logfile found!'))
+            self.stdout.write(f'Compressed logfiles: {compressed_logfiles_count}')
+            self.stdout.write(f'Rotated uncompressed logfiles: {uncompressed_count}')
+
+            rotation = settings.PUBLISHING_LOG_ROTATION_DAYS
+            retention = settings.PUBLISHING_LOG_RETENTION
+            files_past_retention = []
+            for file in logfiles:
+                path = f'{settings.LOG_DIR}/{file}'
+                mtime = os.path.getmtime(path)
+                if mtime < time.time() - (rotation + retention) * 24 * 3600:
+                    files_past_retention.append(file)
+            if files_past_retention:
+                self.stdout.write(
+                    self.style.WARNING('There are files past the retention date')
+                )
+                for file in files_past_retention:
+                    self.stdout.write(file)
+            else:
+                self.stdout.write(self.style.SUCCESS('No files past retention date'))
 
         elif mode == 'compress':
             print('not yet implemented')  # TODO
