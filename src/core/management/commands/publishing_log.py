@@ -115,4 +115,10 @@ class Command(BaseCommand):
             print('not yet implemented')  # TODO
 
         elif mode == 'retention':
-            print('not yet implemented')  # TODO
+            files_past_retention = get_files_past_retention()
+            for file in files_past_retention:
+                path = f'{settings.LOG_DIR}/{file}'
+                self.stdout.write(f'removing {path}')
+                os.remove(path)
+            if not files_past_retention:
+                self.stdout.write('No files past retention date to remove')
