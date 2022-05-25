@@ -116,6 +116,6 @@ SITE_URL=https://url/
 # SENTRY_TRACES_SAMPLE_RATE=0.2
 
 ## Number of days after which the publishing.log gets rotated
-# PUBLISHING_LOG_ROTATION_DAYS=7
+# PUBLISHING_LOG_ROTATION_DAYS=30
 ## Retention period of publishing log in days (default: 365 * 7)
 # PUBLISHING_LOG_RETENTION=2492
