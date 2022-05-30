@@ -38,7 +38,21 @@ def index_activity(activity):
                         if ln == lang:
                             indexed[lang].append(text_data.get('text'))
 
-    # TODO: should type and keywords be added here as well?
+    # Add type and keywords to activity
+    if (activity_type := data.get('type')) and type(activity_type) is dict:
+        if (label := activity_type.get('label')) and type(label) is dict:
+            for (lang, _lang_label) in settings.LANGUAGES:
+                if text := label.get(lang):
+                    indexed[lang].append(text)
+
+    if (keywords := data.get('keywords')) and type(keywords) is list:
+        for kw in keywords:
+            if type(kw) is not dict:
+                continue
+            if (label := kw.get('label')) and type(label) is dict:
+                for (lang, _lang_label) in settings.LANGUAGES:
+                    if text := label.get(lang):
+                        indexed[lang].append(text)
 
     # Now run type/category-specific indexing functions, in case the data key is set
     if (inner_data := data.get('data')) and type(inner_data) == dict:
