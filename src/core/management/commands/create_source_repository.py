@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.db import IntegrityError
 
 from core.models import SourceRepository
 
@@ -58,16 +59,20 @@ class Command(BaseCommand):
         if options['icon_url']:
             icon = options['icon_url']
 
-        # TODO: catch IntegrityError in case of duplicate id or key and provide message
-        sr = SourceRepository.objects.create(
-            id=options['id'],
-            label_institution=label,
-            label_repository=label_repo,
-            url_institution=url_institution,
-            url_repository=url_repo,
-            icon=icon,
-            api_key=options['api_key'],
-        )
+        try:
+            sr = SourceRepository.objects.create(
+                id=options['id'],
+                label_institution=label,
+                label_repository=label_repo,
+                url_institution=url_institution,
+                url_repository=url_repo,
+                icon=icon,
+                api_key=options['api_key'],
+            )
+        except IntegrityError as err:
+            raise CommandError(
+                f'Conflict with existing source repository: {err}'
+            ) from err
 
         self.stdout.write(
             self.style.SUCCESS(
