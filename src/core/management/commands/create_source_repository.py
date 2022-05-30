@@ -10,14 +10,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('id', type=str, help='The repository ID (integer)')
         parser.add_argument(
-            'repo_url',
-            type=str,
-            help='The repository base url, e.g. https://base.uni-ak.ac.at',
-        )
-        parser.add_argument(
             'api_key',
             type=str,
             help='The key used by the repository to authenticate against showroom.',
+        )
+        parser.add_argument(
+            'label',
+            type=str,
+            help='The name/label of this institution.',
+        )
+        parser.add_argument(
+            'repo_url',
+            type=str,
+            help='The repository base url, e.g. https://base.uni-ak.ac.at',
         )
         parser.add_argument(
             '-u',
@@ -29,12 +34,6 @@ class Command(BaseCommand):
             '-i', '--icon_url', type=str, help='The icon URL. Default: None'
         )
         parser.add_argument(
-            '-l',
-            '--label',
-            type=str,
-            help='The name/label of this institution. Default: None',
-        )
-        parser.add_argument(
             '-p',
             '--label_repo',
             type=str,
@@ -42,9 +41,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if not options['label']:
-            raise CommandError('The institution name/label has to be set (-l, --label)')
-
         label = options['label']
         label_repo = label
         if options['label_repo']:
