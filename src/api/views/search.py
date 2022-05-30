@@ -380,6 +380,10 @@ def get_daterange_filter(values, lang):
                 Q(datesearchindex__date__range=[d_from, d_to])
                 | Q(daterangesearchindex__date_from__range=[d_from, d_to])
                 | Q(daterangesearchindex__date_to__range=[d_from, d_to])
+                | Q(
+                    daterangesearchindex__date_from__lte=d_from,
+                    daterangesearchindex__date_to__gte=d_to,
+                )
             )
         if not flt:
             flt = add_flt
