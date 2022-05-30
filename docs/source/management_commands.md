@@ -6,9 +6,7 @@ or if running the project locally by executing `python manage.py <command>` in `
 
 To get some quick usage info on the shell, use `python manage.py help <command>`.
 
-## Available Commands
-
-### `create_institution`
+## `create_institution`
 
 This command is used to create an empty institution object.
 
@@ -20,13 +18,13 @@ The command will print the new showroom ID of this institution, which has to be 
 in the setup of the _Showroom Frontend_ as well as to set a default institution for
 the `initial` endpoint. See [](./install.md) for more context on how/why it is used.
 
-#### Arguments
+### Arguments
 
 - `repo_id` - the ID of the SourceRepository this institution should be associated with
 - `title` - the title of the institution (will be slugified into its showroom ID)
 
 
-### `create_source_repository`
+## `create_source_repository`
 
 This command is used to create a _SourceRepository_ with an API key, that can be used
 to push activities and entities to _Showroom_.
@@ -43,7 +41,7 @@ see [](./install.md).
 > not displayed in the _Showroom Frontend_, one reason could be a mis-configured
 > `repo_url`.
 
-#### Arguments
+### Arguments
 
 Positional parameters:
 
@@ -63,7 +61,7 @@ Options:
 - `-p`, `--label_repo` -  the name/label of this repository. Default: `label`
 
 
-### `publishing_log`
+## `publishing_log`
 
 This command is used to view and maintain the activity publishing log.
 
@@ -80,7 +78,7 @@ The `compress` mode will apply a gzip compression on all rotated files, which ha
 not yet been compressed. In `retention` mode all log files are deleted, that are older
 than the configured retention period.
 
-#### Arguments
+### Arguments
 
 - `-m`, `--mode` - the mode to use, as described above
 - `-a`, `--activity-id` - if the view mode is used, this specifies the activity ID
