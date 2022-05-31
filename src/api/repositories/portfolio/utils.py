@@ -113,7 +113,7 @@ def get_user_role_dicts(activity, username):
 
 def get_usernames_from_roles(activity):
     usernames = set()
-    data = activity.source_repo_data['data']
+    data = activity.source_repo_data.get('data')
     if not data or type(data) is not dict:
         return usernames
     for role_field in role_fields:
