@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     'django_cas_ng',
     'django_extensions',
     'rest_framework',
+    'rest_framework_api_key',
     'drf_spectacular',
     'django_rq',
     'corsheaders',
