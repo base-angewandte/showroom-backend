@@ -7,7 +7,7 @@ from .models import PluginAPIKey
 
 
 class PluginAPIKeyAdmin(APIKeyModelAdmin):
-    pass
+    list_display = [*APIKeyModelAdmin.list_display, 'active', 'plugins', 'allowed_ips']
 
 
 admin.site.register(PluginAPIKey, PluginAPIKeyAdmin)
