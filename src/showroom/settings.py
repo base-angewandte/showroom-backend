@@ -108,6 +108,18 @@ INSTALLED_APPS = [
     'user_preferences',
 ]
 
+
+# API Plugin settings
+
+API_PLUGINS = []
+USE_API_PLUGIN_REPO_SOURCE = env.bool('USE_API_PLUGIN_REPO_SOURCE', default=False)
+
+if USE_API_PLUGIN_REPO_SOURCE:
+    API_PLUGINS.append('repo_source')
+
+
+# Authentication and user repo settings
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'django_cas_ng.backends.CASBackend',
