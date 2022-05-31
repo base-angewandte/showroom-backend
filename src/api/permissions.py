@@ -54,6 +54,10 @@ class HasPluginAPIKey(BaseHasAPIKey):
         key = self.get_key(request)
         api_key = self.model.objects.get_from_key(key)
 
+        # check whether the api key is currently active
+        if not api_key.active:
+            return False
+
         # check whether the api key is allowed to use the specific plugin
         if plugin not in api_key.plugins:
             return False
