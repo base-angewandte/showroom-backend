@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.permissions import HasPluginAPIKey
+from api.serializers.media import MediaSerializer
 from core.models import ShowroomObject
 
 
@@ -17,6 +18,7 @@ class RepoSourceSerializer(serializers.Serializer):
     data = serializers.JSONField(required=False)
     _showroom_id = serializers.CharField()
     _publishing_info = serializers.JSONField()
+    _media = serializers.JSONField()
 
 
 @extend_schema(
@@ -67,5 +69,15 @@ class RepoSourceView(APIView):
                 'showroom_id'
             ] = activity.belongs_to.showroom_id
             ret['_publishing_info']['publisher']['name'] = activity.belongs_to.title
+
+        media = activity.media_set.all()
+        media_entries = []
+        if media:
+            context = {
+                'repo_base': activity.source_repo.url_repository,
+                'request': request,
+            }
+            media_entries = MediaSerializer(media, many=True, context=context).data
+        ret['_media'] = media_entries
 
         return Response(ret, status=200)
