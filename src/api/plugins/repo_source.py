@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.permissions import HasPluginAPIKey
+from api.repositories.portfolio.utils import get_usernames_from_roles
 from api.serializers.media import MediaSerializer
 from core.models import ShowroomObject
 
@@ -19,6 +20,8 @@ class RepoSourceSerializer(serializers.Serializer):
     _showroom_id = serializers.CharField()
     _publishing_info = serializers.JSONField()
     _media = serializers.JSONField()
+    _relations = serializers.JSONField()
+    _entity_mapping = serializers.JSONField()
 
 
 @extend_schema(
@@ -85,5 +88,13 @@ class RepoSourceView(APIView):
             ret['_relations']['to'].append(relation.showroom_id)
         for relation in activity.relations_from.filter(type=ShowroomObject.ACTIVITY):
             ret['_relations']['from'].append(relation.showroom_id)
+
+        ret['_entity_mapping'] = {}
+        for username in get_usernames_from_roles(activity):
+            try:
+                entity = ShowroomObject.objects.get(source_repo_object_id=username)
+                ret['_entity_mapping'][username] = entity.showroom_id
+            except ShowroomObject.DoesNotExist:
+                pass
 
         return Response(ret, status=200)
