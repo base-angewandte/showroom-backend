@@ -80,4 +80,10 @@ class RepoSourceView(APIView):
             media_entries = MediaSerializer(media, many=True, context=context).data
         ret['_media'] = media_entries
 
+        ret['_relations'] = {'to': [], 'from': []}
+        for relation in activity.relations_to.filter(type=ShowroomObject.ACTIVITY):
+            ret['_relations']['to'].append(relation.showroom_id)
+        for relation in activity.relations_from.filter(type=ShowroomObject.ACTIVITY):
+            ret['_relations']['from'].append(relation.showroom_id)
+
         return Response(ret, status=200)
