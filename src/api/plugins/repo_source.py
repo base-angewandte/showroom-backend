@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 
 from api.permissions import HasPluginAPIKey
 from core.models import ShowroomObject
-from general.datetime.utils import format_datetime
 
 
 class RepoSourceSerializer(serializers.Serializer):
@@ -58,8 +57,8 @@ class RepoSourceView(APIView):
         ret['_showroom_id'] = activity.showroom_id
         ret['_publishing_info'] = {
             'publisher': activity.source_repo_owner_id,
-            'date_published': format_datetime(activity.date_created),
-            'date_updated': format_datetime(activity.date_synced),
+            'date_published': activity.date_created,
+            'date_updated': activity.date_synced,
         }
 
         return Response(ret, status=200)
