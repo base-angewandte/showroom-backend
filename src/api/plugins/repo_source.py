@@ -56,9 +56,16 @@ class RepoSourceView(APIView):
         ret = activity.source_repo_data
         ret['_showroom_id'] = activity.showroom_id
         ret['_publishing_info'] = {
-            'publisher': activity.source_repo_owner_id,
+            'publisher': {
+                'repo_source_id': activity.source_repo_owner_id,
+            },
             'date_published': activity.date_created,
             'date_updated': activity.date_synced,
         }
+        if activity.belongs_to:
+            ret['_publishing_info']['publisher'][
+                'showroom_id'
+            ] = activity.belongs_to.showroom_id
+            ret['_publishing_info']['publisher']['name'] = activity.belongs_to.title
 
         return Response(ret, status=200)
