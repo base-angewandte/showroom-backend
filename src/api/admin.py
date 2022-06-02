@@ -1,3 +1,16 @@
-# from django.contrib import admin
+from rest_framework_api_key.admin import APIKeyModelAdmin
+from rest_framework_api_key.models import APIKey
 
-# Register your models here.
+from django.contrib import admin
+
+from .models import PluginAPIKey
+
+
+class PluginAPIKeyAdmin(APIKeyModelAdmin):
+    list_display = [*APIKeyModelAdmin.list_display, 'active', 'plugins', 'allowed_ips']
+
+
+admin.site.register(PluginAPIKey, PluginAPIKeyAdmin)
+# As it would be confusing to have generic API keys next to our specific ones, we'll
+# unregister them from the admin interface
+admin.site.unregister(APIKey)

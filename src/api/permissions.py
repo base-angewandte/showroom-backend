@@ -1,7 +1,9 @@
 from rest_framework import permissions
+from rest_framework_api_key.permissions import BaseHasAPIKey
 
 from django.conf import settings
 
+from api.models import PluginAPIKey
 from core.models import ShowroomObject, SourceRepository
 
 
@@ -43,3 +45,31 @@ class EntityEditPermission(permissions.BasePermission):
         if pk in allowed:
             return True
         return False
+
+
+class HasPluginAPIKey(BaseHasAPIKey):
+    model = PluginAPIKey
+
+    def has_object_permission(self, request, view, plugin) -> bool:
+        key = self.get_key(request)
+        api_key = self.model.objects.get_from_key(key)
+
+        # check whether the api key is currently active
+        if not api_key.active:
+            return False
+
+        # check whether the api key is allowed to use the specific plugin
+        if plugin not in api_key.plugins:
+            return False
+
+        # check whether the client IP is allowed to use this api key
+        if '*' not in api_key.allowed_ips:
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            if ip not in api_key.allowed_ips:
+                return False
+
+        return True

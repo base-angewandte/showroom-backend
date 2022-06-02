@@ -60,6 +60,8 @@ djangorestframework==3.12.2
     # via
     #   -r src/requirements.in
     #   drf-spectacular
+djangorestframework-api-key==2.2.0
+    # via -r src/requirements.in
 drf-spectacular==0.15.1
     # via -r src/requirements.in
 gunicorn==20.0.4

@@ -7,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 
 from django.urls import include, path
 
+from . import plugins
 from .views.activity import ActivityViewSet
 from .views.album import AlbumViewSet
 from .views.autocomplete import AutocompleteViewSet
@@ -40,3 +41,5 @@ urlpatterns = [
         name='swagger-ui',
     ),
 ]
+
+urlpatterns.extend(plugins.get_url_patterns())

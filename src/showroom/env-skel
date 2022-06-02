@@ -119,3 +119,6 @@ SITE_URL=https://url/
 # PUBLISHING_LOG_ROTATION_DAYS=30
 ## Retention period of publishing log in days (default: 365 * 7)
 # PUBLISHING_LOG_RETENTION=2555
+
+## To activate any of the following API plugins, set these to True
+# USE_API_PLUGIN_REPO_SOURCE=False
