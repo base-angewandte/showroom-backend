@@ -25,11 +25,11 @@ backend, and how to set it up.
 
 The rest of the sections give you a little more insight into how the
 :doc:`configuration` works in detail, the :doc:`management_commands` you can use,
-some context for the :doc:`rest_api` and a few words on the :doc:`lists_logic`, that
-is used to create sub-structured lists of activities for entity pages. Also the
-:doc:`search_logic` section explains how search works in *Showroom* and it also
-contains the source definition of all available filters and how they are supposed
-to work.
+some context for the :doc:`rest_api` and the available :doc:`api_plugins`, a few words
+on the :doc:`lists_logic`, that is used to create sub-structured lists of activities for
+entity pages. Also the :doc:`search_logic` section explains how search works in
+*Showroom* and it also contains the source definition of all available filters and how
+they are supposed to work.
 
 .. toctree::
    :maxdepth: 2
@@ -40,5 +40,6 @@ to work.
    configuration
    management_commands
    rest_api
+   api_plugins
    lists_logic
    search_logic

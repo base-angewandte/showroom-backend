@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_ipv46_address
 from django.db import models
 
+available_plugins = ', '.join(settings.API_PLUGINS)
+
 
 def get_default_allowed_ips():
     return ['*']
@@ -40,7 +42,7 @@ class PluginAPIKey(AbstractAPIKey):
     active = models.BooleanField(default=True)
     plugins = models.JSONField(
         default=list,
-        help_text=f'JSON list of plugins that can be used with this key. Available plugins: {settings.API_PLUGINS}',
+        help_text=f'JSON list of plugins that can be used with this key. Available plugins: {available_plugins}',
         validators=[validate_plugins],
         blank=True,
     )
