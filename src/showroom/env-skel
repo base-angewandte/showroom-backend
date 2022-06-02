@@ -29,17 +29,19 @@ SITE_URL=https://url/
 # DJANGO_SUPERUSERS=(username1,username2)
 
 ## The base url for the CAS server, e.g. https://your.base.domain/cas/
+## default: f'{SITE_URL}cas/'
 # CAS_SERVER=
 ## Wherever the CAS server should redirect to after successful auth, e.g. /showroom
+## default: FORCE_SCRIPT_NAME or '/'
 # CAS_REDIRECT_URL=
 
 ## In a production setup you should set up SMTP account to get notifications
 # EMAIL_HOST_USER=
 # EMAIL_HOST_PASSWORD=
-# EMAIL_HOST=
-# EMAIL_PORT=
-# EMAIL_USE_TLS=
-# EMAIL_USE_LOCALTIME=
+# EMAIL_HOST=localhost
+# EMAIL_PORT=25
+# EMAIL_USE_TLS=False
+# EMAIL_USE_LOCALTIME=True
 # EMAIL_SUBJECT_PREFIX=[showroom]
 
 ## The domain that should be used for session cookies. Leave empty for a
@@ -47,7 +49,7 @@ SITE_URL=https://url/
 # SESSION_COOKIE_DOMAIN=
 
 ## Set up CSRF and CORS settings here. For a local development server you
-## might want to set CSRF_TRUSTED_ORIGINS to localhost
+## might want to set CSRF_TRUSTED_ORIGINS to: localhost,127.0.0.1
 # CSRF_COOKIE_DOMAIN=
 # CSRF_TRUSTED_ORIGINS=
 # CORS_ALLOW_CREDENTIALS=False
@@ -107,7 +109,7 @@ SITE_URL=https://url/
 ## listed in the above SHOWCASE_DEMO_USERS
 # SHOWCASE_DEMO_ENTITY_EDITING=
 
-## Number of seconds after which entitiy jobs should be scheduled
+## Number of seconds after which entity jobs should be scheduled
 # WORKER_DELAY_ENTITY=10
 
 ## If you have Sentry configured for this instance, set the following parameters
