@@ -124,3 +124,9 @@ SITE_URL=https://url/
 
 ## To activate any of the following API plugins, set these to True
 # USE_API_PLUGIN_REPO_SOURCE=False
+
+## Settings for static documentation folder that is protected by HTTP Basic Auth
+## DOCS_USER and DOCS_PASSWORD have to be set in order to gain access
+# DOCS_USER=
+# DOCS_PASSWORD=
+# DOCS_URL=docs/

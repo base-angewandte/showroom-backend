@@ -37,6 +37,7 @@ urlpatterns = [
         name='cas_ng_proxy_callback',
     ),
     path('api/', include('api.urls')),
+    path(settings.DOCS_URL, include('docs.urls')),
 ]
 
 if settings.DEBUG:

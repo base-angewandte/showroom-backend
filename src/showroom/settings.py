@@ -106,7 +106,18 @@ INSTALLED_APPS = [
     'general',
     'api',
     'user_preferences',
+    'docs',
 ]
+
+
+# Documentation directory settings
+
+DOCS_USER = env('DOCS_USER', default=None)
+DOCS_PASSWORD = env('DOCS_PASSWORD', default=None)
+
+DOCS_REALM = 'base Showroom Backend\'s Documentation'
+DOCS_ROOT = os.path.join(BASE_DIR, '..', 'docs', 'build', 'html')  # noqa: F405
+DOCS_URL = env('DOCS_URL', default='docs/')
 
 
 # API Plugin settings
