@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     'general',
     'api',
     'user_preferences',
+    'docs',
 ]
 
 
