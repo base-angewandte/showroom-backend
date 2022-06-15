@@ -161,3 +161,7 @@ in Showroom.
 ### Data flow
 
 > TODO!
+
+![Data Flow in the Showroom Ecosystem](data_flow.svg)
+(full-size image: [](data_flow.svg)
+bpmn source: [](data_flow.bpmn))
