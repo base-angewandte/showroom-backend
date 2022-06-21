@@ -160,7 +160,15 @@ in Showroom.
 
 ### Data flow
 
-> TODO!
+The following BPMN diagram shows the process (and data) flows, happening between
+the different components of the Portfolio/Showroom ecosystem. The aim here is not to
+describe any flows within a component, but give an overview of which actions in which
+components trigger which API calls and worker jobs, based on data that has to be
+(re-)rendered or in other ways processed.
+
+Note that user interaction with Showroom Backend itself (through the Showroom Frontend),
+is not listed here. This is because all direct user interactions with Showroom should
+be able to be handled without interaction with other systems.
 
 ![Data Flow in the Showroom Ecosystem](data_flow.svg)
 (full-size image: [](data_flow.svg)
