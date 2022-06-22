@@ -152,10 +152,311 @@ drawio source: [](showroom-model-classes.drawio))
 
 What this model does not show are the transformations from an activity's source data
 format in the repository (e.g. as it is stored in _Portfolio_) to how it is stored
+in Showroom. This will be elaborated in the next section.
+
+### Data transformations
+
+When a repository pushes one of its entries to Showroom, it has to be transformed into
+a _ShowroomObject_ of the type `activity`. In Showroom all published entries from
+repositories are framed as activities which belong to a user, which is linked in
+the activities, if they also have activated their Showroom user page. Those activities
+then fall into different categories, like "document/publication", "exhibition", "audio",
+"research project", or one of the many more available categories.
+
+Depending on which category this activity falls into, it should be displayed differently
 in Showroom.
 
-> TODO: transform internal requirements docs to separate chapter containing a definition
-> of data transformations from Portfolio to Showroom
+While the Showroom Frontend is finally responsible for displaying the results, the
+Showroom Backend is responsible for already preparing the data to be displayed, so that
+that most of the needed transformations are done already on creation/update of an
+activity, and the data is ready for the response, whenever a client requests the
+activity.
+
+So, while the original data from the repository will be stored on the _ShowroomObject_
+in the `source_repo_data` property, the following properties should already hold the
+data as it is displayed by the Showroom Frontend:
+
+* `title`
+* `subtext`
+* `primary_details`
+* `secondary_details`
+* `list`
+* `locations`
+
+The following subsections list which of the properties from the repository data should
+be transformed into which of those ShowroomObject properties, based on which category /
+activity type they fall in.
+
+Below these sections we provide a bit more detail on how those transformations are
+supposed to work.
+
+#### person
+
+A ShowroomObject of the type person (usually pushed/pulled from the user repository).
+
+* `title` contains:
+  - name, surname
+* `subtext` contains:
+  - position, title
+* `pimary_details` contains:
+  - affiliation
+  - faculty
+  - contact details
+  - skills and expertise
+  - GND, VIAF, ORCID
+  - e-mail
+  - website
+* `secondary_details` contains:
+  - short biography
+* `list` contains:
+  - all the person's activities, based on the [](./lists_logic.md)
+* `location` contains:
+  - the person's office address
+
+#### \_\_none\_\_
+
+If the type is not set in the entry, or if it is a type that cannot be linked to any of
+the following concepts.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - keywords
+* `secondary_details` contains:
+    - texts with types
+* `list` stays empty
+* `location` stays empty
+
+#### architecture
+
+Includes all entries belonging to a type listed in the
+[collection_architecture](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_architecture)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - architecture
+    - date, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - material, format
+    - dimensions
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+
+#### audio
+
+Includes all entries belonging to a type listed in the
+[collection_audio](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_audio)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - authors
+    - artists
+    - date, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - material, format
+    - duration
+    - language
+* `list` contains:
+    - contributors
+    - published in
+* `location` should not be displayed for this type of activity
+
+#### awards and grants
+
+Includes all entries belonging to a type listed in the
+[collection_awards_and_grants](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_awards_and_grants)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - winners
+    - granted by
+    - award date
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - category
+    - jury
+    - arward ceremony, location, location description
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### concert
+
+Includes all entries belonging to a type listed in the
+[collection_concert](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_concert)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - music
+    - composition
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - conductors
+    - opening
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### conference
+
+Includes all entries belonging to a type listed in the
+[collection_conference](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_conference)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - organisers
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - lecturers
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### conference contribution
+
+Includes all entries belonging to a type listed in the
+[collection_conference_contribution](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_conference_contribution)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - lecturers
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - title of event
+    - organisers
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### design
+
+Includes all entries belonging to a type listed in the
+[collection_](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - design
+    - date, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - commissions
+    - texts with types
+    - material, format
+* `list` contains:
+    - contributors
+* `location` should not be displayed for this type of activity
+
+#### document/publication
+
+Includes all entries belonging to a type listed in the
+[collection_document_publication](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_document_publication)
+concept.
+
+* `title` contains:
+  - title
+* `subtext` contains:
+  - subtitle
+* `pimary_details` contains:
+  - type
+  - authors
+  - editors
+  - publisher, place, date
+  - keywords
+  - ISBN, DOI
+  - url
+* `secondary_details` contains:
+  - texts with types
+  - volume/issue, pages
+  - language, format, material, edition
+* `list` contains:
+  - published in
+  - contributors
+* `location` should not be displayed for this type of activity
+
+#### ...
+
+Includes all entries belonging to a type listed in the
+[collection_](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - ..
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+
+
+
+#### Details on how to transform data
+
+> TODO: add example screenshot, notes on base-components, note on combining multiple dates etc.
+
+
 
 
 ### Data flow
