@@ -672,10 +672,56 @@ concept.
 
 #### Details on how to transform data
 
-> TODO: add example screenshot, notes on base-components, note on combining multiple dates etc.
+To shed some light on how the data will be displayed, the following screenshot of an
+activity in Showroom contains additional area markings in red, with the _ShowroomObject_
+properties, which are used by the Frontend to display the data:
 
+![Data Transformation Areas Example](data_transformation_areas.png)
+(full-size image: [](data_transformation_areas.png))
 
+Here you also see, that the `type` is displayed in one area. But it is not mentioned
+in the above transformation definitions. This is because the `type` contains the data
+as it comes from Portfolio, and the Showroom Frontend uses a specific component to
+display it.
 
+What is missing from the above screenshot is how the `location` property will be
+displayed. The next screenshot is from a different activity, containing two locations:
+
+![Data Transformation for Locations Example](data_transformation_location.png)
+(full-size image: [](data_transformation_location.png))
+
+The `location` property is an array containing objects (for each location found in the
+repository data). Each of the location objects contains a `data` property and a
+`coordinates` property, both are arrays. The latter just holds two floating-point
+numbers: the latitude and the longitude. These are used to display the markers on the
+map. The `data` array contains a list of strings, which are used to display the
+lines of each address below the map.
+
+Now for the `primary_details`, `secondary_details` and `list`, the Showroom Frontend
+uses the [base-ui-components](https://github.com/base-angewandte/base-ui-components).
+There is a [Base UI Components styleguide](https://base-angewandte.github.io/base-ui-components/)
+showcasing every component: how it looks like and how the data has to look like.
+Both, the `primary_details` and the `secondary_details` are displyed with the
+[BaseTextList](https://base-angewandte.github.io/base-ui-components/#basetextlist),
+while the `list` is displayed with the
+[BaseExpandList](https://base-angewandte.github.io/base-ui-components/#baseexpandlist).
+
+The aim of _Showroom Backend_ is to transform the repository data in a way, so we can
+store it almost exactly as the frontend needs the data in the _ShowroomObject_. But
+there is one catch: we need to localize the data for all available languages too. Yet
+the frontend will request the data only for a specific language. Therefore we transform
+all mapped items for every language and store them under specific language keys in
+each item of the property. When the frontend requests a an activity the backend only
+has to filter our the requested language before it returns the data.
+
+The main implementation of this mapping and transformation for data coming from
+Portfolio happens in the following two files:
+
+* _src/api/repositories/portfolio/transform.py_
+* _src/api/repositories/portfolio/mapping.py_
+
+When writing an adapter for a different repository, take those two examples as a
+template.
 
 ### Data flow
 
