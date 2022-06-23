@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 
 from api.permissions import ApiKeyPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
+from api.repositories.portfolio.search_indexer import index_entity
 from api.serializers.autocomplete import (
     AutocompleteRequestSerializer,
     AutocompleteSerializer,
@@ -143,6 +144,7 @@ class EntityViewSet(viewsets.GenericViewSet):
         entity.source_repo_data = request.data
         entity.save()
         entity.entitydetail.run_updates()
+        index_entity(entity)
 
         return Response(entity.showroom_id, status=201 if created else 200)
 
