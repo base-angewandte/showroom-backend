@@ -428,7 +428,101 @@ concept.
   - contributors
 * `location` should not be displayed for this type of activity
 
-#### ...
+#### event
+
+Includes all entries belonging to a type listed in the
+[collection_event](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_event)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### exhibition
+
+Includes all entries belonging to a type listed in the
+[collection_exhibition](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_exhibition)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - artists
+    - curators
+    - opening date, location
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - opening
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### fellowship and visiting affiliation
+
+Includes all entries belonging to a type listed in the
+[collection_fellowship_visiting_affiliation](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_fellowship_visiting_affiliation)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - fellow
+    - date range, location
+    - keywords
+    - url
+* `secondary_details` contains:
+    - commissions
+    - funding
+    - organisations
+    - texts with types
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### festival
+
+Includes all entries belonging to a type listed in the
+[collection_festival](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_festival)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - artists
+    - curators
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - organisers
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### film / video
 
 Includes all entries belonging to a type listed in the
 [collection_](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_)
@@ -439,18 +533,142 @@ concept.
 * `subtext` contains:
     - subtitle
 * `primary_details` contains:
-    - ..
+    - directors
+    - date, location, location description
     - keywords
     - url
 * `secondary_details` contains:
     - texts with types
+    - isan
+    - material, format
+    - duration
+    - language
+* `list` contains:
+    - contributors
+    - published in
+* `location` should not be displayed for this type of activity
+
+#### image
+
+Includes all entries belonging to a type listed in the
+[collection_](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - artists
+    - date, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - material, format, dimensions
 * `list` contains:
     - contributors
 * `location` contains:
     - all locations found in the entry
 
+#### performance
 
+Includes all entries belonging to a type listed in the
+[collection_performance](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_performance)
+concept.
 
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - artists
+    - date, time, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - material
+    - format
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### research project
+
+Includes all entries belonging to a type listed in the
+[collection_research_project](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_research_project)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - project lead
+    - project partners
+    - date range
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - funding
+    - funding category
+    - status
+* `list` contains:
+    - contributors
+* `location` should not be displayed for this type of activity
+
+#### sculpture
+
+Includes all entries belonging to a type listed in the
+[collection_sculpture](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_sculpture)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - artists
+    - date, location, location description
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - material, format
+    - dimensions
+* `list` contains:
+    - contributors
+* `location` contains:
+    - all locations found in the entry
+
+#### software
+
+Includes all entries belonging to a type listed in the
+[collection_software](http://base.uni-ak.ac.at/portfolio/taxonomy/collection_software)
+concept.
+
+* `title` contains:
+    - title
+* `subtext` contains:
+    - subtitle
+* `primary_details` contains:
+    - software developers
+    - date
+    - open source license
+    - keywords
+    - url
+* `secondary_details` contains:
+    - texts with types
+    - programming language
+    - git url
+    - documentation url
+    - software version
+* `list` contains:
+    - contributors
+* `location` should not be displayed for this type of activity
 
 #### Details on how to transform data
 
