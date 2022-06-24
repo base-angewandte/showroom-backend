@@ -147,8 +147,9 @@ def index_entity(entity):
         indexed[lang] = []
 
     # index keywords
-    for lang in entity.entitydetail.expertise.keys():
-        indexed[lang].extend(entity.entitydetail.expertise[lang])
+    if entity.entitydetail.expertise and type(entity.entitydetail.expertise) == dict:
+        for lang in entity.entitydetail.expertise.keys():
+            indexed[lang].extend(entity.entitydetail.expertise[lang])
 
     # now flatten the indexed item to a string and store them on the index table
     for lang, values in indexed.items():
