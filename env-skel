@@ -5,7 +5,7 @@ SHOWROOM_DB_USER=django_showroom
 ## Make sure to change this to a strong password on any production/public server.
 ## If you change it here, make sure to also set the POSTGRES_PASSWORD in
 ## src/showroom/.env accordingly
-SHOWROOM_DB_PASSWORD=password
+SHOWROOM_DB_PASSWORD=password_showroom
 
 ## The docker mount point for Django's static files
 SHOWROOM_ASSETS=./dockerdata/django/assets
