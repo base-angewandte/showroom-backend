@@ -198,7 +198,7 @@ subsections.
     
     So the following would be a full-fledged command to set up a SourceRepository:
     ```bash
-    sudo docker-compose exec showroom-django python manage.py create_source_repository -u https://www.dieangewandte.at -l "Universität für Angewandte Kunst Wien" -p "Portfolio" 1 https://base.uni-ak.ac.at GOy4Dq1f0Yftxr3r3G8Twr11K172Krzn  
+    sudo docker-compose exec showroom-django python manage.py create_source_repository -u "https://www.dieangewandte.at" -p "Portfolio" 1 GOy4Dq1f0Yftxr3r3G8Twr11K172Krzn "Universität für Angewandte Kunst Wien" "https://base.uni-ak.ac.at"  
     ```
     
     Now we can use the new repo id to also create a first institution entity:
