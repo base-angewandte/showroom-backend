@@ -16,7 +16,7 @@ django-filter==2.4.0
 djangorestframework==3.12.2
 djangorestframework-api-key==2.2.0
 drf-spectacular==0.15.1
-pip-tools==6.6.0
+pip-tools==6.7.0
 psycopg2-binary==2.8.6
 python-slugify==6.1.2
 rdflib==5.0.0  # TODO: needed by skosmos, but 6.1.1 would break concept retrieval

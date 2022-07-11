@@ -12,6 +12,8 @@ attrs==21.4.0
     # via jsonschema
 babel==2.10.1
     # via -r src/requirements.in
+build==0.8.0
+    # via pip-tools
 certifi==2021.10.8
     # via
     #   requests
@@ -79,10 +81,12 @@ jsonschema==4.4.0
 lxml==4.8.0
     # via python-cas
 packaging==21.3
-    # via redis
+    # via
+    #   build
+    #   redis
 pep517==0.12.0
-    # via pip-tools
-pip-tools==6.6.0
+    # via build
+pip-tools==6.7.0
     # via -r src/requirements.in
 portalocker==2.4.0
     # via concurrent-log-handler
@@ -150,7 +154,9 @@ sqlparse==0.4.2
 text-unidecode==1.3
     # via python-slugify
 tomli==2.0.1
-    # via pep517
+    # via
+    #   build
+    #   pep517
 translitcodec==0.7.0
     # via -r src/requirements.in
 uritemplate==4.1.1
