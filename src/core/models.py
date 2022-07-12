@@ -243,6 +243,12 @@ def create_object_details(sender, instance, created, raw, *args, **kwargs):
         instance.save()
 
 
+class ShowroomObjectHistory(models.Model):
+    showroom_id = models.CharField(max_length=255, primary_key=True)
+    object_id = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+    date_created = models.DateTimeField(auto_now_add=True, editable=False)
+
+
 class EntityDetail(models.Model):
     showroom_object = models.OneToOneField(
         ShowroomObject, on_delete=models.CASCADE, primary_key=True
