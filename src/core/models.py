@@ -153,7 +153,7 @@ class ShowroomObject(AbstractBaseModel):
             if self.showroom_id != old_instance.showroom_id:
                 ShowroomObjectHistory.objects.create(
                     showroom_id=old_instance.showroom_id,
-                    object_id=self,
+                    object=self,
                 )
 
     def generate_showroom_id(self, char_limit=4):
@@ -288,7 +288,7 @@ def create_object_details(sender, instance, created, raw, *args, **kwargs):
 
 class ShowroomObjectHistory(models.Model):
     showroom_id = models.CharField(max_length=255, primary_key=True)
-    object_id = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+    object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True, editable=False)
 
 

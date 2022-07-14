@@ -432,8 +432,8 @@ class EntityViewSet(viewsets.GenericViewSet):
             hist = ShowroomObjectHistory.objects.filter(showroom_id=kwargs['pk'])
             if not hist:
                 raise NotFound from err
-            # TODO: refactor to object and redirect
-            instance = hist[0].object_id
+            # TODO: refactor to redirect
+            instance = hist[0].object
 
         return instance
 
