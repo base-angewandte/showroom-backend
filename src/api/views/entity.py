@@ -5,7 +5,6 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound, ParseError
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -31,9 +30,8 @@ from api.serializers.showcase import ShowcaseSerializer
 from api.views.autocomplete import AutocompleteViewSet
 from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import CsrfExemptSessionAuthentication, get_search_results
-from core.models import ShowroomObject, SourceRepository
+from core.models import ShowroomObject, ShowroomObjectHistory, SourceRepository
 from core.validators import validate_showcase
-from general.utils import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -427,13 +425,16 @@ class EntityViewSet(viewsets.GenericViewSet):
         )
 
     def get_object_or_404(self, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        instance = get_object_or_404(self.queryset, pk=pk)
-        slug = f'entity-{instance.id}'
-        if instance.title:
-            slug = f'{slugify(instance.title)}-{instance.id}'
-        if kwargs['pk'] != slug:
-            raise NotFound
+        try:
+            instance = self.queryset.get(showroom_id=kwargs['pk'])
+        except ShowroomObject.DoesNotExist as err:
+            # check in id history
+            hist = ShowroomObjectHistory.objects.filter(showroom_id=kwargs['pk'])
+            if not hist:
+                raise NotFound from err
+            # TODO: refactor to object and redirect
+            instance = hist[0].object_id
+
         return instance
 
 
