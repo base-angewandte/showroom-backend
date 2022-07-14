@@ -73,29 +73,6 @@ class EntityViewSet(viewsets.GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        # if not settings.DISABLE_USER_REPO and instance.type == ShowroomObject.PERSON:
-        #     try:
-        #         sync.pull_user_data(instance.source_repo_object_id)
-        #     except sync.UserPrefError:
-        #         # TODO: discuss what to do if the sync fails but we already have some data
-        #         pass
-        #     # TODO: deactivated the code below for now, because we have to check user
-        #     #       settings on every request, to see if their user page is activiated.
-        #     #       this can be changed back, as soon as there is a push from UP to SR,
-        #     #       whenever the setting changes
-        #     # t_synced = instance.date_synced
-        #     # t_cache = datetime.today() - timedelta(
-        #     #     minutes=settings.USER_REPO_CACHE_TIME
-        #     # )
-        #     # if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
-        #     #     # TODO: discuss whether this should be executed directly or relegated to an async
-        #     #     #       job. in the latter case the current request would be served the cached data
-        #     #     try:
-        #     #         sync.pull_user_data(instance.source_repo_object_id)
-        #     #     except sync.UserPrefError:
-        #     #         # TODO: discuss what to do if the sync fails but we already have some data
-        #     #         pass
-        # instance.refresh_from_db()
 
         if not instance.active:
             return Response(
