@@ -23,6 +23,7 @@ from core.validators import (
     validate_showcase,
 )
 from general.models import AbstractBaseModel, ShortUUIDField
+from general.utils import slugify
 
 
 def get_default_list_ordering():
@@ -127,9 +128,54 @@ class ShowroomObject(AbstractBaseModel):
         return label
 
     def save(self, *args, **kwargs):
-        if self.showroom_id is None:
-            self.showroom_id = self.id
+        old_instance = None
+        if self.id:
+            try:
+                old_instance = ShowroomObject.objects.get(id=self.id)
+            except ShowroomObject.DoesNotExist:
+                pass
+
         super().save(*args, **kwargs)
+
+        # in case the object was just created, we have to generate a new showroom_id
+        if old_instance is None:
+            self.generate_showroom_id()
+            ShowroomObject.objects.filter(id=self.id).update(
+                showroom_id=self.showroom_id
+            )
+
+        # for updated objects check whether the showroom id has to change
+        elif self.title != old_instance.title:
+            self.generate_showroom_id()
+            ShowroomObject.objects.filter(id=self.id).update(
+                showroom_id=self.showroom_id
+            )
+            if self.showroom_id != old_instance.showroom_id:
+                ShowroomObjectHistory.objects.create(
+                    showroom_id=old_instance.showroom_id,
+                    object_id=self,
+                )
+
+    def generate_showroom_id(self, char_limit=4):
+        if self.type in [self.PERSON, self.INSTITUTION, self.DEPARTMENT]:
+            # for entities the showroom id should be their slugified name plus the first
+            # 4 characters of the id. but we have to check whether a (extremely rare)
+            # collision happens with another person of the same name where the id starts
+            # with the same characters. in that case we increase the characters taken
+            # from the id, until we find a unique showroom_id
+            if char_limit >= len(self.id):
+                self.showroom_id = f'{slugify(self.title)}-{self.id}'
+            else:
+                self.showroom_id = f'{slugify(self.title)}-{self.id[:char_limit]}'
+                if (
+                    ShowroomObject.objects.filter(showroom_id=self.showroom_id).exists()
+                    or ShowroomObjectHistory.objects.filter(
+                        showroom_id=self.showroom_id
+                    ).exists()
+                ):
+                    self.generate_showroom_id(char_limit=char_limit + 1)
+        else:
+            self.showroom_id = self.id
 
     def get_showcase_date_info(self):
         dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]

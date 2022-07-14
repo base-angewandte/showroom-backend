@@ -136,10 +136,16 @@ class EntityViewSet(viewsets.GenericViewSet):
             # this case should not be happening, as the key is already validated
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        name = request.data.get('name')
+        if not name:
+            return Response(
+                {'detail': 'name has to be set'}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         entity, created = ShowroomObject.objects.get_or_create(
             source_repo_object_id=pk,
             source_repo=source_repo,
-            defaults={'type': ShowroomObject.PERSON},
+            defaults={'type': ShowroomObject.PERSON, 'title': name},
         )
         entity.source_repo_data = request.data
         entity.save()
