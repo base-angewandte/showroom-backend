@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from core.models import ShowroomObject
-from general.utils import slugify
 
 from ..repositories.portfolio import activity_lists
 from . import showroom_object_fields
@@ -24,18 +23,9 @@ class EntitySerializer(serializers.ModelSerializer):
         ret.pop('relations_to')
         ret.pop('belongs_to')
 
-        # transform the id and parent id to include name
-        if not instance.title:
-            ret['id'] = f'entity-{instance.id}'
-        else:
-            ret['id'] = f'{slugify(instance.title)}-{instance.id}'
+        ret['id'] = instance.showroom_id
         if instance.belongs_to:
-            if not instance.belongs_to.title:
-                ret['parent'] = f'entity-{instance.belongs_to.id}'
-            else:
-                ret[
-                    'parent'
-                ] = f'{slugify(instance.belongs_to.title)}-{instance.belongs_to.id}'
+            ret['parent'] = instance.belongs_to.showroom_id
 
         # TODO: refactor this (also in get_serach_item(), to be configurable)
         if instance.type == ShowroomObject.PERSON:
