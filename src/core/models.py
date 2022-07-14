@@ -23,7 +23,6 @@ from core.validators import (
     validate_showcase,
 )
 from general.models import AbstractBaseModel, ShortUUIDField
-from general.utils import slugify
 
 
 def get_default_list_ordering():
@@ -78,6 +77,7 @@ class ShowroomObject(AbstractBaseModel):
     ]
 
     id = ShortUUIDField(primary_key=True)
+    showroom_id = models.CharField(max_length=255, unique=True, default='')
     title = models.CharField(max_length=255)
     subtext = models.JSONField(blank=True, null=True)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES)
@@ -126,6 +126,11 @@ class ShowroomObject(AbstractBaseModel):
             label = f'{label} (deactivated)'
         return label
 
+    def save(self, *args, **kwargs):
+        if self.showroom_id is None:
+            self.showroom_id = self.id
+        super().save(*args, **kwargs)
+
     def get_showcase_date_info(self):
         dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]
         for d in self.daterangesearchindex_set.order_by('date_from'):
@@ -145,14 +150,6 @@ class ShowroomObject(AbstractBaseModel):
                 dates.append(f'{d.date_from} - {d.date_to}')
         ret = ', '.join(dates)
         return ret
-
-    @property
-    def showroom_id(self):
-        # TODO: check logic and use it in serializers
-        if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
-            return f'{slugify(self.title)}-{self.id}'
-        else:
-            return self.id
 
     def deactivate(self):
         """Deactivate an object instead of deletion, in order to preserve its
