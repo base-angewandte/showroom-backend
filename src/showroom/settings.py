@@ -540,6 +540,7 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSION': 'v1',
     'ORDERING_PARAM': 'sort',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'api.showroom_exception_handler',
 }
 
 # spectacular settings

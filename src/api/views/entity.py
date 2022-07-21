@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from api import PermanentRedirect
 from api.permissions import ApiKeyPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
 from api.repositories.portfolio.search_indexer import index_entity
@@ -432,8 +433,7 @@ class EntityViewSet(viewsets.GenericViewSet):
             hist = ShowroomObjectHistory.objects.filter(showroom_id=kwargs['pk'])
             if not hist:
                 raise NotFound from err
-            # TODO: refactor to redirect
-            instance = hist[0].object
+            raise PermanentRedirect(to=hist[0].object.showroom_id) from err
 
         return instance
 
