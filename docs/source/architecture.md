@@ -27,43 +27,54 @@ it is connected to other components. A detailed explanation follows below.
 (full-size image: [](showroom-backend-architecture.png)
 drawio source: [](showroom-backend-architecture.drawio))
 
-Let's look at the _Showroom Backend_ itself first. The data is stored in a
-_PostgreSQL_ database - which in our default setup runs in its own container. The
-backend itself is a _Django_ application - also running in its own container or for
-development on the developers host, ideally using a python virtual environment. More
-on that in the [](./install.md) section. Apart from that we are using a
-_Redis_ store - also in its own container - for caching and message queueing.
+The _Showroom Backend_ setup consists of the following components all running in their
+own docker containers:
+
+* _Django_ application (might also be run on the developers host, ideally using a python
+  virtual environment. More on that in the [](./install.md) section.)
+* _PostgreSQL_ database - storing the data
+* _Redis_ store - caching and message queuing
 
 The backend provides a REST API, which is described in more detail in [](./rest_api.md).
 It provides public and authenticated endpoints for the frontend, as well as
 endpoints with an API key based authentication for repositories to push data to
 _Showroom_.
 
-A central component of _Showroom_ is the _Portfolio adapter_, which is responsible
-to handle all transformations and elaborations for entry data that is published in
-_Portfolio_. It is also responsible for generating all relevant search indices, that
-are used in the search. For more information on the data model see the corresponding
-section below. For mode details on the search functionality go to [](./search_logic.md).
+A central component of _Showroom_ is the _Portfolio adapter_, which is responsible for:
 
-Now, apart from the _Showroom Backend_ there is of course also a _Showroom Frontend_,
-which is a server-side rendered application written with Nuxt.js and Vue.js . All
-display and manipulation of Showroom data for and by users is handled through the
-frontend. Apart from that the backend still provides the classic Django admin for
-administration and mostly development and debugging convenience.
+* handling all data transformations for entry data that is published in _Portfolio_
+* generating all relevant search indices, that are used in the search. 
+
+For more information on the data model see the corresponding section below. For more
+details on the search functionality go to [](./search_logic.md).
+
+Apart from the _Showroom Backend_ there is of course also a _Showroom Frontend_, which:
+
+* is a server-side rendered application written with Nuxt.js and Vue.js
+* displays all public information to Showroom visitors
+* allows logged in users to edit their own descriptin, showcases and activity list
+  ordering
+* allows logged in users to edit other entities, if configured
+
+Additionally, the backend still provides the classic Django admin for administration
+and mostly development and debugging convenience.
 
 To get actual data into _Showroom_ we need a repository, that uses the
-`repo` endpoints, to push published entries. In this basic setup we hae a single
-[base Portfolio](https://github.com/base-angewandte/portfolio-backend) instance
-that pushes entries to Showroom, whenever they are published
-by its users. Next to this repository we need an authentication backend, that
-also provides information about the users/publishers - as long as they have activated
-their _Showroom_ page. This can also be called the _user repository_, in our basic setup
-a single instance of [base CAS](https://github.com/base-angewandte/cas) with the
-_User Preferences_ module, that has been added in 1.1. While in this case there is only a single data and a single user repository, there
-could be more repositories connected to Showroom. This is elaborated in the next
+`repo` endpoints, to push published entries. In this basic setup we have:
+
+* a single [base Portfolio](https://github.com/base-angewandte/portfolio-backend)
+  instance, that pushes entries to Showroom, whenever they are published by its users
+* an authentication backend, that also provides information about the users/publishers -
+  as long as they have activated their _Showroom_ page
+  * This can also be called the _user repository_, which in our basic setup is a single
+    instance of [base CAS](https://github.com/base-angewandte/cas) with the
+    _User Preferences_ module, that has been added in 1.1. 
+
+While in the described case there is only a single data and a single user repository,
+there could be more repositories connected to Showroom. This is elaborated in the next
 section.
 
-Then there is a controlled vocabulary in form of a [Skosmos](http://www.skosmos.org/)
+Finally, there is a controlled vocabulary in form of a [Skosmos](http://www.skosmos.org/)
 instance. This is used by Showroom (as well as by Portfolio) to provide localized labels
 for a range of concepts described in the data.
 
