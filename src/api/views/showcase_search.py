@@ -84,8 +84,9 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
                     & Q(textsearchindex__language=lang)
                 )
             )
-            queryset = queryset.filter(q_filter).distinct().order_by(sort)
+            queryset = queryset.filter(q_filter).distinct()
 
+        queryset = queryset.order_by(sort)
         count = queryset.count()
         queryset = queryset[offset : limit + offset]
 
