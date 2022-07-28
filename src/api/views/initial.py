@@ -73,13 +73,12 @@ class InitialViewSet(viewsets.GenericViewSet):
         },
     )
     def retrieve(self, request, *args, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        return get_initial_response(request, pk=pk)
+        return get_initial_response(request, showroom_id=kwargs['pk'])
 
 
-def get_initial_response(request, pk):
+def get_initial_response(request, showroom_id):
     try:
-        entity = ShowroomObject.active_objects.get(pk=pk)
+        entity = ShowroomObject.active_objects.get(showroom_id=showroom_id)
     except ShowroomObject.DoesNotExist:
         return Response(
             {'detail': 'No entity found with this id.'},
