@@ -11,7 +11,6 @@ from api.serializers.initial import InitialDataSerializer
 from api.serializers.showcase import get_serialized_showcase_and_warnings
 from api.views.search import get_search_results, label_current_activities
 from core.models import ShowroomObject
-from general.utils import slugify
 from showroom import settings
 
 logger = logging.getLogger(__name__)
@@ -100,7 +99,7 @@ def get_initial_response(request, pk):
         limit = int(limit)
 
     response = {
-        'id': f'{slugify(entity.title)}-{entity.id}',
+        'id': entity.showroom_id,
         'source_institution': {
             'label': entity.source_repo.label_institution,
             'url': entity.source_repo.url_institution,

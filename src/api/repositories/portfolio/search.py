@@ -4,7 +4,6 @@ from django.conf import settings
 from django.core.cache import cache
 
 from core.models import ShowroomObject
-from general.utils import slugify
 
 from . import get_schema
 from .mapping import map_search
@@ -24,7 +23,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     search_item = cache.get(cache_key)
     if not search_item:
         search_item = {
-            'id': item.id,
+            'id': item.showroom_id,
             'type': None,
             'title': None,
             'subtitle': None,
@@ -46,7 +45,6 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         elif item.type == ShowroomObject.ALBUM:
             search_item['type'] = 'album'
         else:
-            search_item['id'] = slugify(item.title) + '-' + item.id
             # TODO: refactor this (also in entity serializer, to be configurable)
             if item.type == ShowroomObject.PERSON:
                 search_item['type'] = 'person'
