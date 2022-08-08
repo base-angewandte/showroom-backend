@@ -197,6 +197,7 @@ def render_list_from_activities(activities, username):
                 and activity not in activity_list['document_publication']['chapter']
                 and activity not in activity_list['document_publication']['review']
                 and len(roles) > 0
+                and 'supervisor' not in roles
             ):
                 activity_list['document_publication'][
                     'general_document_publication'
