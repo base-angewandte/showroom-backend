@@ -30,7 +30,7 @@ class EntityEditPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        pk = view.kwargs['pk'].split('-')[-1]
+        pk = view.kwargs['pk']
         # TODO: discuss: theoretically there could be more than one entity
         #       associated to one user. also there could be users with the same
         #       ID from different repositories. how do we want to handle that?
@@ -39,7 +39,7 @@ class EntityEditPermission(permissions.BasePermission):
         )
         # if not entities:
         #     return False
-        allowed = [entity.id for entity in entities]
+        allowed = [entity.showroom_id for entity in entities]
         if request.user.username in settings.SHOWCASE_DEMO_USERS:
             allowed.extend(settings.SHOWCASE_DEMO_ENTITY_EDITING)
         if pk in allowed:

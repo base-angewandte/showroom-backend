@@ -78,6 +78,7 @@ class ShowroomObject(AbstractBaseModel):
     ]
 
     id = ShortUUIDField(primary_key=True)
+    showroom_id = models.CharField(max_length=255, unique=True, default='')
     title = models.CharField(max_length=255)
     subtext = models.JSONField(blank=True, null=True)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES)
@@ -126,6 +127,56 @@ class ShowroomObject(AbstractBaseModel):
             label = f'{label} (deactivated)'
         return label
 
+    def save(self, *args, **kwargs):
+        old_instance = None
+        if self.id:
+            try:
+                old_instance = ShowroomObject.objects.get(id=self.id)
+            except ShowroomObject.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+        # in case the object was just created, we have to generate a new showroom_id
+        if old_instance is None:
+            self.generate_showroom_id()
+            ShowroomObject.objects.filter(id=self.id).update(
+                showroom_id=self.showroom_id
+            )
+
+        # for updated objects check whether the showroom id has to change
+        elif self.title != old_instance.title:
+            self.generate_showroom_id()
+            ShowroomObject.objects.filter(id=self.id).update(
+                showroom_id=self.showroom_id
+            )
+            if self.showroom_id != old_instance.showroom_id:
+                ShowroomObjectHistory.objects.create(
+                    showroom_id=old_instance.showroom_id,
+                    object=self,
+                )
+
+    def generate_showroom_id(self, char_limit=4):
+        if self.type in [self.PERSON, self.INSTITUTION, self.DEPARTMENT]:
+            # for entities the showroom id should be their slugified name plus the first
+            # 4 characters of the id. but we have to check whether a (extremely rare)
+            # collision happens with another person of the same name where the id starts
+            # with the same characters. in that case we increase the characters taken
+            # from the id, until we find a unique showroom_id
+            if char_limit >= len(self.id):
+                self.showroom_id = f'{slugify(self.title)}-{self.id}'
+            else:
+                self.showroom_id = f'{slugify(self.title)}-{self.id[:char_limit]}'
+                if (
+                    ShowroomObject.objects.filter(showroom_id=self.showroom_id).exists()
+                    or ShowroomObjectHistory.objects.filter(
+                        showroom_id=self.showroom_id
+                    ).exists()
+                ):
+                    self.generate_showroom_id(char_limit=char_limit + 1)
+        else:
+            self.showroom_id = self.id
+
     def get_showcase_date_info(self):
         dates = [f'{d.date}' for d in self.datesearchindex_set.order_by('date')]
         for d in self.daterangesearchindex_set.order_by('date_from'):
@@ -145,14 +196,6 @@ class ShowroomObject(AbstractBaseModel):
                 dates.append(f'{d.date_from} - {d.date_to}')
         ret = ', '.join(dates)
         return ret
-
-    @property
-    def showroom_id(self):
-        # TODO: check logic and use it in serializers
-        if self.type in (self.PERSON, self.DEPARTMENT, self.INSTITUTION):
-            return f'{slugify(self.title)}-{self.id}'
-        else:
-            return self.id
 
     def deactivate(self):
         """Deactivate an object instead of deletion, in order to preserve its
@@ -241,6 +284,12 @@ def create_object_details(sender, instance, created, raw, *args, **kwargs):
         EntityDetail.objects.get_or_create(showroom_object=instance)
         instance.secondary_details = get_default_entity_secondary_details()
         instance.save()
+
+
+class ShowroomObjectHistory(models.Model):
+    showroom_id = models.CharField(max_length=255, primary_key=True)
+    object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
+    date_created = models.DateTimeField(auto_now_add=True, editable=False)
 
 
 class EntityDetail(models.Model):

@@ -9,7 +9,6 @@ from general.datetime.utils import (
     format_datetime_string,
     format_time_range_string,
 )
-from general.utils import slugify
 
 from . import (
     LANGUAGES,
@@ -1762,7 +1761,7 @@ def transform_entity(entity):
             )
             ret = {'value': e.title}
             if e.active:
-                ret['source'] = f'{slugify(e.title)}-{e.id}'
+                ret['source'] = e.showroom_id
             return ret
         except ShowroomObject.DoesNotExist:
             pass

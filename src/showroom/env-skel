@@ -98,7 +98,7 @@ SITE_URL=https://url/
 ## Value should be a comma-separated list of ID:TYPE pairs, where TYPE can either be 'activity' or 'album'
 # DEFAULT_SHOWCASE=
 
-## A default entity id to be used in the /initial endpoint without any ID
+## The showroom_id of a default entity to be used in the /initial endpoint
 # DEFAULT_ENTITY=
 
 ## Temporary feature for showcase editing

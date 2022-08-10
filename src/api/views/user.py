@@ -51,7 +51,7 @@ def get_user_data(request, *args, **kwargs):
         'email': attributes.get('email'),
         'entity_id': entity_id,
         'showroom_id': showroom_id,
-        'entity_editing': [entity_id] if entity_id else [],
+        'entity_editing': [showroom_id] if showroom_id else [],
         'groups': attributes.get('groups'),
         'permissions': attributes.get('permissions'),
     }
