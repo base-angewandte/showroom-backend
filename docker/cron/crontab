@@ -1,1 +1,2 @@
 0 0 * * * docker exec showroom-django /django/scripts/logrotate.sh > /dev/stdout
+0 1 * * * docker exec showroom-django /django/scripts/publishing_log_rotation.sh > /dev/stdout
