@@ -107,7 +107,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         ret['date_changed'] = instance.date_changed
         ret['date_created'] = instance.date_created
         # add aggregated media and related activities
-        media = instance.media_set.all()
+        media = instance.media_set.all().order_by('-featured', 'order')
         media_entries = []
         if media:
             context = {
@@ -120,21 +120,25 @@ class ActivitySerializer(serializers.ModelSerializer):
             'media': media_entries,
             'linked': relations,
         }
-        # in case a featured medium is set, we'll use this. if non is set explicitly
-        # we search if there is any image attached to the entry and take this one.
+        # in case a featured medium is set, we'll use this. if none is set explicitly
+        # we take the first medium according to the given ordering, that has a usable
+        # thumbnail or cover image
         ret['featured_media'] = None
         featured_medium = media.filter(featured=True)
         if featured_medium:
             ret['featured_media'] = MediaSerializer(
                 featured_medium[0], context=context
             ).data
-        else:
+        elif media:
             for medium in media:
-                if medium.type == 'i':
-                    ret['featured_media'] = MediaSerializer(
-                        medium, context=context
-                    ).data
+                if medium.specifics.get('thumbnail'):
                     break
+                elif medium.type == 'v':
+                    if cover := medium.specifics.get('cover'):
+                        if cover.get('jpg'):
+                            break
+            ret['featured_media'] = MediaSerializer(medium, context=context).data
+
         # publisher currently is only the entity this activity belongs to
         ret.pop('belongs_to')
         publisher = []

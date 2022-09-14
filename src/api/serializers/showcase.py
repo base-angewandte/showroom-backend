@@ -64,9 +64,9 @@ class ShowcaseSerializer(serializers.Serializer):
             ret['additional'] = instance.get_showcase_date_info()
             ret['type'] = instance.activitydetail.activity_type
             media = instance.media_set.all().order_by('-featured', 'order')
-            # Similar to search results we take the previews from the first image
-            # we find in the activity. If there is no image, we'll use thumbnails of
-            # a document or the cover of a video, if there are any.
+            # in case a featured medium is set, we'll use this, if there is a usable
+            # thumbnail or cover image. otherwise we take the first medium according to
+            # the given ordering, that has a usable thumbnail or cover image
             alternative_preview = None
             for m in media:
                 if previews := m.specifics.get('previews'):
@@ -77,8 +77,10 @@ class ShowcaseSerializer(serializers.Serializer):
                         if cover := m.specifics.get('cover'):
                             if cover_jpg := cover.get('jpg'):
                                 alternative_preview = cover_jpg
+                                break
                     else:
-                        alternative_preview = m.specifics.get('thumbnail')
+                        if alternative_preview := m.specifics.get('thumbnail'):
+                            break
             if not ret['previews'] and alternative_preview:
                 widths = ['640w', '768w', '1024w', '1366w', '1600w', '1632w']
                 ret['previews'] = [{w: alternative_preview} for w in widths]
