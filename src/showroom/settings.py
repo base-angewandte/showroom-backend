@@ -106,7 +106,18 @@ INSTALLED_APPS = [
     'general',
     'api',
     'user_preferences',
+    'docs',
 ]
+
+
+# Documentation directory settings
+
+DOCS_USER = env('DOCS_USER', default=None)
+DOCS_PASSWORD = env('DOCS_PASSWORD', default=None)
+
+DOCS_REALM = 'base Showroom Backend\'s Documentation'
+DOCS_ROOT = os.path.join(BASE_DIR, '..', 'docs', 'build', 'html')  # noqa: F405
+DOCS_URL = env('DOCS_URL', default='docs/')
 
 
 # API Plugin settings
@@ -180,11 +191,6 @@ ACTIVE_SCHEMAS = env.list(
 
 # The default limit for searches, when no limit parameter is provided
 SEARCH_LIMIT = env.int('SEARCH_LIMIT', default=100)
-
-# Time span (in days) into the future and past for the current_activities filter
-# TODO: deprecated - remove once old model search functions are removed
-CURRENT_ACTIVITIES_FUTURE = env.int('CURRENT_ACTIVITIES_FUTURE', default=90)
-CURRENT_ACTIVITIES_PAST = env.int('CURRENT_ACTIVITIES_PAST', default=365)
 
 # Factor by which past dates are multiplied for currentness search
 CURRENTNESS_PAST_WEIGHT = env.int('CURRENTNESS_PAST_WEIGHT', default=4)
@@ -529,6 +535,7 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSION': 'v1',
     'ORDERING_PARAM': 'sort',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'api.showroom_exception_handler',
 }
 
 # spectacular settings

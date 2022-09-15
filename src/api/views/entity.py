@@ -5,15 +5,16 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, NotFound, ParseError
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from api import PermanentRedirect
 from api.permissions import ApiKeyPermission, EntityEditPermission
 from api.repositories.portfolio import activity_lists
+from api.repositories.portfolio.search_indexer import index_entity
 from api.serializers.autocomplete import (
     AutocompleteRequestSerializer,
     AutocompleteSerializer,
@@ -30,9 +31,8 @@ from api.serializers.showcase import ShowcaseSerializer
 from api.views.autocomplete import AutocompleteViewSet
 from api.views.filter import get_dynamic_entity_filters, static_entity_filters
 from api.views.search import CsrfExemptSessionAuthentication, get_search_results
-from core.models import ShowroomObject, SourceRepository
+from core.models import ShowroomObject, ShowroomObjectHistory, SourceRepository
 from core.validators import validate_showcase
-from general.utils import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -72,29 +72,6 @@ class EntityViewSet(viewsets.GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object_or_404(pk=kwargs['pk'])
-        # if not settings.DISABLE_USER_REPO and instance.type == ShowroomObject.PERSON:
-        #     try:
-        #         sync.pull_user_data(instance.source_repo_object_id)
-        #     except sync.UserPrefError:
-        #         # TODO: discuss what to do if the sync fails but we already have some data
-        #         pass
-        #     # TODO: deactivated the code below for now, because we have to check user
-        #     #       settings on every request, to see if their user page is activiated.
-        #     #       this can be changed back, as soon as there is a push from UP to SR,
-        #     #       whenever the setting changes
-        #     # t_synced = instance.date_synced
-        #     # t_cache = datetime.today() - timedelta(
-        #     #     minutes=settings.USER_REPO_CACHE_TIME
-        #     # )
-        #     # if t_synced is None or t_synced.timestamp() < t_cache.timestamp():
-        #     #     # TODO: discuss whether this should be executed directly or relegated to an async
-        #     #     #       job. in the latter case the current request would be served the cached data
-        #     #     try:
-        #     #         sync.pull_user_data(instance.source_repo_object_id)
-        #     #     except sync.UserPrefError:
-        #     #         # TODO: discuss what to do if the sync fails but we already have some data
-        #     #         pass
-        # instance.refresh_from_db()
 
         if not instance.active:
             return Response(
@@ -135,14 +112,21 @@ class EntityViewSet(viewsets.GenericViewSet):
             # this case should not be happening, as the key is already validated
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        name = request.data.get('name')
+        if not name:
+            return Response(
+                {'detail': 'name has to be set'}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         entity, created = ShowroomObject.objects.get_or_create(
             source_repo_object_id=pk,
             source_repo=source_repo,
-            defaults={'type': ShowroomObject.PERSON},
+            defaults={'type': ShowroomObject.PERSON, 'title': name},
         )
         entity.source_repo_data = request.data
         entity.save()
         entity.entitydetail.run_updates()
+        index_entity(entity)
 
         return Response(entity.showroom_id, status=201 if created else 200)
 
@@ -442,13 +426,15 @@ class EntityViewSet(viewsets.GenericViewSet):
         )
 
     def get_object_or_404(self, **kwargs):
-        pk = kwargs['pk'].split('-')[-1]
-        instance = get_object_or_404(self.queryset, pk=pk)
-        slug = f'entity-{instance.id}'
-        if instance.title:
-            slug = f'{slugify(instance.title)}-{instance.id}'
-        if kwargs['pk'] != slug:
-            raise NotFound
+        try:
+            instance = self.queryset.get(showroom_id=kwargs['pk'])
+        except ShowroomObject.DoesNotExist as err:
+            # check in id history
+            hist = ShowroomObjectHistory.objects.filter(showroom_id=kwargs['pk'])
+            if not hist:
+                raise NotFound from err
+            raise PermanentRedirect(to=hist[0].object.showroom_id) from err
+
         return instance
 
 

@@ -141,6 +141,25 @@ def index_activity(activity):
         )
 
 
+def index_entity(entity):
+    indexed = {}
+    for (lang, _lang_label) in settings.LANGUAGES:
+        indexed[lang] = []
+
+    # index keywords
+    if entity.entitydetail.expertise and type(entity.entitydetail.expertise) == dict:
+        for lang in entity.entitydetail.expertise.keys():
+            indexed[lang].extend(entity.entitydetail.expertise[lang])
+
+    # now flatten the indexed item to a string and store them on the index table
+    for lang, values in indexed.items():
+        search_index, created = TextSearchIndex.objects.get_or_create(
+            showroom_object=entity, language=lang
+        )
+        search_index.text = '; '.join(values)
+        search_index.save()
+
+
 def append_date(date, dates, date_ranges):
     if re.match(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', date):
         dates.append(date)

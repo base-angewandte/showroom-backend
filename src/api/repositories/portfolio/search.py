@@ -4,7 +4,6 @@ from django.conf import settings
 from django.core.cache import cache
 
 from core.models import ShowroomObject
-from general.utils import slugify
 
 from . import get_schema
 from .mapping import map_search
@@ -24,7 +23,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
     search_item = cache.get(cache_key)
     if not search_item:
         search_item = {
-            'id': item.id,
+            'id': item.showroom_id,
             'type': None,
             'title': None,
             'subtitle': None,
@@ -46,7 +45,6 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
         elif item.type == ShowroomObject.ALBUM:
             search_item['type'] = 'album'
         else:
-            search_item['id'] = slugify(item.title) + '-' + item.id
             # TODO: refactor this (also in entity serializer, to be configurable)
             if item.type == ShowroomObject.PERSON:
                 search_item['type'] = 'person'
@@ -56,35 +54,19 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 search_item['type'] = 'department'
 
         if item.type == ShowroomObject.ACTIVITY:
-            # in case a featured medium is set, we'll use this. if non is set explicitly
-            # we search if there is any image attached to the entry and take this one.
-            media = item.media_set.all()
-            featured_medium = media.filter(featured=True)
-            if featured_medium:
-                medium = featured_medium[0]
-                if medium.type == 'v':
+            # in case a featured medium is set, we'll use this, if there is a usable
+            # thumbnail or cover image. otherwise we take the first medium according to
+            # the given ordering, that has a usable thumbnail or cover image
+            media = item.media_set.all().order_by('-featured', 'order')
+            for medium in media:
+                if thumbnail := medium.specifics.get('thumbnail'):
+                    search_item['image_url'] = thumbnail
+                    break
+                elif medium.type == 'v':
                     if cover := medium.specifics.get('cover'):
-                        search_item['image_url'] = cover.get('jpg')
-                else:
-                    search_item['image_url'] = medium.specifics.get('thumbnail')
-            if search_item['image_url'] is None:
-                alternative_preview = None
-                for medium in media:
-                    if medium.type == 'i':
-                        thumbnail = medium.specifics.get('thumbnail')
-                        if not thumbnail:
-                            continue
-                        search_item['image_url'] = thumbnail
-                        break
-                    elif not alternative_preview:
-                        if medium.type == 'v':
-                            if cover := medium.specifics.get('cover'):
-                                if cover_jpg := cover.get('jpg'):
-                                    alternative_preview = cover_jpg
-                        else:
-                            alternative_preview = medium.specifics.get('thumbnail')
-                if not search_item['image_url'] and alternative_preview:
-                    search_item['image_url'] = alternative_preview
+                        if cover_jpg := cover.get('jpg'):
+                            search_item['image_url'] = cover_jpg
+                            break
         elif item.type in [
             ShowroomObject.PERSON,
             ShowroomObject.DEPARTMENT,
@@ -143,7 +125,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 item.type == ShowroomObject.ACTIVITY
                 and type(item.source_repo_data.get('data')) is not dict
             ):
-                logger.warning(f'source_repo_date[\'data\'] is not a dict for {item}')
+                logger.warning(f'source_repo_data[\'data\'] is not a dict for {item}')
                 continue
             transformed = transform_func(item, lang)
             # TODO: discuss: should we actually just filter out None values or should

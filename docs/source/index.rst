@@ -33,13 +33,24 @@ they are supposed to work.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Overview & Setup
 
    architecture
    install
    configuration
    management_commands
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer References
+
    rest_api
    api_plugins
    lists_logic
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Definitions
+
    search_logic
+   data_transformation_definitions

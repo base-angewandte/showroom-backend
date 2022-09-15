@@ -60,7 +60,7 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
         entity = None
         if entity_id is not None:
             try:
-                entity = ShowroomObject.active_objects.get(pk=entity_id)
+                entity = ShowroomObject.active_objects.get(showroom_id=entity_id)
             except ShowroomObject.DoesNotExist:
                 return Response({'detail': 'entity_id is not valid'}, status=400)
             if entity.type not in [ShowroomObject.PERSON, ShowroomObject.INSTITUTION]:
@@ -73,7 +73,7 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
             elif entity.type == ShowroomObject.INSTITUTION:
                 queryset = queryset.filter(source_repo=entity.source_repo)
         if exclude:
-            queryset = queryset.exclude(id__in=exclude)
+            queryset = queryset.exclude(showroom_id__in=exclude)
 
         if q:
             q_filter = (
@@ -84,8 +84,9 @@ class ShowcaseSearchViewSet(viewsets.GenericViewSet):
                     & Q(textsearchindex__language=lang)
                 )
             )
-            queryset = queryset.filter(q_filter).distinct().order_by(sort)
+            queryset = queryset.filter(q_filter).distinct()
 
+        queryset = queryset.order_by(sort)
         count = queryset.count()
         queryset = queryset[offset : limit + offset]
 

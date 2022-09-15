@@ -1,5 +1,14 @@
 # Installation guide
 
+## Compatibility matrix
+
+To use Showroom backend with all features, make sure to have the proper versions of
+Portfolio and CAS running.
+
+| Showroom Backend | Showroom Frontend | Portfolio Backend | CAS Backend |
+| ---------------- | ----------------- | ----------------- | ----------- |
+| 1.0.0            | 1.0.0             | 1.2.1             | 1.2.0       |
+
 ## Development
 
 There are two supported ways to start the development server:
@@ -14,7 +23,8 @@ There are two supported ways to start the development server:
 
 In both cases there are some common steps to follow:
 
-* Install docker and docker-compose for your system
+* Install docker and docker-compose for your system. Make sure to not only have the
+  `docker compose` plugin but the actual `docker-compose` binary installed. 
 
 * Clone git repository and checkout branch `develop`:
 
@@ -34,6 +44,9 @@ In both cases there are some common steps to follow:
     cp ./src/showroom/env-skel ./src/showroom/.env
     vi ./src/showroom/.env
     ```
+
+Take a look at the [](./configuration.md) section, for more details, if you need more
+context than the comments in the skeleton env files give you.
 
 Now, depending on which path you want to go, take one of the following two
 subsections.
@@ -73,6 +86,12 @@ subsections.
   To stop all services again, use `make stop` or `docker-compose down`.
 
 ### The full developer setup
+
+> Disclaimer: make sure to explicitly set the relevant `POSTGRES_*` variables in your
+> src/showroom/.env file, if you have changed any of the corresponding `SHOWROOM_DB_*`
+> parameters in your .env file. This is not necessary for dockerised setups, but in your
+> for local django dev server we those environement variables are not assigned
+> automagically. Take a look at the [](./configuration.md) section for details.
 
 * Create docker-compose override file:
 
@@ -198,7 +217,7 @@ subsections.
     
     So the following would be a full-fledged command to set up a SourceRepository:
     ```bash
-    sudo docker-compose exec showroom-django python manage.py create_source_repository -u https://www.dieangewandte.at -l "Universität für Angewandte Kunst Wien" -p "Portfolio" 1 https://base.uni-ak.ac.at GOy4Dq1f0Yftxr3r3G8Twr11K172Krzn  
+    sudo docker-compose exec showroom-django python manage.py create_source_repository -u "https://www.dieangewandte.at" -p "Portfolio" 1 GOy4Dq1f0Yftxr3r3G8Twr11K172Krzn "Universität für Angewandte Kunst Wien" "https://base.uni-ak.ac.at"  
     ```
     
     Now we can use the new repo id to also create a first institution entity:

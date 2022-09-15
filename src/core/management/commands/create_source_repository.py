@@ -44,7 +44,7 @@ class Command(BaseCommand):
         label = options['label']
         label_repo = label
         if options['label_repo']:
-            label = options['label_repo']
+            label_repo = options['label_repo']
 
         url_repo = options['repo_url']
         url_institution = url_repo

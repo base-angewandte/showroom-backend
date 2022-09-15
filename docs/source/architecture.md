@@ -27,43 +27,54 @@ it is connected to other components. A detailed explanation follows below.
 (full-size image: [](showroom-backend-architecture.png)
 drawio source: [](showroom-backend-architecture.drawio))
 
-Let's look at the _Showroom Backend_ itself first. The data is stored in a
-_PostgreSQL_ database - which in our default setup runs in its own container. The
-backend itself is a _Django_ application - also running in its own container or for
-development on the developers host, ideally using a python virtual environment. More
-on that in the [](./install.md) section. Apart from that we are using a
-_Redis_ store - also in its own container - for caching and message queueing.
+The _Showroom Backend_ setup consists of the following components all running in their
+own docker containers:
+
+* _Django_ application (might also be run on the developers host, ideally using a python
+  virtual environment. More on that in the [](./install.md) section.)
+* _PostgreSQL_ database - storing the data
+* _Redis_ store - caching and message queuing
 
 The backend provides a REST API, which is described in more detail in [](./rest_api.md).
 It provides public and authenticated endpoints for the frontend, as well as
 endpoints with an API key based authentication for repositories to push data to
 _Showroom_.
 
-A central component of _Showroom_ is the _Portfolio adapter_, which is responsible
-to handle all transformations and elaborations for entry data that is published in
-_Portfolio_. It is also responsible for generating all relevant search indices, that
-are used in the search. For more information on the data model see the corresponding
-section below. For mode details on the search functionality go to [](./search_logic.md).
+A central component of _Showroom_ is the _Portfolio adapter_, which is responsible for:
 
-Now, apart from the _Showroom Backend_ there is of course also a _Showroom Frontend_,
-which is a server-side rendered application written with Nuxt.js and Vue.js . All
-display and manipulation of Showroom data for and by users is handled through the
-frontend. Apart from that the backend still provides the classic Django admin for
-administration and mostly development and debugging convenience.
+* handling all data transformations for entry data that is published in _Portfolio_
+* generating all relevant search indices, that are used in the search. 
+
+For more information on the data model see the corresponding section below. For more
+details on the search functionality go to [](./search_logic.md).
+
+Apart from the _Showroom Backend_ there is of course also a _Showroom Frontend_, which:
+
+* is a server-side rendered application written with Nuxt.js and Vue.js
+* displays all public information to Showroom visitors
+* allows logged in users to edit their own descriptin, showcases and activity list
+  ordering
+* allows logged in users to edit other entities, if configured
+
+Additionally, the backend still provides the classic Django admin for administration
+and mostly development and debugging convenience.
 
 To get actual data into _Showroom_ we need a repository, that uses the
-`repo` endpoints, to push published entries. In this basic setup we hae a single
-[base Portfolio](https://github.com/base-angewandte/portfolio-backend) instance
-that pushes entries to Showroom, whenever they are published
-by its users. Next to this repository we need an authentication backend, that
-also provides information about the users/publishers - as long as they have activated
-their _Showroom_ page. This can also be called the _user repository_, in our basic setup
-a single instance of [base CAS](https://github.com/base-angewandte/cas) with the
-_User Preferences_ module, that has been added in 1.1. While in this case there is only a single data and a single user repository, there
-could be more repositories connected to Showroom. This is elaborated in the next
+`repo` endpoints, to push published entries. In this basic setup we have:
+
+* a single [base Portfolio](https://github.com/base-angewandte/portfolio-backend)
+  instance, that pushes entries to Showroom, whenever they are published by its users
+* an authentication backend, that also provides information about the users/publishers -
+  as long as they have activated their _Showroom_ page
+  * This can also be called the _user repository_, which in our basic setup is a single
+    instance of [base CAS](https://github.com/base-angewandte/cas) with the
+    _User Preferences_ module, that has been added in 1.1. 
+
+While in the described case there is only a single data and a single user repository,
+there could be more repositories connected to Showroom. This is elaborated in the next
 section.
 
-Then there is a controlled vocabulary in form of a [Skosmos](http://www.skosmos.org/)
+Finally, there is a controlled vocabulary in form of a [Skosmos](http://www.skosmos.org/)
 instance. This is used by Showroom (as well as by Portfolio) to provide localized labels
 for a range of concepts described in the data.
 
@@ -152,12 +163,118 @@ drawio source: [](showroom-model-classes.drawio))
 
 What this model does not show are the transformations from an activity's source data
 format in the repository (e.g. as it is stored in _Portfolio_) to how it is stored
+in Showroom. This will be elaborated in the next section.
+
+### Data transformations
+
+When a repository pushes one of its entries to Showroom, it has to be transformed into
+a _ShowroomObject_ of the type `activity`. In Showroom all published entries from
+repositories are framed as activities which belong to a user, which is linked in
+the activities, if they also have activated their Showroom user page. Those activities
+then fall into different categories, like "document/publication", "exhibition", "audio",
+"research project", or one of the many more available categories.
+
+Depending on which category this activity falls into, it should be displayed differently
 in Showroom.
 
-> TODO: transform internal requirements docs to separate chapter containing a definition
-> of data transformations from Portfolio to Showroom
+While the Showroom Frontend is finally responsible for displaying the results, the
+Showroom Backend is responsible for already preparing the data to be displayed, so that
+that most of the needed transformations are done already on creation/update of an
+activity, and the data is ready for the response, whenever a client requests the
+activity.
 
+So, while the original data from the repository will be stored on the _ShowroomObject_
+in the `source_repo_data` property, the following properties should already hold the
+data as it is displayed by the Showroom Frontend:
+
+* `title`
+* `subtext`
+* `primary_details`
+* `secondary_details`
+* `list`
+* `locations`
+
+The following subsections list which of the properties from the repository data should
+be transformed into which of those ShowroomObject properties, based on which category /
+activity type they fall in.
+
+Below these sections we provide a bit more detail on how those transformations are
+supposed to work.
+
+The following subsection explains how and why data coming from a repository has to be
+transformed in general. Depending on the specific category of entry, different fields
+have to be transformed and mapped. The specific mapping of data to those mentioned
+fields can be found in the Appendix section [](./data_transformation_definitions.md).
+
+#### Details on how to transform data
+
+To shed some light on how the data will be displayed, the following screenshot of an
+activity in Showroom contains additional area markings in red, with the _ShowroomObject_
+properties, which are used by the Frontend to display the data:
+
+![Data Transformation Areas Example](data_transformation_areas.png)
+(full-size image: [](data_transformation_areas.png))
+
+Here you also see, that the `type` is displayed in one area. But it is not mentioned
+in the above transformation definitions. This is because the `type` contains the data
+as it comes from Portfolio, and the Showroom Frontend uses a specific component to
+display it.
+
+What is missing from the above screenshot is how the `location` property will be
+displayed. The next screenshot is from a different activity, containing two locations:
+
+![Data Transformation for Locations Example](data_transformation_location.png)
+(full-size image: [](data_transformation_location.png))
+
+The `location` property is an array containing objects (for each location found in the
+repository data). Each of the location objects contains a `data` property and a
+`coordinates` property, both are arrays. The latter just holds two floating-point
+numbers: the latitude and the longitude. These are used to display the markers on the
+map. The `data` array contains a list of strings, which are used to display the
+lines of each address below the map.
+
+Now for the `primary_details`, `secondary_details` and `list`, we need the data in a way
+that can be displayed easily by the frontend without the need for any additional
+transformations or data mappings. To display this data the Showroom Frontend uses the
+[base-ui-components](https://github.com/base-angewandte/base-ui-components). There is a
+[Base UI Components styleguide](https://base-angewandte.github.io/base-ui-components/)
+showcasing every component: how it looks like and how the data has to look like.
+Both, the `primary_details` and the `secondary_details` are displayed with the
+[BaseTextList](https://base-angewandte.github.io/base-ui-components/#basetextlist),
+while the `list` is displayed with the
+[BaseExpandList](https://base-angewandte.github.io/base-ui-components/#baseexpandlist).
+These are the templates for how we need to provide data to the frontend, and in
+consequence for how we already want to store it in the backend database.
+
+The aim of _Showroom Backend_ is to transform the repository data in a way, so we can
+store it almost exactly as the frontend needs the data in the _ShowroomObject_. But
+there is one catch: we need to localize the data for all available languages too. Yet
+the frontend will request the data only for a specific language. Therefore we transform
+all mapped items for every language and store them under specific language keys in
+each item of the property. When the frontend requests a an activity the backend only
+has to filter our the requested language before it returns the data.
+
+The main implementation of this mapping and transformation for data coming from
+Portfolio happens in the following two files:
+
+* _src/api/repositories/portfolio/transform.py_
+* _src/api/repositories/portfolio/mapping.py_
+
+When writing an adapter for a different repository, take those two examples as a
+template.
 
 ### Data flow
 
-> TODO!
+The following BPMN diagram shows the process (and data) flows, happening between
+the different components of the Portfolio/Showroom ecosystem. The aim here is not to
+describe any flows within a component, but give an overview of which actions in which
+components trigger which API calls and worker jobs, based on data that has to be
+(re-)rendered or in other ways processed.
+
+Note that user interaction with Showroom Backend itself (through the Showroom Frontend),
+is not listed here. This is because all direct user interactions with Showroom should
+be able to be handled without interaction with other systems.
+
+![Data Flow in the Showroom Ecosystem](data_flow.svg)
+(full-size image: [](data_flow.svg)
+bpmn source: [](data_flow.bpmn))

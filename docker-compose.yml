@@ -37,6 +37,7 @@ services:
       - 8500
     volumes:
       - ./src:/django
+      - ./docs/build:/docs/build
       - ./logs:/logs
       - $SHOWROOM_ASSETS:/django/assets
     networks:
