@@ -1,5 +1,14 @@
 # Installation guide
 
+## Compatibility matrix
+
+To use Showroom backend with all features, make sure to have the proper versions of
+Portfolio and CAS running.
+
+| Showroom Backend | Showroom Frontend | Portfolio Backend | CAS Backend |
+| ---------------- | ----------------- | ----------------- | ----------- |
+| 1.0.0            | 1.0.0             | 1.2.1             | 1.2.0       |
+
 ## Development
 
 There are two supported ways to start the development server:
