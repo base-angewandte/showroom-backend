@@ -110,6 +110,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
             'university': get_university,
             'winners_jury_contributors': get_winners_jury_contributors,
         }
+        entry_data_independent = ['title_subtitle', 'name', 'university', 'skills']
 
         for field, map_function in mapping.items():
             if map_function is None:
@@ -126,7 +127,9 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 and type(item.source_repo_data.get('data')) is not dict
             ):
                 logger.warning(f'source_repo_data[\'data\'] is not a dict for {item}')
-                continue
+                # if the current transformation relies on a data dict, go to next one
+                if map_function not in entry_data_independent:
+                    continue
             transformed = transform_func(item, lang)
             # TODO: discuss: should we actually just filter out None values or should
             #       we try to get a default value instead, if the localised is not available?
