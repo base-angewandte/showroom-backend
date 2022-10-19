@@ -486,6 +486,7 @@ class DateRelevanceIndex(models.Model):
     id = models.AutoField(primary_key=True)
     showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     date = models.DateField()
+    rank = models.IntegerField(default=2147483647)
 
 
 class Media(models.Model):
