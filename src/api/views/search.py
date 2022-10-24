@@ -1,6 +1,5 @@
 import logging
 import re
-from datetime import timedelta
 
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -16,8 +15,7 @@ from django.contrib.postgres.search import (
     SearchVector,
     TrigramSimilarity,
 )
-from django.db.models import Case, DurationField, F, Min, Q, When
-from django.utils import timezone
+from django.db.models import Min, Q
 
 from api.repositories.portfolio.search import get_search_item
 from api.repositories.portfolio.utils import get_usernames_from_roles
@@ -144,23 +142,8 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
         if order_by in ['title', '-title', 'date_changed', '-date_changed']:
             queryset = queryset.order_by(order_by)
         elif order_by == 'currentness':
-            now = timezone.now().date()
-            zero = timedelta(days=0)
-            queryset = (
-                queryset.annotate(
-                    date_timediff=Min(F('daterelevanceindex__date') - now)
-                )
-                .annotate(
-                    ranked_date_timediff=Case(
-                        When(date_timediff__gte=zero, then=F('date_timediff')),
-                        When(
-                            date_timediff__lt=zero,
-                            then=F('date_timediff') * -settings.CURRENTNESS_PAST_WEIGHT,
-                        ),
-                        output_field=DurationField(),
-                    )
-                )
-                .order_by('ranked_date_timediff')
+            queryset = queryset.annotate(rank=Min('daterelevanceindex__rank')).order_by(
+                'rank'
             )
         elif order_by == 'rank':
             words = []
