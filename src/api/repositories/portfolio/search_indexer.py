@@ -228,6 +228,13 @@ def get_contributors(data):
     return {}
 
 
+def get_date_rank(date, reference_date):
+    rank = (date - reference_date).days
+    if rank < 0:
+        rank = (-rank) * settings.CURRENTNESS_PAST_WEIGHT
+    return rank
+
+
 def get_format(data):
     return get_vocabulary_list_labels(data, 'format')
 
