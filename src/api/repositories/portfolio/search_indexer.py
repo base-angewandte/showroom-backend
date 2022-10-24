@@ -1,3 +1,4 @@
+import datetime
 import logging
 import re
 
@@ -136,8 +137,21 @@ def index_activity(activity):
         )
         dates.extend([dr[0] for dr in date_ranges])
         dates.extend([dr[1] for dr in date_ranges])
+        dates_with_ranks = []
+        today = datetime.date.today()
+        for d in dates:
+            try:
+                date = datetime.date.fromisoformat(d)
+            except ValueError:
+                pass
+            dates_with_ranks.append({'date': date, 'rank': get_date_rank(date, today)})
         DateRelevanceIndex.objects.bulk_create(
-            [DateRelevanceIndex(showroom_object=activity, date=date) for date in dates]
+            [
+                DateRelevanceIndex(
+                    showroom_object=activity, date=dr['date'], rank=dr['rank']
+                )
+                for dr in dates_with_ranks
+            ]
         )
 
 
