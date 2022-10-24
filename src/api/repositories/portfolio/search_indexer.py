@@ -137,22 +137,12 @@ def index_activity(activity):
         )
         dates.extend([dr[0] for dr in date_ranges])
         dates.extend([dr[1] for dr in date_ranges])
-        dates_with_ranks = []
-        today = datetime.date.today()
-        for d in dates:
-            try:
-                date = datetime.date.fromisoformat(d)
-            except ValueError:
-                pass
-            dates_with_ranks.append({'date': date, 'rank': get_date_rank(date, today)})
-        DateRelevanceIndex.objects.bulk_create(
-            [
-                DateRelevanceIndex(
-                    showroom_object=activity, date=dr['date'], rank=dr['rank']
-                )
-                for dr in dates_with_ranks
-            ]
+        inserted = DateRelevanceIndex.objects.bulk_create(
+            [DateRelevanceIndex(showroom_object=activity, date=d) for d in dates]
         )
+        today = datetime.date.today()
+        for dr in inserted:
+            dr.update_rank(today)
 
 
 def index_entity(entity):
@@ -240,13 +230,6 @@ def get_contributors(data):
         text_index = ', '.join(labels)
         return {lang: text_index for (lang, _lang_label) in settings.LANGUAGES}
     return {}
-
-
-def get_date_rank(date, reference_date):
-    rank = (date - reference_date).days
-    if rank < 0:
-        rank = (-rank) * settings.CURRENTNESS_PAST_WEIGHT
-    return rank
 
 
 def get_format(data):

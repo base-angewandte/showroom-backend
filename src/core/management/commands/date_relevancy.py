@@ -3,7 +3,6 @@ from re import match
 
 from django.core.management.base import BaseCommand, CommandError
 
-from api.repositories.portfolio.search_indexer import get_date_rank
 from core.models import DateRelevanceIndex
 
 
@@ -33,5 +32,4 @@ class Command(BaseCommand):
         dates = DateRelevanceIndex.objects.all()
 
         for d in dates:
-            d.rank = get_date_rank(d.date, day)
-            d.save()
+            d.update_rank(day)
