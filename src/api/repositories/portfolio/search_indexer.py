@@ -1,3 +1,4 @@
+import datetime
 import logging
 import re
 
@@ -136,9 +137,12 @@ def index_activity(activity):
         )
         dates.extend([dr[0] for dr in date_ranges])
         dates.extend([dr[1] for dr in date_ranges])
-        DateRelevanceIndex.objects.bulk_create(
-            [DateRelevanceIndex(showroom_object=activity, date=date) for date in dates]
+        inserted = DateRelevanceIndex.objects.bulk_create(
+            [DateRelevanceIndex(showroom_object=activity, date=d) for d in dates]
         )
+        today = datetime.date.today()
+        for dr in inserted:
+            dr.update_rank(today)
 
 
 def index_entity(entity):

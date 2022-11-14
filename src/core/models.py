@@ -486,6 +486,17 @@ class DateRelevanceIndex(models.Model):
     id = models.AutoField(primary_key=True)
     showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     date = models.DateField()
+    rank = models.IntegerField(default=2147483647)
+
+    def update_rank(self, reference_date):
+        # after bulk creates date is a string not a date object, therefore refresh
+        if type(self.date) is str:
+            self.refresh_from_db()
+        rank = (self.date - reference_date).days
+        if rank < 0:
+            rank = (-rank) * settings.CURRENTNESS_PAST_WEIGHT
+        self.rank = rank
+        self.save()
 
 
 class Media(models.Model):
