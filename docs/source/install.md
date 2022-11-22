@@ -29,7 +29,7 @@ In both cases there are some common steps to follow:
 * Clone git repository and checkout branch `develop`:
 
     ```bash
-    git clone https://basedev.uni-ak.ac.at/redmine/showroom-backend.git
+    git clone https://github.com/base-angewandte/showroom-backend.git
     cd showroom-backend
     ```
 
