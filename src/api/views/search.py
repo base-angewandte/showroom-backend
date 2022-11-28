@@ -143,7 +143,7 @@ def get_search_results(base_queryset, filters, limit, offset, order_by, lang):
             queryset = queryset.order_by(order_by)
         elif order_by == 'currentness':
             queryset = queryset.annotate(rank=Min('daterelevanceindex__rank')).order_by(
-                'rank'
+                'rank', 'title', 'id'
             )
         elif order_by == 'rank':
             words = []
