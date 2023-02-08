@@ -279,7 +279,8 @@ def render_list_from_activities(activities, username):
         if typ not in types['science_to_public']:
             # - memberships
             if typ in sub_types['functions_practice']['event'] and (
-                'board_member' in roles
+                'member' in roles
+                or 'board_member' in roles
                 or 'advisory_board' in roles
                 or 'commissions_boards' in roles
                 or 'appointment_committee' in roles
