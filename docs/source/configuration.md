@@ -110,6 +110,11 @@ the last section. Functionally though, this is only used Showroom-internally to 
 to associate _ShowroomObjects_ of type entity (person, department, institution) with the
 corresponding source repository from which the activities are pushed.
 
+### CURRENTNESS\_PAST\_WEIGHT
+
+This is the value that past events are multiplied with, when the `currentness` ordering
+is applied to search results. See [Ranking and sorting](ranking_and_sorting)
+
 ### DEFAULT\_ENTITY
 
 This should most likely be set to the one institution created during [](install.md).

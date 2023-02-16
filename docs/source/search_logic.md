@@ -96,16 +96,18 @@ retrieve filters available for the entity search (which differ primarily in the
 available controlled vocabulary objects, e.g. used for keyword and type filters, because
 they are solely based on the entity's activities)
 
-
+(ranking_and_sorting)=
 ## Ranking and sorting
 
 Every search request has optional `limit` and `offset` parameters to paginate the
 results. Additionally, there is:
 
 - an `order_by` parameter, which defines the ordering/ranking and can be the following
-  - `currentness`: orders all objects by date: with activities with the current date
-    first, then activities with a future date, then past those with a past date
-    (limited by configurable parameter)
+  - `currentness`: orders all objects by date relevancy. For every object the closest
+    date to today is evaluated, and then all objects are ordered by the least difference
+    from today. Past events are weighted by a multiplication with a configurable value
+    (default: 4). The score in the ordered result reflects the absolute distance in days
+    from today (with past events weighted by the configured factor).
   - `rank`: orders objects by full text search ranking (if available)
   - `default`: applies a default ordering coming from the database query. has the same
     effect as leaving out the order_by parameter as a whole
