@@ -1,8 +1,10 @@
 default_language_version:
   python: python3
 exclude: (^docs/|/migrations/|manage.py)
+default_install_hook_types: [pre-commit, commit-msg]
 repos:
   - repo: https://github.com/base-angewandte/pre-commit-hooks
-    rev: py3.8
+    rev: 1.2.0
     hooks:
       - id: base-hooks
+      - id: base-commit-msg-hooks
