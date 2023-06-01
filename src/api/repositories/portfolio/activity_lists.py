@@ -76,10 +76,11 @@ def render_list_from_activities(activities, username):
     """Return a dict in LocalisedCommonList format based on Portfolio's list
     logic.
 
-    An entity's activity list is generated from all activities that are associated
-    with an entity, where the entity has a significant role. The logic how this list
-    has to be generated is documented in the Portfolio backend docs:
-    https://portfolio-backend.readthedocs.io/en/latest/lists_logic.html
+    An entity's activity list is generated from all activities that are
+    associated with an entity, where the entity has a significant role.
+    The logic how this list has to be generated is documented in the
+    Portfolio backend docs section on
+    [lists logic](https://portfolio-backend.readthedocs.io/en/latest/lists_logic.html)
     """
     types = {
         collection: get_collection_members(f'{base_url}{collection}')

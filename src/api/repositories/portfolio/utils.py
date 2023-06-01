@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from django.conf import settings
 
@@ -128,7 +127,7 @@ def year_from_date_string(dt: str) -> str:
     return str(datetime.strptime(dt[:4], '%Y').year)
 
 
-def years_list_from_date_range(dr) -> List[str]:
+def years_list_from_date_range(dr) -> list[str]:
     years = []
     if dr.get('date_from') and dr.get('date_to'):
         date_from = year_from_date_string(dr['date_from'])

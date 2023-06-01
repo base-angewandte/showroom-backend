@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Union
 
 from django.conf import settings
 
@@ -112,7 +111,7 @@ def transform_field(field, data):
     #       and replace with an Exception / log line / admin mail notification(?)
     if settings.DEBUG and not field_transformer:
         logger.error(
-            f'No transformation function is available for field: {{"{field}": "{data.get(field)}"}}'
+            f'No transformation function is available for field: {{{field!r}: {data.get(field)!r}}}'
         )
         raise FieldTransformerMissingError(field)
 
@@ -503,9 +502,7 @@ def get_localized_line(data):
     return ret
 
 
-def get_transformed_date_field(
-    data: Dict, data_field: str, label: Union[str, List[str]]
-):
+def get_transformed_date_field(data: dict, data_field: str, label: str | list[str]):
     """Helper function to transform date fields.
 
     The following date fields are supported:

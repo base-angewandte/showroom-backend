@@ -17,7 +17,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         if None in [
             settings.USER_PREFERENCES_API_BASE,
             settings.USER_PREFERENCES_API_KEY,

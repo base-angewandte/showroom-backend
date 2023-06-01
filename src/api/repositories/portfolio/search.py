@@ -119,7 +119,7 @@ def get_search_item(item, lang=settings.LANGUAGES[0][0]):
                 if settings.DEBUG:
                     # TODO: discuss: do we want this also in prod, or an admin notification?
                     logger.error(
-                        f'Missing search mapping function: {{"{field}": "{map_function}"}}'
+                        f'Missing search mapping function: {{{field!r}: {map_function!r}}}'
                     )
                 continue
             if (
