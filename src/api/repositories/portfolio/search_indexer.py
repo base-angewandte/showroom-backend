@@ -73,8 +73,10 @@ def index_activity(activity):
                         if res := indexer_result.get(lang):
                             indexed[lang].append(res)
 
+    # clear all old text search index values for this activity before creating new ones
+    TextSearchIndex.objects.filter(showroom_object=activity).delete()
     for lang, values in indexed.items():
-        search_index, created = TextSearchIndex.objects.get_or_create(
+        search_index = TextSearchIndex.objects.create(
             showroom_object=activity, language=lang
         )
         search_index.text = '; '.join(values)
