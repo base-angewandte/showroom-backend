@@ -515,7 +515,7 @@ class Media(models.Model):
 
     id = ShortUUIDField(primary_key=True)
     type = models.CharField(max_length=1, choices=MEDIA_TYPE_CHOICES)
-    file = models.CharField(max_length=255)
+    file = models.CharField(max_length=350)
     showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
     # TODO@review: should we limit max_length here to 129 or even to 90?
     #   reasoning: there was a 127 limit defined in old RFCs for type nad subtype;
