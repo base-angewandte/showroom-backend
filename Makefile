@@ -11,9 +11,9 @@ cleanup:  ## clear sessions
 
 .PHONY: init-rq
 init-rq:  ## init rq containers
-	docker-compose exec ${PROJECT_NAME}-rq-worker-1 bash -c "pip-sync && python manage.py migrate"
-	docker-compose exec ${PROJECT_NAME}-rq-worker-2 bash -c "pip-sync && python manage.py migrate"
-	docker-compose exec ${PROJECT_NAME}-rq-scheduler bash -c "pip-sync && python manage.py migrate"
+	docker-compose exec ${PROJECT_NAME}-rq-worker-1 bash -c "pip-sync"
+	docker-compose exec ${PROJECT_NAME}-rq-worker-2 bash -c "pip-sync"
+	docker-compose exec ${PROJECT_NAME}-rq-scheduler bash -c "pip-sync"
 
 .PHONY: restart-rq
 restart-rq:  ## restart rq containers
