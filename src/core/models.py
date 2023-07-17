@@ -517,10 +517,8 @@ class Media(models.Model):
     type = models.CharField(max_length=1, choices=MEDIA_TYPE_CHOICES)
     file = models.CharField(max_length=350)
     showroom_object = models.ForeignKey(ShowroomObject, on_delete=models.CASCADE)
-    # TODO@review: should we limit max_length here to 129 or even to 90?
-    #   reasoning: there was a 127 limit defined in old RFCs for type nad subtype;
-    #   newer RFCs suggest even a 64 char limit for type and subtype; the longest IANA
-    #   registered types are between 80 & 90 characters
+    # mime type length could be limited to 90 based on RFCs and existing IANA types
+    # but as this should not be a performance issue with Postgres we'll leave it at 255
     mime_type = models.CharField(max_length=255)
     exif = models.JSONField(blank=True, null=True)
     license = models.JSONField(blank=True, null=True)
