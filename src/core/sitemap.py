@@ -31,9 +31,10 @@ class PeopleSitemap(Sitemap):
 
     def items(self):
         """Returns a queryset of all persons, ordered by name."""
-        return ShowroomObject.objects.filter(type=ShowroomObject.PERSON).order_by(
-            'title'
-        )
+        return ShowroomObject.objects.filter(
+            type=ShowroomObject.PERSON,
+            active=True,
+        ).order_by('title')
 
     def location(self, item):
         return f'{prefix}/{self.lang}/{item.showroom_id}'
