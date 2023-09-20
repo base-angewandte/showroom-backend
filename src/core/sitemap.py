@@ -23,6 +23,9 @@ class ActivitiesSitemap(Sitemap):
     def location(self, item):
         return f'{prefix}/{self.lang}/{item.showroom_id}'
 
+    def lastmod(self, item):
+        return item.date_changed
+
 
 class PeopleSitemap(Sitemap):
     def __init__(self, lang='en'):
@@ -38,3 +41,6 @@ class PeopleSitemap(Sitemap):
 
     def location(self, item):
         return f'{prefix}/{self.lang}/{item.showroom_id}'
+
+    def lastmod(self, item):
+        return item.date_changed
