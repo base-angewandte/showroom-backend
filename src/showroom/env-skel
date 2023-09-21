@@ -90,6 +90,9 @@ SITE_URL=https://url/
 ## The default limit for a search, if now explicit limit parameter is set
 # SEARCH_LIMIT=100
 
+## The limit for activities featured in the sitemap
+# SITEMAP_ACTIVITIES_LIMIT=10000
+
 ## The negative weight of past dates (vs current and future dates) in searches
 ## when the currentness ordering is applied
 # CURRENTNESS_PAST_WEIGHT=4
