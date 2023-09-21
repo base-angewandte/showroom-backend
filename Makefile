@@ -19,20 +19,9 @@ init-rq:  ## init rq containers
 restart-rq:  ## restart rq containers
 	docker-compose restart ${PROJECT_NAME}-rq-worker-1 ${PROJECT_NAME}-rq-worker-2 ${PROJECT_NAME}-rq-scheduler
 
-.PHONY: reload
-reload: restart-gunicorn restart-rq  ## restart django and rq workers
-
-.PHONY: update
-update: git-update init restart-gunicorn init-rq restart-rq  ## update project (runs git-update init restart-gunicorn init-rq restart-rq)
-
 .PHONY: start-dev
 start-dev:  ## start containers for local development
 	docker-compose pull
 	docker-compose up -d \
 		${PROJECT_NAME}-redis \
 		${PROJECT_NAME}-postgres
-
-.PHONY: build-docs
-build-docs:  ## build documentation with sphinx to docs/build folder
-	docker build -t showroom-docs ./docker/docs
-	docker run -it --rm -v `pwd`/docs:/docs -v `pwd`/src:/src showroom-docs bash -c "make clean html"
