@@ -539,7 +539,7 @@ REST_FRAMEWORK = {
 # https://drf-spectacular.readthedocs.io/en/latest/settings.html
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Showroom API v1',
-    'VERSION': '1.0.0',
+    'VERSION': '1.0',
     'DESCRIPTION': """Provides public access to all activities published to *Showroom*, as well as authenticated access
     for users and repositories to publish and update activites, create and maintain albums. For a general project
     description visit the [Portfolio/Showroom website](https://portfolio-showroom.ac.at), for the sources and
