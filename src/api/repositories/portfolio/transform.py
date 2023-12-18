@@ -517,7 +517,6 @@ def get_transformed_date_field(data: dict, data_field: str, label: str | list[st
     * date_time_range_location
     """
     if d := data.get(data_field):
-
         lines = {lang: [] for lang in LANGUAGES}
 
         for i in d:
@@ -1368,7 +1367,7 @@ def get_published_in(data):
     if not published_in:
         return None
 
-    if type(published_in) == str:
+    if type(published_in) is str:
         transformed = {}
         for lang in LANGUAGES:
             label = get_preflabel('published_in', lang=lang)
@@ -1718,7 +1717,7 @@ def list_published_in(data):
     if not published_in:
         return None
 
-    if type(published_in) == str:
+    if type(published_in) is str:
         transformed = {}
         for lang in LANGUAGES:
             label = get_preflabel('published_in', lang=lang)

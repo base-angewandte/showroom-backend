@@ -1,19 +1,19 @@
 # Architecture and data model
 
-*Showroom* is part of a potential ensemble of applications, that are used to display
+_Showroom_ is part of a potential ensemble of applications, that are used to display
 current art and research information from several institutions' repositories.
 
-In its most simple setup, *Showroom* will be combined with a single *Portfolio*
-instance, and a *CAS/UserPreferences* instance to provide entity data. But it could
-also be used to only display the activities that are published from *Portfolio*,
+In its most simple setup, _Showroom_ will be combined with a single _Portfolio_
+instance, and a _CAS/UserPreferences_ instance to provide entity data. But it could
+also be used to only display the activities that are published from _Portfolio_,
 without including any detailed data about the users/publishers of those activites.
-In that case a single *Showroom* can be combined with a single *Portfolio* instance,
+In that case a single _Showroom_ can be combined with a single _Portfolio_ instance,
 and the user repository can be disabled in the configuration.
 
-However, *Showroom* is built in a way to accommodate different *Portfolio*
+However, _Showroom_ is built in a way to accommodate different _Portfolio_
 instances as repositories, and in hindsight of adding adapters for other
 CRIS or object repositories in the future. This is one of the main reasons why
-*Showroom* does not just mirror tha data model used in *Portfolio*.
+_Showroom_ does not just mirror tha data model used in _Portfolio_.
 
 The following subsections aim to shed some light on the architectural decisions
 in this project and how data is handled and transformed.
@@ -30,10 +30,10 @@ drawio source: [](showroom-backend-architecture.drawio))
 The _Showroom Backend_ setup consists of the following components all running in their
 own docker containers:
 
-* _Django_ application (might also be run on the developers host, ideally using a python
+- _Django_ application (might also be run on the developers host, ideally using a python
   virtual environment. More on that in the [](./install.md) section.)
-* _PostgreSQL_ database - storing the data
-* _Redis_ store - caching and message queuing
+- _PostgreSQL_ database - storing the data
+- _Redis_ store - caching and message queuing
 
 The backend provides a REST API, which is described in more detail in [](./rest_api.md).
 It provides public and authenticated endpoints for the frontend, as well as
@@ -42,19 +42,19 @@ _Showroom_.
 
 A central component of _Showroom_ is the _Portfolio adapter_, which is responsible for:
 
-* handling all data transformations for entry data that is published in _Portfolio_
-* generating all relevant search indices, that are used in the search. 
+- handling all data transformations for entry data that is published in _Portfolio_
+- generating all relevant search indices, that are used in the search.
 
 For more information on the data model see the corresponding section below. For more
 details on the search functionality go to [](./search_logic.md).
 
 Apart from the _Showroom Backend_ there is of course also a _Showroom Frontend_, which:
 
-* is a server-side rendered application written with Nuxt.js and Vue.js
-* displays all public information to Showroom visitors
-* allows logged in users to edit their own descriptin, showcases and activity list
+- is a server-side rendered application written with Nuxt.js and Vue.js
+- displays all public information to Showroom visitors
+- allows logged in users to edit their own descriptin, showcases and activity list
   ordering
-* allows logged in users to edit other entities, if configured
+- allows logged in users to edit other entities, if configured
 
 Additionally, the backend still provides the classic Django admin for administration
 and mostly development and debugging convenience.
@@ -62,13 +62,13 @@ and mostly development and debugging convenience.
 To get actual data into _Showroom_ we need a repository, that uses the
 `repo` endpoints, to push published entries. In this basic setup we have:
 
-* a single [base Portfolio](https://github.com/base-angewandte/portfolio-backend)
+- a single [base Portfolio](https://github.com/base-angewandte/portfolio-backend)
   instance, that pushes entries to Showroom, whenever they are published by its users
-* an authentication backend, that also provides information about the users/publishers -
+- an authentication backend, that also provides information about the users/publishers -
   as long as they have activated their _Showroom_ page
-  * This can also be called the _user repository_, which in our basic setup is a single
+  - This can also be called the _user repository_, which in our basic setup is a single
     instance of [base CAS](https://github.com/base-angewandte/cas) with the
-    _User Preferences_ module, that has been added in 1.1. 
+    _User Preferences_ module, that has been added in 1.1.
 
 While in the described case there is only a single data and a single user repository,
 there could be more repositories connected to Showroom. This is elaborated in the next
@@ -78,7 +78,6 @@ Finally, there is a controlled vocabulary in form of a [Skosmos](http://www.skos
 instance. This is used by Showroom (as well as by Portfolio) to provide localized labels
 for a range of concepts described in the data.
 
-
 ## Ecosystem architecture
 
 The following diagram shows the potential application of Showroom in a multi-instance
@@ -87,7 +86,6 @@ and multi-stakeholder data ecosystem.
 ![Showroom Ecosystem Architecture Diagram](showroom-ecosystem-architecture.drawio.png)
 (full-size image: [](showroom-ecosystem-architecture.drawio.png)
 drawio source: [](showroom-ecosystem-architecture.drawio))
-
 
 In contrast to what we have seen in the former section on the basic architecture,
 here we see how different repositories are connected to a _Showroom Backend_ instance,
@@ -111,7 +109,6 @@ infrastructure, while still providing a customized or branded user experience to
 own user base. Additionally, their can be joint platforms showcasing the activities
 of several institutions in one place.
 
-
 ## Showroom objects, and the data model
 
 Showroom combines data from published entries in data repositories as well as data from
@@ -125,30 +122,30 @@ showcase for their user page within Showroom.
 These are the guiding considerations for the design of the Showroom data model, which
 will be explained in a bit more detail in this section.
 
-Showroom contains the following entities, implemented as Django models: 
+Showroom contains the following entities, implemented as Django models:
 
-* `SourceRepository` : a representation of an institution's repository, including the
+- `SourceRepository` : a representation of an institution's repository, including the
   API key used by the repository to authenticate.
-* `ShowroomObject` : any object in Showroom that can be displayed on a distinct page. So
+- `ShowroomObject` : any object in Showroom that can be displayed on a distinct page. So
   far this contains _entities_ (persons, departements and insitutions) and _activities_
   (the entries published in the repository). In the future _albums_ will be a different
   kind of ShowroomObject.
-* `EntityDetail` : contains aggregated data only for ShowroomObjects of an _entity_ type
-* `ActivityDetail` : contains aggergated data only for ShowroomObjects that are
+- `EntityDetail` : contains aggregated data only for ShowroomObjects of an _entity_ type
+- `ActivityDetail` : contains aggergated data only for ShowroomObjects that are
   _activities_
-* `Media` : stores metadata about media that are associated with a ShowroomObject
+- `Media` : stores metadata about media that are associated with a ShowroomObject
   (usually an activity). The media files themselves are not stored in Showroom, only
   the links to the publicly consumable media in the SourceRepository.
 
 Further, the following (explicit) Django models are used to manage relationships
 between ShowroomObjects or to create search indices:
 
-* Relation
-* ContributorActivityRelations
-* TextSearchIndex
-* DateSearchIndex
-* DateRangeSearchIndex
-* DateRelevanceIndex
+- Relation
+- ContributorActivityRelations
+- TextSearchIndex
+- DateSearchIndex
+- DateRangeSearchIndex
+- DateRelevanceIndex
 
 The following diagram displays those core models (with a green box color), as well
 as the available endpoints in the API (with a light magenta-ish box color) and all
@@ -187,12 +184,12 @@ So, while the original data from the repository will be stored on the _ShowroomO
 in the `source_repo_data` property, the following properties should already hold the
 data as it is displayed by the Showroom Frontend:
 
-* `title`
-* `subtext`
-* `primary_details`
-* `secondary_details`
-* `list`
-* `locations`
+- `title`
+- `subtext`
+- `primary_details`
+- `secondary_details`
+- `list`
+- `locations`
 
 The following subsections list which of the properties from the repository data should
 be transformed into which of those ShowroomObject properties, based on which category /
@@ -257,8 +254,8 @@ has to filter our the requested language before it returns the data.
 The main implementation of this mapping and transformation for data coming from
 Portfolio happens in the following two files:
 
-* _src/api/repositories/portfolio/transform.py_
-* _src/api/repositories/portfolio/mapping.py_
+- _src/api/repositories/portfolio/transform.py_
+- _src/api/repositories/portfolio/mapping.py_
 
 When writing an adapter for a different repository, take those two examples as a
 template.

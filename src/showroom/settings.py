@@ -200,7 +200,7 @@ CURRENTNESS_PAST_WEIGHT = env.int('CURRENTNESS_PAST_WEIGHT', default=4)
 # showcase is empty. Also check for syntactical validity.
 DEFAULT_SHOWCASE = [x.split(':') for x in env.list('DEFAULT_SHOWCASE', default=[])]
 for x in DEFAULT_SHOWCASE:
-    if type(x) != list or len(x) != 2:
+    if type(x) is not list or len(x) != 2:
         raise ImproperlyConfigured(
             'Syntax error in DEFAULT_SHOWCASE environment variable'
         )
@@ -216,8 +216,7 @@ SHOWCASE_DEMO_ENTITY_EDITING = env.list('SHOWCASE_DEMO_ENTITY_EDITING', default=
 
 # The limit for activities featured in the sitemap
 SITEMAP_ACTIVITIES_LIMIT = env.int('SITEMAP_ACTIVITIES_LIMIT', default=10000)
-
-""" Email settings """
+"""Email settings."""
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
 
 EMAIL_HOST_USER = env.str('EMAIL_HOST_USER', default='')
@@ -384,8 +383,7 @@ MEDIA_ROOT = '{}{}'.format(
 )
 
 FILE_UPLOAD_PERMISSIONS = 0o644
-
-""" Logging """
+"""Logging."""
 LOG_DIR = os.path.join(BASE_DIR, '..', 'logs')
 
 if not os.path.exists(LOG_DIR):
@@ -477,8 +475,7 @@ LOGGING = {
         },
     },
 }
-
-""" Cache settings """
+"""Cache settings."""
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -491,9 +488,7 @@ CACHES = {
         },
     }
 }
-
-
-""" RQ worker settings """
+"""RQ worker settings."""
 RQ_QUEUES = {
     'default': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 500},
     'high': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 14400},
@@ -508,9 +503,7 @@ RQ_EXCEPTION_HANDLERS = ['general.rq.handlers.exception_handler']
 RQ_FAILURE_TTL = 2628288  # approx. 3 month
 
 WORKER_DELAY_ENTITY = env.int('WORKER_DELAY_ENTITY', default=10)
-
-
-""" Session settings """
+"""Session settings."""
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_NAME = f'sessionid_{PROJECT_NAME}'

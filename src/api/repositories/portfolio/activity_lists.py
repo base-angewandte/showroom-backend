@@ -116,7 +116,7 @@ def render_list_from_activities(activities, username):
     sub_types['functions_practice'][
         'general_function_and_practice'
     ] = get_collection_members(f'{settings.TAX_GRAPH}general_function_and_practice')
-    for (lang, _ll) in settings.LANGUAGES:
+    for lang, _ll in settings.LANGUAGES:
         sub_labels[lang]['functions_practice'][
             'general_function_and_practice'
         ] = get_altlabel_collection('general_function_and_practice', lang=lang)
@@ -409,7 +409,7 @@ def render_list_from_activities(activities, username):
         if len(roles) > 0:
             found = False
             for collection in activity_list:
-                if type(activity_list[collection]) == list:
+                if type(activity_list[collection]) is list:
                     if activity in activity_list[collection]:
                         found = True
                 else:
@@ -430,14 +430,14 @@ def render_list_from_activities(activities, username):
         for collection in list_collections
     }
     for collection in activity_list:
-        if type(activity_list[collection]) == list:
-            for (lang, _ll) in settings.LANGUAGES:
+        if type(activity_list[collection]) is list:
+            for lang, _ll in settings.LANGUAGES:
                 ret[collection][lang]['data'] = [
                     render_activity(activity, lang, username)
                     for activity in activity_list[collection]
                 ]
         else:
-            for (lang, _ll) in settings.LANGUAGES:
+            for lang, _ll in settings.LANGUAGES:
                 for sub_col in activity_list[collection]:
                     data = [
                         render_activity(activity, lang, username)
