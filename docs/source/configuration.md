@@ -80,6 +80,17 @@ same domain as the backend. If you need frontends on different domains (e.g. for
 testing and staging purposes) to be able to make those request, you should add them
 to the `CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS` lists.
 
+```{attention}
+**Deprecation of older CORS settings**:
+
+The `CORS_ORIGIN_ALLOW_ALL` and `CORS_ORIGIN_WHITELIST` are older aliases of
+`CORS_ALLOW_ALL_ORIGINS` and `CORS_ALLOWED_ORIGINS` and they are deprecated.
+Adapt accordingly, as this will be removed with version 2 of Showroom. If you use
+both, the old and the new style setting, and the new style setting is empty or
+`False`, the old style will take precedence. In all other cases the new style
+takes precedence.
+```
+
 ### POSTGRES\_\* & REDIS\_\*
 
 For both databases the `*_PORT` setting should be fine by default, unless you explicitly
