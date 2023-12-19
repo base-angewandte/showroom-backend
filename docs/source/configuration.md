@@ -78,7 +78,7 @@ of the user you should minimally set `CORS_ALLOW_CREDENTIALS` to True. All other
 settings should basically be fine by default, as long as your frontend runs on the
 same domain as the backend. If you need frontends on different domains (e.g. for
 testing and staging purposes) to be able to make those request, you should add them
-to the `CSRF_TRUSTED_ORIGINS` and `CORS_ORIGIN_WHITELIST` lists.
+to the `CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS` lists.
 
 ### POSTGRES\_\* & REDIS\_\*
 
