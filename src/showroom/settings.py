@@ -545,9 +545,10 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Showroom API v1',
     'VERSION': '1.0',
     'DESCRIPTION': """Provides public access to all activities published to *Showroom*, as well as authenticated access
-    for users and repositories to publish and update activites, create and maintain albums. For a general project
+    for users and repositories to publish and update activities, create and maintain albums. For a general project
     description visit the [Portfolio/Showroom website](https://portfolio-showroom.ac.at), for the sources and
-    documentation of this component go to **TODO:insertlinktogithubrepo**.
+    documentation of Showroom backend go to
+    [https://github.com/base-angewandte/showroom-backend/](https://github.com/base-angewandte/showroom-backend/).
     """,
     'TAGS': ['public', 'auth', 'repo', 'api'],
     'SERVERS': [
@@ -567,7 +568,7 @@ SPECTACULAR_SETTINGS = {
         'displayOperationId': True,
     },
     # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',  # default
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@5.10.5',  # default
     # "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png",  # default is swagger favicon
     'ENUM_NAME_OVERRIDES': {
         'ShowroomObjectTypeEnum': (
