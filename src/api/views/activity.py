@@ -273,11 +273,6 @@ class ActivityViewSet(
         relations_not_added = []
         relations_error = []
         for related in related_to:
-            if type(related) is not str:
-                return Response(
-                    {'related_to': 'Must only contain strings'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
             try:
                 related_activity = ShowroomObject.active_objects.get(
                     source_repo_object_id=related,
