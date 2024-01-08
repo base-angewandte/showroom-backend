@@ -299,6 +299,15 @@ class ActivityViewSet(
                     f'Could not add relation due to IntegrityError: {err} Additional info: {errinfo}'
                 )
 
+        publishing_info = f'Relations for {activity.id} updated: {relations_added}'
+        added_info = ''
+        if relations_not_added:
+            added_info += f'not found: {relations_not_added} '
+        if relations_error:
+            added_info += f'error: {relations_error} '
+        if added_info:
+            publishing_info += f' {added_info}'
+        publishing_log.info(publishing_info)
         ret = {
             'created': relations_added,
             'not_found': relations_not_added,
