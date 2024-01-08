@@ -11,6 +11,7 @@ from rq.exceptions import NoSuchJobError
 from rq.registry import ScheduledJobRegistry
 
 from django.conf import settings
+from django.db.utils import IntegrityError
 from django.utils import timezone
 
 from api.permissions import ApiKeyPermission
@@ -22,6 +23,7 @@ from api.serializers.generic import Responses
 from core.models import ContributorActivityRelations, ShowroomObject
 
 publishing_log = logging.getLogger('publishing_log')
+logger = logging.getLogger(__name__)
 
 
 @extend_schema_view(
@@ -269,6 +271,7 @@ class ActivityViewSet(
         activity.relations_to.clear()
         relations_added = []
         relations_not_added = []
+        relations_error = []
         for related in related_to:
             if type(related) is not str:
                 return Response(
@@ -280,13 +283,25 @@ class ActivityViewSet(
                     source_repo_object_id=related,
                     source_repo_id=request.META.get('HTTP_X_API_CLIENT'),
                 )
-                relations_added.append(related)
                 activity.relations_to.add(related_activity)
+                relations_added.append(related)
             except ShowroomObject.DoesNotExist:
                 relations_not_added.append(related)
+            except IntegrityError as err:
+                # TODO: this case should not happen, as the RelatedManager should handle this
+                #   gracefully. But we ran into some rare edge cases where this did occur (maybe a
+                #   postgres issue?)
+                #   added this exception on 2024-01-08
+                #   check the logs for these errors in the next year and discuss how to proceed
+                relations_error.append(related)
+                errinfo = f'Current relations of activity {activity} are: {activity.relations_to.all()}'
+                logger.error(
+                    f'Could not add relation due to IntegrityError: {err} Additional info: {errinfo}'
+                )
 
         ret = {
             'created': relations_added,
             'not_found': relations_not_added,
+            'error': relations_error,
         }
         return Response(ret, status=status.HTTP_201_CREATED)
