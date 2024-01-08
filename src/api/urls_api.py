@@ -33,11 +33,11 @@ router.register(r'showcase_search', ShowcaseSearchViewSet, basename='showcase_se
 urlpatterns = [
     path('', include(router.urls)),
     path('user/', get_user_data, name='user'),
-    path('openapi.yaml', SpectacularAPIView.as_view(), name='schema'),
-    path('openapi.json', SpectacularJSONAPIView.as_view(), name='schema'),
+    path('openapi.yaml', SpectacularAPIView.as_view(), name='schema_yaml'),
+    path('openapi.json', SpectacularJSONAPIView.as_view(), name='schema_json'),
     path(
         'docs/',
-        SpectacularSwaggerView.as_view(url_name='schema'),
+        SpectacularSwaggerView.as_view(url_name='schema_json'),
         name='swagger-ui',
     ),
 ]
