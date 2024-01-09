@@ -289,10 +289,13 @@ class ActivityViewSet(
                 #   added this exception on 2024-01-08
                 #   check the logs for these errors in the next year and discuss how to proceed
                 relations_error.append(related)
-                errinfo = f'Current relations of activity {activity} are: {activity.relations_to.all()}'
-                logger.error(
-                    f'Could not add relation due to IntegrityError: {err} Additional info: {errinfo}'
-                )
+                error_msg = f'Could not add relation due to IntegrityError: {err}'
+                info = f'Current relations of activity {activity} are: {activity.relations_to.all()}'
+                if error_msg[-1] == '\n':
+                    error_msg += info
+                else:
+                    error_msg += f'\n{info}'
+                logger.error(error_msg)
 
         publishing_info = f'Relations for {activity.id} updated: {relations_added}'
         added_info = ''
