@@ -26,7 +26,10 @@ def basicauth(view):
 
         response = HttpResponse()
         response.status_code = 401
-        response['WWW-Authenticate'] = f'Basic realm="{settings.DOCS_REALM}"'
+        # we specifically need the double quotes here, therefore applying # noqa: B907
+        response[
+            'WWW-Authenticate'
+        ] = f'Basic realm="{settings.DOCS_REALM}"'  # noqa: B907
         return response
 
     return wrap

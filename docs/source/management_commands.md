@@ -23,7 +23,6 @@ the `initial` endpoint. See [](./install.md) for more context on how/why it is u
 - `repo_id` - the ID of the SourceRepository this institution should be associated with
 - `title` - the title of the institution (will be slugified into its showroom ID)
 
-
 ## `create_source_repository`
 
 This command is used to create a _SourceRepository_ with an API key, that can be used
@@ -58,8 +57,7 @@ Options:
 
 - `-u`, `--url` - the URL of the institution (e.g. the website). Default: `repo-url`.
 - `-i`, `--icon_url` - the icon URL. Default: None
-- `-p`, `--label_repo` -  the name/label of this repository. Default: `label`
-
+- `-p`, `--label_repo` - the name/label of this repository. Default: `label`
 
 ## `publishing_log`
 
@@ -67,10 +65,10 @@ This command is used to view and maintain the activity publishing log.
 
 There are four modes of operation for this command:
 
-* `stats`: view some general statistics of the current publishing log
-* `view`: view the specific publishing history of a single activity
-* `compress`: compress all rotated logfiles, that are not yet compressed
-* `retention`: check for data retention policy and remove too old log files
+- `stats`: view some general statistics of the current publishing log
+- `view`: view the specific publishing history of a single activity
+- `compress`: compress all rotated logfiles, that are not yet compressed
+- `retention`: check for data retention policy and remove too old log files
 
 If mode is not set, the statistics will be displayed by default. The `view` mode will
 print all publishing info found in the available logs, in a chronological order.

@@ -1,6 +1,6 @@
 # Configuration
 
-*Showroom Backend* is configured through two `.env` files. For both there is a template
+_Showroom Backend_ is configured through two `.env` files. For both there is a template
 `env-skel` file available in the same folder, to copy from and then modify it. See
 also [](install.md) on when and how to set up those files.
 
@@ -30,27 +30,28 @@ services will be run inside docker containers. Only when you want to start the
 Django application itself on your host machine (e.g. for local development), you have
 to set this to False.
 
-### SITE\_URL & FORCE\_SCRIPT\_NAME
+### SITE_URL & FORCE_SCRIPT_NAME
 
-The `SITE_URL` has to be set to the base URL of the site *Showroom* is running on, which
+The `SITE_URL` has to be set to the base URL of the site _Showroom_ is running on, which
 will depend on whether you deploy this to some online node, either with multiple services
-sharing one domain or running *Showroom* on a separate domain, or if you run it locally.
+sharing one domain or running _Showroom_ on a separate domain, or if you run it locally.
 For local development setups you can choose `http://127.0.0.1:8500/`. For an online
 deployment choose the base path (protocol and domain), e.g. `https://base.uni-ak.ac.at/`.
 
 Additionally, `FORCE_SCRIPT_NAME` (which defaults to `/showroom`) will be used to
-determine the actual PATH to your *Showroom* instance, by prefixing it with the
+determine the actual PATH to your _Showroom_ instance, by prefixing it with the
 `SITE_URL`. So for a local development setup (where Django is actually running on
 127.0.0.1:8500) make sure to remove the comment and explicitly set this to an empty
 string:
+
 ```
 FORCE_SCRIPT_NAME=
 ```
 
-Do the same if your *Showroom* runs on the root of a dedicated domain, and leave the
+Do the same if your _Showroom_ runs on the root of a dedicated domain, and leave the
 default if it runs on a shared domain where it runs on the _/showroom_ path.
 
-### BEHIND\_PROXY
+### BEHIND_PROXY
 
 This defines whether your application is running behind a reverse proxy (e.g. nginx).
 In most cases the default True will be fine here. But for local development you might
@@ -60,7 +61,7 @@ want to set this to False.
 
 The `CAS_SERVER` points to the base path of your authentication server (e.g.
 https://base.uni-ak.ac.at/cas/). `CAS_REDIRECT_URL` then points to the path on your
-*Showroom* to which the authentication server should redirect once the user's login
+_Showroom_ to which the authentication server should redirect once the user's login
 was successful.
 
 ### EMAIL\_\*
@@ -77,7 +78,18 @@ of the user you should minimally set `CORS_ALLOW_CREDENTIALS` to True. All other
 settings should basically be fine by default, as long as your frontend runs on the
 same domain as the backend. If you need frontends on different domains (e.g. for
 testing and staging purposes) to be able to make those request, you should add them
-to the `CSRF_TRUSTED_ORIGINS` and `CORS_ORIGIN_WHITELIST` lists.
+to the `CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS` lists.
+
+```{attention}
+**Deprecation of older CORS settings**:
+
+The `CORS_ORIGIN_ALLOW_ALL` and `CORS_ORIGIN_WHITELIST` are older aliases of
+`CORS_ALLOW_ALL_ORIGINS` and `CORS_ALLOWED_ORIGINS` and they are deprecated.
+Adapt accordingly, as this will be removed with version 2 of Showroom. If you use
+both, the old and the new style setting, and the new style setting is empty or
+`False`, the old style will take precedence. In all other cases the new style
+takes precedence.
+```
 
 ### POSTGRES\_\* & REDIS\_\*
 
@@ -96,12 +108,12 @@ activities but also the entities (specifically the persons publishing those acti
 you need to enable user repo by setting `DISABLE_USER_REPO` to False. This will be
 the standard mode of operation in most scenarios.
 
-But the default here is set to True, so you can get the *Showroom Backend* running
+But the default here is set to True, so you can get the _Showroom Backend_ running
 in a first version, to later connect it to the user repo. Once you do this, you also
 have to set the `USER_PREFERENCES_API_BASE` path and the `USER_PREFERENCES_API_KEY`,
 which you have to create in the user repo.
 
-### DEFAULT\_USER\_REPO
+### DEFAULT_USER_REPO
 
 This relates to a _SourceRepository_ you have set up in Showroom. Most likely to the
 one set with the management command during [](install.md). In almost all scenarios
@@ -110,11 +122,16 @@ the last section. Functionally though, this is only used Showroom-internally to 
 to associate _ShowroomObjects_ of type entity (person, department, institution) with the
 corresponding source repository from which the activities are pushed.
 
-### DEFAULT\_ENTITY
+### CURRENTNESS_PAST_WEIGHT
+
+This is the value that past events are multiplied with, when the `currentness` ordering
+is applied to search results. See [Ranking and sorting](ranking_and_sorting)
+
+### DEFAULT_ENTITY
 
 This should most likely be set to the one institution created during [](install.md).
 
-### SHOWCASE\_DEMO\_\*
+### SHOWCASE_DEMO\_\*
 
 While in a future version of Showroom, the handling of organisational units will be
 available through an administrative interface, for now we can only add organisational

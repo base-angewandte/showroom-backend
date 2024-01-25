@@ -1,4 +1,4 @@
-"""showroom URL Configuration.
+"""Showroom URL Configuration.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
@@ -17,7 +17,17 @@ import django_cas_ng.views
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.sitemaps.views import index, sitemap
 from django.urls import include, path
+
+from core.sitemap import ActivitiesSitemap, PeopleSitemap
+
+sitemaps = {
+    'activities-en': ActivitiesSitemap,
+    'activities-de': ActivitiesSitemap(lang='de'),
+    'people-en': PeopleSitemap,
+    'people-de': PeopleSitemap(lang='de'),
+}
 
 urlpatterns = [
     # admin
@@ -37,6 +47,18 @@ urlpatterns = [
         name='cas_ng_proxy_callback',
     ),
     path('api/', include('api.urls')),
+    path(
+        'sitemap.xml',
+        index,
+        {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.index',
+    ),
+    path(
+        'sitemap-<section>.xml',
+        sitemap,
+        {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.sitemap',
+    ),
     path(settings.DOCS_URL, include('docs.urls')),
 ]
 

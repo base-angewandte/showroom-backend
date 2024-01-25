@@ -53,8 +53,8 @@ SITE_URL=https://url/
 # CSRF_COOKIE_DOMAIN=
 # CSRF_TRUSTED_ORIGINS=
 # CORS_ALLOW_CREDENTIALS=False
-# CORS_ORIGIN_ALLOW_ALL=False
-# CORS_ORIGIN_WHITELIST=
+# CORS_ALLOW_ALL_ORIGINS=False
+# CORS_ALLOWED_ORIGINS=
 
 ## The database port only needs to be changed, if you are running showroom
 ## locally in combination with e.g. portfolio also running locally. Then at
@@ -89,6 +89,9 @@ SITE_URL=https://url/
 
 ## The default limit for a search, if now explicit limit parameter is set
 # SEARCH_LIMIT=100
+
+## The limit for activities featured in the sitemap
+# SITEMAP_ACTIVITIES_LIMIT=10000
 
 ## The negative weight of past dates (vs current and future dates) in searches
 ## when the currentness ordering is applied

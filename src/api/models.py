@@ -42,7 +42,7 @@ class PluginAPIKey(AbstractAPIKey):
     active = models.BooleanField(default=True)
     plugins = models.JSONField(
         default=list,
-        help_text=f'JSON list of plugins that can be used with this key. Available plugins: {available_plugins}',
+        help_text='JSON list of plugins that can be used with this key. See API plugins section in the docs for available plugins.',
         validators=[validate_plugins],
         blank=True,
     )

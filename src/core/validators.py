@@ -148,9 +148,9 @@ def validate_showcase(value):
             allowed_types = ['act', 'alb']
             if item.type not in allowed_types:
                 raise ValidationError(
-                    f'type "{item.type}" of showcase item ID {sc_id} is not valid. allowed types: {allowed_types}'
+                    f'type {item.type!r} of showcase item ID {sc_id} is not valid. allowed types: {allowed_types}'
                 )
-        except model.DoesNotExist:
+        except model.DoesNotExist as err:
             raise ValidationError(
                 f'showcase item ID {sc_id} does not exist', params={'value': value}
-            )
+            ) from err

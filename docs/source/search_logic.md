@@ -4,14 +4,14 @@ This chapter defines the _Showroom_ search logic. The first section describes ho
 specific search indices are generated. The next section explains defines the available
 filters and what they mean, followed by a section on ranking and sorting, that
 explains how your search result can be ordered. A separate section on autocomplete
-defines how the two autocomplete endpoints in _Showroom_ work, and how they  can be
+defines how the two autocomplete endpoints in _Showroom_ work, and how they can be
 used to suggest search terms / filters to the user based on their input. Finally, there
 is also a section on the showcase search, which is only used for authenticated users,
 when they edit their showcases.
 
 ## Search base ...
 
-### ...  for full text search
+### ... for full text search
 
 For all search filters that use a full text search, a separate text search index will
 be used, that is created whenever a _ShowroomObject_ is pushed / updated. Indexing in
@@ -22,6 +22,7 @@ every available language, so that the specific request language can be used when
 client submits a full text search request.
 
 For activities the following data:
+
 - title
 - subtitle
 - texts
@@ -36,14 +37,14 @@ _src/api/repositories/portfolio/mapping.py_.
 ### ... for date based search
 
 For all search filters that use a date based search, three separate date search indices
-are maintained: _DateSearchIndex_, _DateRangeSearchIndex_, and _DateRelevanceIndex_. 
+are maintained: _DateSearchIndex_, _DateRangeSearchIndex_, and _DateRelevanceIndex_.
 
 After the _TextSearchIndex_ for a _ShowroomObject_ is generated, the
 `search_indexer` checks the `data` object of the received activity for all relevant
 dates that can be found, and adds them to the corresponding search indices.
 
-
 ## Available filters
+
 - `fulltext`: is a free text search filter, that returns all entities and activities
   (and later albums) that can be found with either the person or activity free text
   search filter
@@ -96,6 +97,7 @@ retrieve filters available for the entity search (which differ primarily in the
 available controlled vocabulary objects, e.g. used for keyword and type filters, because
 they are solely based on the entity's activities)
 
+(ranking_and_sorting)=
 
 ## Ranking and sorting
 
@@ -103,13 +105,14 @@ Every search request has optional `limit` and `offset` parameters to paginate th
 results. Additionally, there is:
 
 - an `order_by` parameter, which defines the ordering/ranking and can be the following
-  - `currentness`: orders all objects by date: with activities with the current date
-    first, then activities with a future date, then past those with a past date
-    (limited by configurable parameter)
+  - `currentness`: orders all objects by date relevancy. For every object the closest
+    date to today is evaluated, and then all objects are ordered by the least difference
+    from today. Past events are weighted by a multiplication with a configurable value
+    (default: 4). The score in the ordered result reflects the absolute distance in days
+    from today (with past events weighted by the configured factor).
   - `rank`: orders objects by full text search ranking (if available)
   - `default`: applies a default ordering coming from the database query. has the same
     effect as leaving out the order_by parameter as a whole
-
 
 ## Autocomplete
 
@@ -138,7 +141,6 @@ used, the results might be split into a set with filter_id activity (and a label
 There is not real auto completion for full text searches, as one might be familiar with
 from other search engines. In Showroom, auto complete items are only used in id-based
 search filters.
-
 
 ## Showcase search
 

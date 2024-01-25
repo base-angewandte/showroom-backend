@@ -1,6 +1,5 @@
-version: '2.3'
+version: "2.3"
 services:
-
   showroom-django:
     build:
       context: ./src

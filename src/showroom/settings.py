@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     # Third-party apps
     'django_cas_ng',
     'django_extensions',
@@ -199,7 +200,7 @@ CURRENTNESS_PAST_WEIGHT = env.int('CURRENTNESS_PAST_WEIGHT', default=4)
 # showcase is empty. Also check for syntactical validity.
 DEFAULT_SHOWCASE = [x.split(':') for x in env.list('DEFAULT_SHOWCASE', default=[])]
 for x in DEFAULT_SHOWCASE:
-    if type(x) != list or len(x) != 2:
+    if type(x) is not list or len(x) != 2:
         raise ImproperlyConfigured(
             'Syntax error in DEFAULT_SHOWCASE environment variable'
         )
@@ -213,7 +214,9 @@ DEFAULT_ENTITY = env.str('DEFAULT_ENTITY', default=None)
 SHOWCASE_DEMO_USERS = env.list('SHOWCASE_DEMO_USERS', default=[])
 SHOWCASE_DEMO_ENTITY_EDITING = env.list('SHOWCASE_DEMO_ENTITY_EDITING', default=[])
 
-""" Email settings """
+# The limit for activities featured in the sitemap
+SITEMAP_ACTIVITIES_LIMIT = env.int('SITEMAP_ACTIVITIES_LIMIT', default=10000)
+"""Email settings."""
 SERVER_EMAIL = 'error@%s' % urlparse(SITE_URL).hostname
 
 EMAIL_HOST_USER = env.str('EMAIL_HOST_USER', default='')
@@ -380,8 +383,7 @@ MEDIA_ROOT = '{}{}'.format(
 )
 
 FILE_UPLOAD_PERMISSIONS = 0o644
-
-""" Logging """
+"""Logging."""
 LOG_DIR = os.path.join(BASE_DIR, '..', 'logs')
 
 if not os.path.exists(LOG_DIR):
@@ -473,8 +475,7 @@ LOGGING = {
         },
     },
 }
-
-""" Cache settings """
+"""Cache settings."""
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -487,9 +488,7 @@ CACHES = {
         },
     }
 }
-
-
-""" RQ worker settings """
+"""RQ worker settings."""
 RQ_QUEUES = {
     'default': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 500},
     'high': {'USE_REDIS_CACHE': 'default', 'DEFAULT_TIMEOUT': 14400},
@@ -504,9 +503,7 @@ RQ_EXCEPTION_HANDLERS = ['general.rq.handlers.exception_handler']
 RQ_FAILURE_TTL = 2628288  # approx. 3 month
 
 WORKER_DELAY_ENTITY = env.int('WORKER_DELAY_ENTITY', default=10)
-
-
-""" Session settings """
+"""Session settings."""
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_NAME = f'sessionid_{PROJECT_NAME}'
@@ -518,9 +515,13 @@ CSRF_COOKIE_DOMAIN = env.str('CSRF_COOKIE_DOMAIN', default=None)
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 
 CORS_ALLOW_CREDENTIALS = env.bool('CORS_ALLOW_CREDENTIALS', default=False)
-CORS_ORIGIN_ALLOW_ALL = env.bool('CORS_ORIGIN_ALLOW_ALL', default=False)
-CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=[])
-# CORS_URLS_REGEX = r'^/()/.*$'
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
+# The following two are aliases of the two above and will be deprecated
+if not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ORIGIN_ALLOW_ALL', default=False)
+if not CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS = env.list('CORS_ORIGIN_WHITELIST', default=[])
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -542,11 +543,12 @@ REST_FRAMEWORK = {
 # https://drf-spectacular.readthedocs.io/en/latest/settings.html
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Showroom API v1',
-    'VERSION': '1.0.0',
+    'VERSION': '1.0',
     'DESCRIPTION': """Provides public access to all activities published to *Showroom*, as well as authenticated access
-    for users and repositories to publish and update activites, create and maintain albums. For a general project
+    for users and repositories to publish and update activities, create and maintain albums. For a general project
     description visit the [Portfolio/Showroom website](https://portfolio-showroom.ac.at), for the sources and
-    documentation of this component go to **TODO:insertlinktogithubrepo**.
+    documentation of Showroom backend go to
+    [https://github.com/base-angewandte/showroom-backend/](https://github.com/base-angewandte/showroom-backend/).
     """,
     'TAGS': ['public', 'auth', 'repo', 'api'],
     'SERVERS': [
@@ -566,7 +568,7 @@ SPECTACULAR_SETTINGS = {
         'displayOperationId': True,
     },
     # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',  # default
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@5.10.5',  # default
     # "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png",  # default is swagger favicon
     'ENUM_NAME_OVERRIDES': {
         'ShowroomObjectTypeEnum': (

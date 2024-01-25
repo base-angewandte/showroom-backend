@@ -13,11 +13,10 @@ _Swagger UI_ to interact with the API.
 Once running, the API itself is available on the `/api/v1/` path, while the schema is
 consumable under any of the following three paths:
 
-* `/api/v1/schema/openapi3.json` - Open API 3.0 schema in JSON
-* `/api/v1/schema/openapi3.yaml` - Open API 3.0 schema in YAML
-* `/api/v1/schema/swagger-ui` - The Swagger UI to the schema described in the above two 
+- `/api/v1/openapi.json` - Open API 3.0 schema in JSON
+- `/api/v1/openapi.yaml` - Open API 3.0 schema in YAML
+- `/api/v1/docs/` - The Swagger UI to the schema described in the above two
 
 As an example reference you can also take a look at the Swagger UI of the current stable
 release deployment of the University of Applied Arts Vienna:
-[https://base.uni-ak.ac.at/showroom/api/v1/schema/swagger-ui](https://base.uni-ak.ac.at/showroom/api/v1/schema/swagger-ui)
-
+[https://base.uni-ak.ac.at/showroom/api/v1/docs/](https://base.uni-ak.ac.at/showroom/api/v1/docs/)

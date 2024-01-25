@@ -1,3 +1,4 @@
+import datetime
 import logging
 import re
 
@@ -21,7 +22,7 @@ def index_activity(activity):
     data = activity.source_repo_data
 
     indexed = {}
-    for (lang, _lang_label) in settings.LANGUAGES:
+    for lang, _lang_label in settings.LANGUAGES:
         indexed[lang] = []
         if title := data.get('title'):
             indexed[lang].append(title)
@@ -41,7 +42,7 @@ def index_activity(activity):
     # Add type and keywords to activity
     if (activity_type := data.get('type')) and type(activity_type) is dict:
         if (label := activity_type.get('label')) and type(label) is dict:
-            for (lang, _lang_label) in settings.LANGUAGES:
+            for lang, _lang_label in settings.LANGUAGES:
                 if text := label.get(lang):
                     indexed[lang].append(text)
 
@@ -50,12 +51,12 @@ def index_activity(activity):
             if type(kw) is not dict:
                 continue
             if (label := kw.get('label')) and type(label) is dict:
-                for (lang, _lang_label) in settings.LANGUAGES:
+                for lang, _lang_label in settings.LANGUAGES:
                     if text := label.get(lang):
                         indexed[lang].append(text)
 
     # Now run type/category-specific indexing functions, in case the data key is set
-    if (inner_data := data.get('data')) and type(inner_data) == dict:
+    if (inner_data := data.get('data')) and type(inner_data) is dict:
         # Index all role-based fields for names/labels
         contributors = get_contributors(inner_data)
         if contributors:
@@ -68,19 +69,21 @@ def index_activity(activity):
 
                 for indexer in indexers:
                     indexer_result = get_index(indexer, inner_data)
-                    for (lang, _lang_label) in settings.LANGUAGES:
+                    for lang, _lang_label in settings.LANGUAGES:
                         if res := indexer_result.get(lang):
                             indexed[lang].append(res)
 
+    # clear all old text search index values for this activity before creating new ones
+    TextSearchIndex.objects.filter(showroom_object=activity).delete()
     for lang, values in indexed.items():
-        search_index, created = TextSearchIndex.objects.get_or_create(
+        search_index = TextSearchIndex.objects.create(
             showroom_object=activity, language=lang
         )
         search_index.text = '; '.join(values)
         search_index.save()
 
     # now do the date related indexing
-    if inner_data and type(inner_data) == dict:
+    if inner_data and type(inner_data) is dict:
         dates = []
         date_ranges = []
         # collect all possible dates and date locations
@@ -136,18 +139,21 @@ def index_activity(activity):
         )
         dates.extend([dr[0] for dr in date_ranges])
         dates.extend([dr[1] for dr in date_ranges])
-        DateRelevanceIndex.objects.bulk_create(
-            [DateRelevanceIndex(showroom_object=activity, date=date) for date in dates]
+        inserted = DateRelevanceIndex.objects.bulk_create(
+            [DateRelevanceIndex(showroom_object=activity, date=d) for d in dates]
         )
+        today = datetime.date.today()
+        for dr in inserted:
+            dr.update_rank(today)
 
 
 def index_entity(entity):
     indexed = {}
-    for (lang, _lang_label) in settings.LANGUAGES:
+    for lang, _lang_label in settings.LANGUAGES:
         indexed[lang] = []
 
     # index keywords
-    if entity.entitydetail.expertise and type(entity.entitydetail.expertise) == dict:
+    if entity.entitydetail.expertise and type(entity.entitydetail.expertise) is dict:
         for lang in entity.entitydetail.expertise.keys():
             indexed[lang].extend(entity.entitydetail.expertise[lang])
 
@@ -218,9 +224,9 @@ def get_contributors(data):
     labels = []
     for role in role_fields:
         if role_data := data.get(role):
-            if type(role_data) == list:
+            if type(role_data) is list:
                 for r in role_data:
-                    if type(r) == dict and 'label' in r:
+                    if type(r) is dict and 'label' in r:
                         labels.append(r.get('label'))
     if labels:
         text_index = ', '.join(labels)
@@ -287,7 +293,7 @@ def get_simple_label(data, indexing_item):
 
 def get_software_developers(data):
     devs = data.get('software_developers')
-    if devs and type(devs) == list:
+    if devs and type(devs) is list:
         text_index = ', '.join([d.get('label') for d in devs])
     else:
         return {}
@@ -302,7 +308,7 @@ def get_vocabulary_list_labels(data, field):
         for item in item_list:
             if type(item) is not dict:
                 continue
-            if 'label' in item and type(item['label']) == dict:
+            if 'label' in item and type(item['label']) is dict:
                 for lang in item['label']:
                     if lang not in indexed:
                         indexed[lang] = []
