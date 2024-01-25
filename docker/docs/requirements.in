@@ -1,5 +1,7 @@
 # compile this file with 'pip-compile requirements.in'
+furo
+linkify-it-py
 myst-parser
 sphinx
-sphinx-rtd-theme
-sphinx-rtd-dark-mode
+sphinx-copybutton
+sphinx-togglebutton

@@ -1,2 +1,0 @@
-myst-parser==0.17.2
-sphinx-rtd-dark-mode==1.2.4
