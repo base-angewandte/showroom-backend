@@ -78,8 +78,8 @@ primary_color = '#673ab7'
 primary_color_dark_style = '#b085f5'
 
 html_theme_options = {
-    'light_logo': 'base-light.svg',
-    'dark_logo': 'base-dark.svg',
+    'light_logo': 'showroom-backend-light.svg',
+    'dark_logo': 'showroom-backend-dark.svg',
     'light_css_variables': {
         'color-brand-primary': primary_color,
         'color-brand-content': primary_color,
@@ -95,3 +95,5 @@ html_theme_options = {
 
 pygments_style = 'default'
 pygments_dark_style = 'github-dark'
+
+html_css_files = ['css/style.css']
