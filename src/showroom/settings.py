@@ -40,10 +40,7 @@ except ImportError:
         SECRET_KEY = get_random_secret_key()
         f.write("SECRET_KEY = '%s'\n" % SECRET_KEY)
 
-# Introduced in Django 3.2, we can explicitly set a field for auto-created primary keys
-# Therefore we want to stick with the old AutoField. In the future a migration to the
-# newer BigAutoField (which is now standard) is advisable. (TODO)
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
