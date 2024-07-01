@@ -29,8 +29,6 @@ jinja2==3.1.2
     # via
     #   myst-parser
     #   sphinx
-linkify-it-py==2.0.2
-    # via -r docker/docs/requirements.in
 markdown-it-py==3.0.0
     # via
     #   mdit-py-plugins
@@ -88,8 +86,6 @@ sphinxcontrib-qthelp==1.0.6
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.8
     # via sphinx
-uc-micro-py==1.0.2
-    # via linkify-it-py
 urllib3==2.0.4
     # via requests
 wheel==0.42.0

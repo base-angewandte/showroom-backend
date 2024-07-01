@@ -1,6 +1,5 @@
 # compile this file with 'pip-compile requirements.in'
 furo
-linkify-it-py
 myst-parser
 sphinx
 sphinx-copybutton
