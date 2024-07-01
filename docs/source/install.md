@@ -156,7 +156,7 @@ subsections.
 - Clone git repository:
 
   ```bash
-  git clone https://base@basedev.uni-ak.ac.at/redmine/showroom-backend.git
+  git clone https://github.com/base-angewandte/showroom-backend.git
   cd showroom-backend
   ```
 
